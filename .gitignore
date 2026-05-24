@@ -1,0 +1,6 @@
+.artifacts/
+out/
+publish/
+*.user
+.vs/
+.env
