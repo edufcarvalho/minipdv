@@ -5,7 +5,7 @@ namespace minipdv.Infrastructure.Configuration;
 public class DatabaseConfig
 {
     public string Server { get; set; } = @"localhost\SQLEXPRESS";
-    public string Database { get; set; } = "minipdv";
+    public string Database { get; set; } = "MINIPDV";
     public string User { get; set; } = "sa";
     public string Password { get; set; } = "";
 
@@ -19,7 +19,7 @@ public class DatabaseConfig
         return new DatabaseConfig
         {
             Server = GetValue(env, "DB_SERVER", @"localhost\SQLEXPRESS"),
-            Database = GetValue(env, "DB_NAME", "minipdv"),
+            Database = GetValue(env, "DB_NAME", "MINIPDV"),
             User = GetValue(env, "DB_USER", "sa"),
             Password = GetValue(env, "DB_PASSWORD", "")
         };
