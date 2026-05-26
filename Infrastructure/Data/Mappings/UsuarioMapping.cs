@@ -37,8 +37,9 @@ public class UsuarioMapping : IEntityTypeConfiguration<AbstractUsuario>
         builder.Property(u => u.AtualizadoEm);
 
         builder.HasOne(u => u.Contato)
-            .WithMany()
-            .HasForeignKey(u => u.ContatoId);
+            .WithOne()
+            .HasForeignKey<AbstractUsuario>(u => u.ContatoId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasDiscriminator<string>("TipoUsuario")
             .HasValue<Usuario>("Usuario")

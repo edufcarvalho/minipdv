@@ -31,7 +31,8 @@ public class FabricanteMapping : IEntityTypeConfiguration<Fabricante>
         builder.Property(f => f.AtualizadoEm);
 
         builder.HasOne(f => f.Contato)
-            .WithMany()
-            .HasForeignKey(f => f.ContatoId);
+            .WithOne()
+            .HasForeignKey<Fabricante>(f => f.ContatoId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

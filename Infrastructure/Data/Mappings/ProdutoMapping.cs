@@ -35,15 +35,18 @@ public class ProdutoMapping : IEntityTypeConfiguration<Produto>
 
         builder.HasOne(p => p.Grupo)
             .WithMany(g => g.Produtos)
-            .HasForeignKey(p => p.ProdutoGrupoId);
+            .HasForeignKey(p => p.ProdutoGrupoId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(p => p.Fabricante)
             .WithMany(f => f.Produtos)
-            .HasForeignKey(p => p.FabricanteId);
+            .HasForeignKey(p => p.FabricanteId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasOne(p => p.PrincipioAtivo)
             .WithMany(pa => pa.Produtos)
-            .HasForeignKey(p => p.PrincipioAtivoId);
+            .HasForeignKey(p => p.PrincipioAtivoId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasDiscriminator(p => p.Controlado)
             .HasValue<Produto>(false)

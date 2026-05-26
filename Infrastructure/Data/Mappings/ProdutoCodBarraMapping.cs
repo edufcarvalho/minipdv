@@ -18,6 +18,7 @@ public class ProdutoCodBarraMapping : IEntityTypeConfiguration<ProdutoCodBarra>
 
         builder.HasOne(p => p.Produto)
             .WithMany(p => p.CodBarras)
-            .HasForeignKey(p => p.ProdutoId);
+            .HasForeignKey(p => p.ProdutoId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

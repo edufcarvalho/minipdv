@@ -25,6 +25,7 @@ public class ProdutoEstoqueMapping : IEntityTypeConfiguration<ProdutoEstoque>
 
         builder.HasOne(p => p.Produto)
             .WithMany(p => p.Estoques)
-            .HasForeignKey(p => p.ProdutoId);
+            .HasForeignKey(p => p.ProdutoId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
