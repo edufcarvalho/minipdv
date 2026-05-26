@@ -10,6 +10,7 @@ public class MiniPDVContext : DbContext
 
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Produto> Produtos { get; set; }
+    public DbSet<ProdutoGrupo> ProdutoGrupos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
