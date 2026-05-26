@@ -3,7 +3,6 @@ using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Data.Context;
 using minipdv.Infrastructure.Data.Seed;
 using minipdv.Presentation.Desktop.Forms.Shared;
-using System.Windows.Forms;
 
 namespace minipdv;
 
