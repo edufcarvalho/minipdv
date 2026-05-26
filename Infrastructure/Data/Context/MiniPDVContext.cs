@@ -18,6 +18,7 @@ public class MiniPDVContext : DbContext
     public DbSet<Contato> Contatos { get; set; }
     public DbSet<PrincipioAtivo> PrincipiosAtivos { get; set; }
     public DbSet<ProdutoEstoque> ProdutoEstoques { get; set; }
+    public DbSet<ProdutoCodBarra> ProdutoCodBarras { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
