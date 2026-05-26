@@ -11,4 +11,5 @@ public class Fabricante : Entity
     public int? ContatoId { get; set; }
     [ForeignKey(nameof(ContatoId))]
     public virtual Contato? Contato { get; set; }
+    public virtual ICollection<Produto> Produtos { get; set; } = [];
 }

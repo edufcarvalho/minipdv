@@ -376,19 +376,19 @@ namespace minipdv.Migrations
             modelBuilder.Entity("minipdv.Domain.Entities.Produto", b =>
                 {
                     b.HasOne("minipdv.Domain.Entities.Fabricante", "Fabricante")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("FabricanteId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("minipdv.Domain.Entities.PrincipioAtivo", "PrincipioAtivo")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("PrincipioAtivoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("minipdv.Domain.Entities.ProdutoGrupo", "Grupo")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("ProdutoGrupoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -414,7 +414,7 @@ namespace minipdv.Migrations
             modelBuilder.Entity("minipdv.Domain.Entities.ProdutoEstoque", b =>
                 {
                     b.HasOne("minipdv.Domain.Entities.Produto", "Produto")
-                        .WithMany()
+                        .WithMany("Estoques")
                         .HasForeignKey("ProdutoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -422,9 +422,26 @@ namespace minipdv.Migrations
                     b.Navigation("Produto");
                 });
 
+            modelBuilder.Entity("minipdv.Domain.Entities.Fabricante", b =>
+                {
+                    b.Navigation("Produtos");
+                });
+
+            modelBuilder.Entity("minipdv.Domain.Entities.PrincipioAtivo", b =>
+                {
+                    b.Navigation("Produtos");
+                });
+
             modelBuilder.Entity("minipdv.Domain.Entities.Produto", b =>
                 {
                     b.Navigation("CodBarras");
+
+                    b.Navigation("Estoques");
+                });
+
+            modelBuilder.Entity("minipdv.Domain.Entities.ProdutoGrupo", b =>
+                {
+                    b.Navigation("Produtos");
                 });
 #pragma warning restore 612, 618
         }

@@ -24,7 +24,7 @@ public class ProdutoEstoqueMapping : IEntityTypeConfiguration<ProdutoEstoque>
             .IsRequired();
 
         builder.HasOne(p => p.Produto)
-            .WithMany()
+            .WithMany(p => p.Estoques)
             .HasForeignKey(p => p.ProdutoId);
     }
 }

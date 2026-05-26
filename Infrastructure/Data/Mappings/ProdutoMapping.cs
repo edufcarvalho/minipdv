@@ -34,15 +34,15 @@ public class ProdutoMapping : IEntityTypeConfiguration<Produto>
             .HasMaxLength(50);
 
         builder.HasOne(p => p.Grupo)
-            .WithMany()
+            .WithMany(g => g.Produtos)
             .HasForeignKey(p => p.ProdutoGrupoId);
 
         builder.HasOne(p => p.Fabricante)
-            .WithMany()
+            .WithMany(f => f.Produtos)
             .HasForeignKey(p => p.FabricanteId);
 
         builder.HasOne(p => p.PrincipioAtivo)
-            .WithMany()
+            .WithMany(pa => pa.Produtos)
             .HasForeignKey(p => p.PrincipioAtivoId);
 
         builder.HasDiscriminator(p => p.Controlado)

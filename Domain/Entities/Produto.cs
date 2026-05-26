@@ -21,4 +21,5 @@ public class Produto : Entity
     [ForeignKey(nameof(PrincipioAtivoId))]
     public required virtual PrincipioAtivo PrincipioAtivo { get; set; }
     public virtual ICollection<ProdutoCodBarra> CodBarras { get; set; } = [];
+    public virtual ICollection<ProdutoEstoque> Estoques { get; set; } = [];
 }
