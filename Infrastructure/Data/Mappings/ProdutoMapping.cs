@@ -17,7 +17,34 @@ public class ProdutoMapping : IEntityTypeConfiguration<Produto>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(p => p.Ativo)
+            .IsRequired();
+
         builder.Property(p => p.CriadoEm)
             .IsRequired();
+
+        builder.Property(p => p.AtualizadoEm);
+
+        builder.Property(p => p.CodBarra)
+            .HasMaxLength(14);
+
+        builder.Property(p => p.Dosagem)
+            .HasMaxLength(50);
+
+        builder.HasOne(p => p.Grupo)
+            .WithMany()
+            .HasForeignKey(p => p.ProdutoGrupoId);
+
+        builder.HasOne(p => p.Fabricante)
+            .WithMany()
+            .HasForeignKey(p => p.FabricanteId);
+
+        builder.HasOne(p => p.PrincipioAtivo)
+            .WithMany()
+            .HasForeignKey(p => p.PrincipioAtivoId);
+
+        builder.HasDiscriminator(p => p.Controlado)
+            .HasValue<Produto>(false)
+            .HasValue<ProdutoControlado>(true);
     }
 }

@@ -17,7 +17,12 @@ public class ProdutoGrupoMapping : IEntityTypeConfiguration<ProdutoGrupo>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(pg => pg.Ativo)
+            .IsRequired();
+
         builder.Property(pg => pg.CriadoEm)
             .IsRequired();
+
+        builder.Property(pg => pg.AtualizadoEm);
     }
 }

@@ -8,12 +8,12 @@ namespace minipdv.Infrastructure.Data.Seed;
 public class DatabaseInitializer : IDatabaseInitializer
 {
     private readonly MiniPDVContext _context;
-    private readonly string _seedsPath;
+    private readonly DatabaseConfig _config;
 
-    public DatabaseInitializer(MiniPDVContext context, string seedsPath)
+    public DatabaseInitializer(MiniPDVContext context, DatabaseConfig config)
     {
         _context = context;
-        _seedsPath = seedsPath;
+        _config = config;
     }
 
     public bool IsDatabaseSeeded()
@@ -129,12 +129,27 @@ public class DatabaseInitializer : IDatabaseInitializer
         }
     }
 
+    private static string ResolveSeedsPath()
+    {
+        string[] candidates =
+        [
+            Path.Combine(Directory.GetCurrentDirectory(), "Infrastructure", "Data", "Seed"),
+            Path.Combine(AppContext.BaseDirectory, "Infrastructure", "Data", "Seed"),
+            Path.Combine(Directory.GetCurrentDirectory(), "Data", "Seed")
+        ];
+
+        return candidates.FirstOrDefault(Directory.Exists)
+            ?? Path.Combine(AppContext.BaseDirectory, "Data", "Seed");
+    }
+
     private List<(string FilePath, string ScriptName)> GetSqlFiles()
     {
-        if (!Directory.Exists(_seedsPath))
+        var seedsPath = ResolveSeedsPath();
+
+        if (!Directory.Exists(seedsPath))
             return [];
 
-        return Directory.GetFiles(_seedsPath, "*.sql")
+        return Directory.GetFiles(seedsPath, "*.sql")
             .OrderBy(f => f)
             .Select(f => (f, Path.GetFileName(f)))
             .ToList();

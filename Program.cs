@@ -38,8 +38,7 @@ static class Program
         builder.Services.AddSingleton(sp =>
         {
             var context = sp.GetRequiredService<MiniPDVContext>();
-            var seedsPath = ResolveSeedsPath();
-            return new DatabaseInitializer(context, seedsPath);
+            return new DatabaseInitializer(context, dbConfig);
         });
 
         var app = builder.Build();
@@ -76,8 +75,7 @@ static class Program
                     .UseSqlServer(config.ConnectionString)
                     .Options;
                 using var context = new MiniPDVContext(options);
-                var seedsPath = ResolveSeedsPath();
-                var initializer = new DatabaseInitializer(context, seedsPath);
+                var initializer = new DatabaseInitializer(context, config);
 
                 if (!initializer.IsDatabaseSeeded())
                     initializer.Seed();
@@ -104,18 +102,5 @@ static class Program
         ];
 
         return candidates.FirstOrDefault(File.Exists);
-    }
-
-    private static string ResolveSeedsPath()
-    {
-        string[] candidates =
-        [
-            Path.Combine(Directory.GetCurrentDirectory(), "Infrastructure", "Data", "Seed"),
-            Path.Combine(AppContext.BaseDirectory, "Infrastructure", "Data", "Seed"),
-            Path.Combine(Directory.GetCurrentDirectory(), "Data", "Seed")
-        ];
-
-        return candidates.FirstOrDefault(Directory.Exists)
-            ?? Path.Combine(AppContext.BaseDirectory, "Data", "Seed");
     }
 }

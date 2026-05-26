@@ -84,7 +84,7 @@ namespace minipdv.Migrations
                     b.ToTable("ProdutoGrupos");
                 });
 
-            modelBuilder.Entity("minipdv.Domain.Entities.UsuarioBase", b =>
+            modelBuilder.Entity("minipdv.Domain.Entities.Base.AbstractUsuario", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -125,14 +125,14 @@ namespace minipdv.Migrations
 
                     b.ToTable("Usuarios", (string)null);
 
-                    b.HasDiscriminator<string>("TipoUsuario").HasValue("UsuarioBase");
+                    b.HasDiscriminator<string>("TipoUsuario").HasValue("AbstractUsuario");
 
                     b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Farmaceutico", b =>
                 {
-                    b.HasBaseType("minipdv.Domain.Entities.UsuarioBase");
+                    b.HasBaseType("minipdv.Domain.Entities.Base.AbstractUsuario");
 
                     b.Property<string>("Crf")
                         .IsRequired()
@@ -144,7 +144,7 @@ namespace minipdv.Migrations
 
             modelBuilder.Entity("minipdv.Domain.Entities.Usuario", b =>
                 {
-                    b.HasBaseType("minipdv.Domain.Entities.UsuarioBase");
+                    b.HasBaseType("minipdv.Domain.Entities.Base.AbstractUsuario");
 
                     b.HasDiscriminator().HasValue("Usuario");
                 });

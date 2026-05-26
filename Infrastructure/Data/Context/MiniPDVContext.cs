@@ -9,8 +9,14 @@ public class MiniPDVContext : DbContext
     public MiniPDVContext(DbContextOptions<MiniPDVContext> options) : base(options) { }
 
     public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Farmaceutico> Farmaceuticos { get; set; }
     public DbSet<Produto> Produtos { get; set; }
+    public DbSet<ProdutoControlado> ProdutosControlados { get; set; }
     public DbSet<ProdutoGrupo> ProdutoGrupos { get; set; }
+    public DbSet<ProdutoTipo> ProdutoTipos { get; set; }
+    public DbSet<Fabricante> Fabricantes { get; set; }
+    public DbSet<Contato> Contatos { get; set; }
+    public DbSet<PrincipioAtivo> PrincipiosAtivos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
