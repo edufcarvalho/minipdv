@@ -4,10 +4,12 @@ using minipdv.Domain.Entities;
 
 namespace minipdv.Infrastructure.Data.Mappings;
 
-public class UsuarioMapping : IEntityTypeConfiguration<Usuario>
+public class UsuarioMapping : IEntityTypeConfiguration<UsuarioBase>
 {
-    public void Configure(EntityTypeBuilder<Usuario> builder)
+    public void Configure(EntityTypeBuilder<UsuarioBase> builder)
     {
+        builder.ToTable("Usuarios");
+
         builder.HasKey(u => u.Id);
 
         builder.Property(u => u.Id)
@@ -17,8 +19,16 @@ public class UsuarioMapping : IEntityTypeConfiguration<Usuario>
             .IsRequired()
             .HasMaxLength(200);
 
+        builder.Property(u => u.Login)
+            .IsRequired()
+            .HasMaxLength(100);
+
         builder.Property(u => u.PasswordHash)
             .IsRequired()
             .HasMaxLength(128);
+
+        builder.HasDiscriminator<string>("TipoUsuario")
+            .HasValue<Usuario>("Usuario")
+            .HasValue<Farmaceutico>("Farmaceutico");
     }
 }
