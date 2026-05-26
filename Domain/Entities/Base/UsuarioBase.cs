@@ -1,6 +1,4 @@
-using minipdv.Domain.Entities.Base;
-
-namespace minipdv.Domain.Entities;
+namespace minipdv.Domain.Entities.Base;
 
 public abstract class UsuarioBase : Entity
 {

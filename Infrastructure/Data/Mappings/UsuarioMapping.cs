@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using minipdv.Domain.Entities;
+using minipdv.Domain.Entities.Base;
 
 namespace minipdv.Infrastructure.Data.Mappings;
 
