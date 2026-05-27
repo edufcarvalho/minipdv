@@ -14,9 +14,11 @@ public class ContatoMapping : IEntityTypeConfiguration<Contato>
             .ValueGeneratedOnAdd();
 
         builder.Property(c => c.Email)
+            .IsRequired()
             .HasMaxLength(200);
 
         builder.Property(c => c.Telefone)
+            .IsRequired()
             .HasMaxLength(20);
 
         builder.Property(c => c.CriadoEm)
