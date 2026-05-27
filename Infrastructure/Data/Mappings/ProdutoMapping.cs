@@ -26,8 +26,7 @@ public class ProdutoMapping : IEntityTypeConfiguration<Produto>
         builder.Property(p => p.AtualizadoEm);
 
         builder.Property(p => p.CodBarra)
-            .IsRequired()
-            .HasMaxLength(14);
+            .IsRequired();
 
         builder.Property(p => p.Dosagem)
             .IsRequired()

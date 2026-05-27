@@ -11,11 +11,9 @@ public class ProdutoValidator : AbstractValidator<Produto>
             .NotEmpty()
             .MaximumLength(200);
 
-        RuleFor(p => p.CodBarra)
-            .NotEmpty()
-            .MaximumLength(14)
-            .Matches(@"^[0-9]+$")
-            .WithMessage("Código de barras deve conter apenas caracteres numéricos");
+        RuleFor(e => e.CodBarra)
+            .GreaterThanOrEqualTo(10^8)
+            .WithMessage("CodBarra deve ter pelo menos 8 caracteres");
 
         RuleFor(p => p.Dosagem)
             .NotEmpty()
