@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using minipdv.Application.Interfaces;
+using minipdv.Data.Interfaces;
 using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Data.Context;
 

@@ -1,4 +1,4 @@
-namespace minipdv.Application.Interfaces;
+namespace minipdv.Data.Interfaces;
 
 public interface IDatabaseInitializer
 {
