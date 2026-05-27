@@ -123,7 +123,7 @@ namespace minipdv.Migrations
             modelBuilder.Entity("minipdv.Domain.Entities.Produto", b =>
                 {
                     b.HasOne("minipdv.Domain.Entities.ProdutoGrupo", "Grupo")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("ProdutoGrupoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -61,8 +61,7 @@ namespace minipdv.Migrations
                 name: "FabricanteId",
                 table: "Produtos",
                 type: "int",
-                nullable: false,
-                defaultValue: 0);
+                nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Lista",
@@ -152,13 +151,16 @@ namespace minipdv.Migrations
                         name: "FK_Fabricantes_Contatos_ContatoId",
                         column: x => x.ContatoId,
                         principalTable: "Contatos",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Usuarios_ContatoId",
                 table: "Usuarios",
-                column: "ContatoId");
+                column: "ContatoId",
+                unique: true,
+                filter: "[ContatoId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Produtos_FabricanteId",
@@ -173,7 +175,9 @@ namespace minipdv.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Fabricantes_ContatoId",
                 table: "Fabricantes",
-                column: "ContatoId");
+                column: "ContatoId",
+                unique: true,
+                filter: "[ContatoId] IS NOT NULL");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Produtos_Fabricantes_FabricanteId",
@@ -181,7 +185,7 @@ namespace minipdv.Migrations
                 column: "FabricanteId",
                 principalTable: "Fabricantes",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Produtos_PrincipiosAtivos_PrincipioAtivoId",
@@ -189,14 +193,15 @@ namespace minipdv.Migrations
                 column: "PrincipioAtivoId",
                 principalTable: "PrincipiosAtivos",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Usuarios_Contatos_ContatoId",
                 table: "Usuarios",
                 column: "ContatoId",
                 principalTable: "Contatos",
-                principalColumn: "Id");
+                principalColumn: "Id",
+                onDelete: ReferentialAction.SetNull);
         }
 
         /// <inheritdoc />

@@ -38,7 +38,6 @@ public class UsuarioMapping : IEntityTypeConfiguration<AbstractUsuario>
 
         builder.HasOne(u => u.Contato)
             .WithOne()
-            .HasForeignKey<AbstractUsuario>(u => u.ContatoId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasDiscriminator<string>("TipoUsuario")

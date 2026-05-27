@@ -14,9 +14,9 @@ public class Produto : Entity
     public required int ProdutoGrupoId { get; set; }
     [ForeignKey(nameof(ProdutoGrupoId))]
     public required virtual ProdutoGrupo Grupo { get; set; }
-    public required int FabricanteId { get; set; }
+    public int? FabricanteId { get; set; }
     [ForeignKey(nameof(FabricanteId))]
-    public required virtual Fabricante Fabricante { get; set; }
+    public virtual Fabricante? Fabricante { get; set; }
     public required int PrincipioAtivoId { get; set; }
     [ForeignKey(nameof(PrincipioAtivoId))]
     public required virtual PrincipioAtivo PrincipioAtivo { get; set; }

@@ -67,7 +67,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContatoId");
+                    b.HasIndex("ContatoId").IsUnique().HasFilter("[ContatoId] IS NOT NULL");
 
                     b.ToTable("Usuarios", (string)null);
 
@@ -137,7 +137,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContatoId");
+                    b.HasIndex("ContatoId").IsUnique().HasFilter("[ContatoId] IS NOT NULL");
 
                     b.ToTable("Fabricantes");
                 });
@@ -201,7 +201,7 @@ namespace minipdv.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("FabricanteId")
+                    b.Property<int?>("FabricanteId")
                         .HasColumnType("int");
 
                     b.Property<int>("PrincipioAtivoId")
@@ -324,8 +324,9 @@ namespace minipdv.Migrations
             modelBuilder.Entity("minipdv.Domain.Entities.Base.AbstractUsuario", b =>
                 {
                     b.HasOne("minipdv.Domain.Entities.Contato", "Contato")
-                        .WithMany()
-                        .HasForeignKey("ContatoId");
+                        .WithOne()
+                        .HasForeignKey("minipdv.Domain.Entities.Base.AbstractUsuario", "ContatoId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Contato");
                 });
@@ -333,8 +334,9 @@ namespace minipdv.Migrations
             modelBuilder.Entity("minipdv.Domain.Entities.Fabricante", b =>
                 {
                     b.HasOne("minipdv.Domain.Entities.Contato", "Contato")
-                        .WithMany()
-                        .HasForeignKey("ContatoId");
+                        .WithOne()
+                        .HasForeignKey("minipdv.Domain.Entities.Fabricante", "ContatoId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Contato");
                 });
@@ -342,21 +344,20 @@ namespace minipdv.Migrations
             modelBuilder.Entity("minipdv.Domain.Entities.Produto", b =>
                 {
                     b.HasOne("minipdv.Domain.Entities.Fabricante", "Fabricante")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("FabricanteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("minipdv.Domain.Entities.PrincipioAtivo", "PrincipioAtivo")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("PrincipioAtivoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("minipdv.Domain.Entities.ProdutoGrupo", "Grupo")
-                        .WithMany()
+                        .WithMany("Produtos")
                         .HasForeignKey("ProdutoGrupoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.SetNull)
                         .IsRequired();
 
                     b.Navigation("Fabricante");
@@ -364,6 +365,21 @@ namespace minipdv.Migrations
                     b.Navigation("Grupo");
 
                     b.Navigation("PrincipioAtivo");
+                });
+
+            modelBuilder.Entity("minipdv.Domain.Entities.Fabricante", b =>
+                {
+                    b.Navigation("Produtos");
+                });
+
+            modelBuilder.Entity("minipdv.Domain.Entities.PrincipioAtivo", b =>
+                {
+                    b.Navigation("Produtos");
+                });
+
+            modelBuilder.Entity("minipdv.Domain.Entities.ProdutoGrupo", b =>
+                {
+                    b.Navigation("Produtos");
                 });
 #pragma warning restore 612, 618
         }

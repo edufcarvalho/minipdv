@@ -64,7 +64,9 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContatoId").IsUnique().HasFilter("[ContatoId] IS NOT NULL");
+                    b.HasIndex("ContatoId")
+                        .IsUnique()
+                        .HasFilter("[ContatoId] IS NOT NULL");
 
                     b.ToTable("Usuarios", (string)null);
 
@@ -134,7 +136,9 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ContatoId").IsUnique().HasFilter("[ContatoId] IS NOT NULL");
+                    b.HasIndex("ContatoId")
+                        .IsUnique()
+                        .HasFilter("[ContatoId] IS NOT NULL");
 
                     b.ToTable("Fabricantes");
                 });
@@ -198,7 +202,7 @@ namespace minipdv.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("FabricanteId")
+                    b.Property<int?>("FabricanteId")
                         .HasColumnType("int");
 
                     b.Property<int>("PrincipioAtivoId")
@@ -341,11 +345,6 @@ namespace minipdv.Migrations
                 {
                     b.HasBaseType("minipdv.Domain.Entities.Produto");
 
-                    b.Property<string>("RegistroMS")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("ClasseTerapeutica")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -363,7 +362,7 @@ namespace minipdv.Migrations
                 {
                     b.HasOne("minipdv.Domain.Entities.Contato", "Contato")
                         .WithOne()
-                        .HasForeignKey("ContatoId")
+                        .HasForeignKey("minipdv.Domain.Entities.Base.AbstractUsuario", "ContatoId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Contato");
@@ -373,7 +372,7 @@ namespace minipdv.Migrations
                 {
                     b.HasOne("minipdv.Domain.Entities.Contato", "Contato")
                         .WithOne()
-                        .HasForeignKey("ContatoId")
+                        .HasForeignKey("minipdv.Domain.Entities.Fabricante", "ContatoId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Contato");
@@ -384,19 +383,18 @@ namespace minipdv.Migrations
                     b.HasOne("minipdv.Domain.Entities.Fabricante", "Fabricante")
                         .WithMany("Produtos")
                         .HasForeignKey("FabricanteId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("minipdv.Domain.Entities.PrincipioAtivo", "PrincipioAtivo")
                         .WithMany("Produtos")
                         .HasForeignKey("PrincipioAtivoId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("minipdv.Domain.Entities.ProdutoGrupo", "Grupo")
                         .WithMany("Produtos")
                         .HasForeignKey("ProdutoGrupoId")
-                        .OnDelete(DeleteBehavior.SetNull)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Fabricante");
