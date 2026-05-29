@@ -1,0 +1,14 @@
+**/.git
+**/.vs
+**/.artifacts
+**/bin
+**/obj
+**/publish
+**/out
+*.user
+.env
+compose.yaml
+.dockerignore
+Containerfile
+pod.yaml
+Scripts

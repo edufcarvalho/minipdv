@@ -1,32 +1,23 @@
-using dotenv.net;
-
 namespace minipdv.Infrastructure.Configuration;
 
 public class DatabaseConfig
 {
-    public string Server { get; set; } = @"localhost\SQLEXPRESS";
+    public string Server { get; set; } = "127.0.0.1,1433";
     public string Database { get; set; } = "MINIPDV";
     public string User { get; set; } = "sa";
-    public string Password { get; set; } = "";
+    public string Password { get; set; } = "MiniPDV@2026!";
 
     public string ConnectionString =>
         $"Server={Server};Database={Database};User Id={User};Password={Password};TrustServerCertificate=True;";
 
-    public static DatabaseConfig FromEnv(string envFilePath)
+    public static DatabaseConfig Load()
     {
-        var env = DotEnv.Read(new DotEnvOptions(envFilePaths: [envFilePath], ignoreExceptions: true));
-
         return new DatabaseConfig
         {
-            Server = GetValue(env, "DB_SERVER", @"localhost\SQLEXPRESS"),
-            Database = GetValue(env, "DB_NAME", "MINIPDV"),
-            User = GetValue(env, "DB_USER", "sa"),
-            Password = GetValue(env, "DB_PASSWORD", "")
+            Server = EnvConfig.Get("DB_SERVER") ?? "127.0.0.1,1433",
+            Database = EnvConfig.Get("DB_NAME") ?? "MINIPDV",
+            User = EnvConfig.Get("DB_USER") ?? "sa",
+            Password = EnvConfig.Get("DB_PASSWORD") ?? "MiniPDV@2026!"
         };
-    }
-
-    private static string GetValue(IDictionary<string, string> env, string key, string defaultValue)
-    {
-        return env.TryGetValue(key, out var value) ? value : defaultValue;
     }
 }
