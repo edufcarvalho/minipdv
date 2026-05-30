@@ -12,6 +12,7 @@ public class VendaRepository : Repository<Venda>, IVendaRepository
     public override async Task<Venda?> GetByIdAsync(int id)
     {
         return await _dbSet
+            .Include(v => v.Vendedor)
             .Include(v => v.Cliente)
             .Include(v => v.Receita)
             .Include(v => v.VendaProdutoEstoques)
@@ -23,6 +24,7 @@ public class VendaRepository : Repository<Venda>, IVendaRepository
     public override async Task<IEnumerable<Venda>> GetAllAsync()
     {
         return await _dbSet
+            .Include(v => v.Vendedor)
             .Include(v => v.Cliente)
             .Include(v => v.Receita)
             .Include(v => v.VendaProdutoEstoques)

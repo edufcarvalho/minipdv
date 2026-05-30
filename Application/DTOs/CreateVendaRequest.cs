@@ -1,6 +1,7 @@
 namespace minipdv.Application.DTOs;
 
 public record CreateVendaRequest(
+    int VendedorId,
     int ClienteId,
     int? ReceitaId,
     List<VendaProdutoItem> Produtos

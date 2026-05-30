@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using minipdv.Infrastructure.Data.Context;
 
@@ -11,9 +12,11 @@ using minipdv.Infrastructure.Data.Context;
 namespace minipdv.Migrations
 {
     [DbContext(typeof(MiniPDVContext))]
-    partial class MiniPDVContextModelSnapshot : ModelSnapshot
+    [Migration("20260530145709_AddVendedorToVenda")]
+    partial class AddVendedorToVenda
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

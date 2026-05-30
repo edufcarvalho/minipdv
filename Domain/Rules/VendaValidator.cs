@@ -7,6 +7,9 @@ public class VendaValidator : AbstractValidator<Venda>
 {
     public VendaValidator()
     {
+        RuleFor(v => v.VendedorId)
+            .GreaterThan(0);
+
         RuleFor(v => v.ClienteId)
             .GreaterThan(0);
 

@@ -1,4 +1,3 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -38,22 +37,24 @@ public class VendasController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateVendaRequest request)
     {
         var entity = new Venda
-        {
-            ClienteId = request.ClienteId,
-            ReceitaId = request.ReceitaId,
-            Cliente = null!,
-            VendaProdutoEstoques = request.Produtos
-                .Select(p => new VendaProdutoEstoque
-                {
-                    VendaId = 0,
-                    ProdutoId = p.ProdutoId,
-                    Lote = p.Lote,
-                    Quantidade = p.Quantidade,
-                    Venda = null!,
-                    ProdutoEstoque = null!
-                })
-                .ToList()
-        };
+            {
+                VendedorId = request.VendedorId,
+                ClienteId = request.ClienteId,
+                ReceitaId = request.ReceitaId,
+                Vendedor = null!,
+                Cliente = null!,
+                VendaProdutoEstoques = request.Produtos
+                    .Select(p => new VendaProdutoEstoque
+                    {
+                        VendaId = 0,
+                        ProdutoId = p.ProdutoId,
+                        Lote = p.Lote,
+                        Quantidade = p.Quantidade,
+                        Venda = null!,
+                        ProdutoEstoque = null!
+                    })
+                    .ToList()
+            };
 
         try
         {
@@ -64,7 +65,7 @@ public class VendasController : ControllerBase
         {
             return BadRequest(new { error = ex.Message });
         }
-        catch (ValidationException ex)
+        catch (FluentValidation.ValidationException ex)
         {
             return BadRequest(new { errors = ex.Errors });
         }

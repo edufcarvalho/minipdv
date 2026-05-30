@@ -8,6 +8,9 @@ public class Venda : Entity
     public required int ClienteId { get; set; }
     [ForeignKey(nameof(ClienteId))]
     public required virtual Cliente Cliente { get; set; }
+    public required int VendedorId { get; set; }
+    [ForeignKey(nameof(VendedorId))]
+    public required virtual Usuario Vendedor { get; set; }
     public int? ReceitaId { get; set; }
     [ForeignKey(nameof(ReceitaId))]
     public virtual Receita? Receita { get; set; }
