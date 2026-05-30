@@ -15,6 +15,9 @@ config:
       bypassProxy: ""
 
 request:
+  auth:
+    type: bearer
+    token: "{{token}}"
   variables:
     - name: nome
       value: Eduardo Freitas de Carvalho
@@ -26,6 +29,14 @@ request:
       value: ""
     - name: baseUrl
       value: http://localhost:5000
+    - name: id
+      value: "1"
+    - name: produtoId
+      value: "1"
+    - name: codBarra
+      value: "7890000000001"
+    - name: lote
+      value: LOTE001
 bundled: false
 extensions:
   bruno:

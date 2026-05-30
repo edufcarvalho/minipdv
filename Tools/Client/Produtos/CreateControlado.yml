@@ -1,12 +1,15 @@
 info:
-  name: Check
+  name: CreateControlado
   type: http
-  seq: 3
+  seq: 6
 
 http:
   method: POST
-  url: "{{baseUrl}}/api/auth/check"
+  url: "{{baseUrl}}/api/produtos/controlado"
   auth: inherit
+  body:
+    type: json
+    data: "{}"
 
 settings:
   encodeUrl: true

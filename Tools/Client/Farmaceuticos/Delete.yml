@@ -1,11 +1,12 @@
 info:
-  name: Health
+  name: Delete
   type: http
   seq: 5
 
 http:
-  method: GET
-  url: "{{baseUrl}}/api/health"
+  method: DELETE
+  url: "{baseUrl}/api/farmaceuticos/{{id}}"
+  auth: inherit
 
 settings:
   encodeUrl: true

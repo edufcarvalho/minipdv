@@ -1,0 +1,18 @@
+info:
+  name: UpdateControlado
+  type: http
+  seq: 7
+
+http:
+  method: PUT
+  url: "{{baseUrl}}/api/produtos/controlado/{{id}}"
+  auth: inherit
+  body:
+    type: json
+    data: "{}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -1,11 +1,12 @@
 info:
-  name: Health
+  name: GetById
   type: http
-  seq: 5
+  seq: 2
 
 http:
   method: GET
-  url: "{{baseUrl}}/api/health"
+  url: "{baseUrl}/api/clientes/{{id}}"
+  auth: inherit
 
 settings:
   encodeUrl: true

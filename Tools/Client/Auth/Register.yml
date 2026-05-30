@@ -6,6 +6,7 @@ info:
 http:
   method: POST
   url: "{{baseUrl}}/api/auth/register"
+  auth: inherit
   body:
     type: json
     data: |-

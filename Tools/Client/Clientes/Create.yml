@@ -1,12 +1,15 @@
 info:
-  name: Check
+  name: Create
   type: http
   seq: 3
 
 http:
   method: POST
-  url: "{{baseUrl}}/api/auth/check"
+  url: "{baseUrl}/api/clientes"
   auth: inherit
+  body:
+    type: json
+    data: "{}"
 
 settings:
   encodeUrl: true

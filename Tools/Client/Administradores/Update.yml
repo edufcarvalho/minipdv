@@ -1,12 +1,15 @@
 info:
-  name: Check
+  name: Update
   type: http
-  seq: 3
+  seq: 4
 
 http:
-  method: POST
-  url: "{{baseUrl}}/api/auth/check"
+  method: PUT
+  url: "{{baseUrl}}/api/administradores/{{id}}"
   auth: inherit
+  body:
+    type: json
+    data: "{}"
 
 settings:
   encodeUrl: true
