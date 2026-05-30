@@ -9,7 +9,7 @@ services:
     volumes:
       - sqlserver_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/1433"]
+      test: ["CMD", "/bin/bash", "-c", "exec 3<>/dev/tcp/localhost/1433"]
       interval: 5s
       timeout: 3s
       retries: 8
@@ -33,7 +33,7 @@ services:
       - /app/bin
       - /app/obj
     working_dir: /app
-    entrypoint: ["/bin/sh", "/app/entrypoint.sh"]
+    entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
 
   api:
     build:
@@ -42,6 +42,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "exec 3<>/dev/tcp/localhost/5000"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
     env_file:
       - .env
     environment:
