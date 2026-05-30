@@ -7,6 +7,7 @@ using minipdv.Application.DTOs.Auth;
 using minipdv.Application.Interfaces;
 using minipdv.Application.Services;
 using minipdv.Application.UseCases.Auth;
+using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Domain.Rules;
 using minipdv.Infrastructure.Configuration;
@@ -103,19 +104,67 @@ static class Program
                 };
             });
 
-        builder.Services.AddAuthorization();
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy("RequireAdministrador", policy =>
+                policy.RequireClaim("tipo", "Administrador"));
+            options.AddPolicy("RequireFarmaceutico", policy =>
+                policy.RequireClaim("tipo", "Farmaceutico", "Administrador"));
+        });
 
         builder.Services.AddControllers();
 
+        builder.Services.AddScoped<IAbstractUsuarioRepository, AbstractUsuarioRepository>();
         builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        builder.Services.AddScoped<IFarmaceuticoRepository, FarmaceuticoRepository>();
+        builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+        builder.Services.AddScoped<IContatoRepository, ContatoRepository>();
+        builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+        builder.Services.AddScoped<IProdutoControladoRepository, ProdutoControladoRepository>();
+        builder.Services.AddScoped<IProdutoGrupoRepository, ProdutoGrupoRepository>();
+        builder.Services.AddScoped<IProdutoTipoRepository, ProdutoTipoRepository>();
+        builder.Services.AddScoped<IFabricanteRepository, FabricanteRepository>();
+        builder.Services.AddScoped<IPrincipioAtivoRepository, PrincipioAtivoRepository>();
+        builder.Services.AddScoped<IProdutoCodBarraRepository, ProdutoCodBarraRepository>();
+        builder.Services.AddScoped<IProdutoEstoqueRepository, ProdutoEstoqueRepository>();
         builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+        builder.Services.AddScoped<IPrescritorRepository, PrescritorRepository>();
+        builder.Services.AddScoped<IAdministradorRepository, AdministradorRepository>();
         builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+        builder.Services.AddScoped<IFarmaceuticoService, FarmaceuticoService>();
+        builder.Services.AddScoped<IClienteService, ClienteService>();
+        builder.Services.AddScoped<IContatoService, ContatoService>();
+        builder.Services.AddScoped<IProdutoService, ProdutoService>();
+        builder.Services.AddScoped<IProdutoControladoService, ProdutoControladoService>();
+        builder.Services.AddScoped<IProdutoGrupoService, ProdutoGrupoService>();
+        builder.Services.AddScoped<IProdutoTipoService, ProdutoTipoService>();
+        builder.Services.AddScoped<IFabricanteService, FabricanteService>();
+        builder.Services.AddScoped<IPrincipioAtivoService, PrincipioAtivoService>();
+        builder.Services.AddScoped<IProdutoCodBarraService, ProdutoCodBarraService>();
+        builder.Services.AddScoped<IProdutoEstoqueService, ProdutoEstoqueService>();
+        builder.Services.AddScoped<IPrescritorService, PrescritorService>();
+        builder.Services.AddScoped<IAdministradorService, AdministradorService>();
         builder.Services.AddScoped<LoginUseCase>();
         builder.Services.AddScoped<RegisterUseCase>();
         builder.Services.AddScoped<LogoutUseCase>();
         builder.Services.AddScoped<CheckTokenUseCase>();
         builder.Services.AddTransient<IValidator<LoginRequest>, LoginRequestValidator>();
         builder.Services.AddTransient<IValidator<RegisterRequest>, RegisterRequestValidator>();
+        builder.Services.AddTransient<IValidator<Usuario>, UsuarioValidator>();
+        builder.Services.AddTransient<IValidator<Farmaceutico>, FarmaceuticoValidator>();
+        builder.Services.AddTransient<IValidator<Cliente>, ClienteValidator>();
+        builder.Services.AddTransient<IValidator<Contato>, ContatoValidator>();
+        builder.Services.AddTransient<IValidator<Produto>, ProdutoValidator>();
+        builder.Services.AddTransient<IValidator<ProdutoControlado>, ProdutoControladoValidator>();
+        builder.Services.AddTransient<IValidator<ProdutoGrupo>, ProdutoGrupoValidator>();
+        builder.Services.AddTransient<IValidator<ProdutoTipo>, ProdutoTipoValidator>();
+        builder.Services.AddTransient<IValidator<Fabricante>, FabricanteValidator>();
+        builder.Services.AddTransient<IValidator<PrincipioAtivo>, PrincipioAtivoValidator>();
+        builder.Services.AddTransient<IValidator<ProdutoCodBarra>, ProdutoCodBarraValidator>();
+        builder.Services.AddTransient<IValidator<ProdutoEstoque>, ProdutoEstoqueValidator>();
+        builder.Services.AddTransient<IValidator<Prescritor>, PrescritorValidator>();
+        builder.Services.AddTransient<IValidator<Administrador>, AdministradorValidator>();
 
         builder.Services.AddSingleton(sp =>
         {
