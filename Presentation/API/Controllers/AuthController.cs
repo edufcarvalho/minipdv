@@ -37,6 +37,7 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Policy = "RequireAdministrador")]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {

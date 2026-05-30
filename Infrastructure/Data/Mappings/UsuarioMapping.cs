@@ -40,8 +40,13 @@ public class UsuarioMapping : IEntityTypeConfiguration<AbstractUsuario>
             .WithOne()
             .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasDiscriminator<string>("TipoUsuario")
+        builder.Property(u => u.TipoUsuario)
+            .HasMaxLength(21)
+            .IsRequired();
+
+        builder.HasDiscriminator(u => u.TipoUsuario)
             .HasValue<Usuario>("Usuario")
-            .HasValue<Farmaceutico>("Farmaceutico");
+            .HasValue<Farmaceutico>("Farmaceutico")
+            .HasValue<Administrador>("Administrador");
     }
 }

@@ -21,5 +21,16 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
             .NotEmpty()
             .MinimumLength(6)
             .MaximumLength(128);
+
+        RuleFor(r => r.Tipo)
+            .NotEmpty()
+            .Must(t => t is "Usuario" or "Farmaceutico" or "Administrador")
+            .WithMessage("Tipo deve ser 'Usuario', 'Farmaceutico' ou 'Administrador'");
+
+        RuleFor(r => r.Crf)
+            .NotEmpty()
+            .MaximumLength(12)
+            .When(r => r.Tipo == "Farmaceutico")
+            .WithMessage("CRF é obrigatório para Farmacêutico");
     }
 }

@@ -1,7 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using minipdv.Data.Interfaces;
+using minipdv.Domain.Entities;
 using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Data.Context;
+using minipdv.Infrastructure.Security;
 
 namespace minipdv.Infrastructure.Data.Seed;
 
@@ -32,6 +34,8 @@ public class DatabaseInitializer : IDatabaseInitializer
 
     public void Seed()
     {
+        SeedAdminUser();
+
         if (IsDatabaseSeeded())
             return;
 
@@ -81,6 +85,8 @@ public class DatabaseInitializer : IDatabaseInitializer
 
     public async Task SeedAsync()
     {
+        await SeedAdminUserAsync();
+
         if (IsDatabaseSeeded())
             return;
 
@@ -125,6 +131,36 @@ public class DatabaseInitializer : IDatabaseInitializer
             await transaction.RollbackAsync();
             throw;
         }
+    }
+
+    private void SeedAdminUser()
+    {
+        if (_context.Set<Administrador>().Any()) return;
+
+        var admin = new Administrador
+        {
+            Nome = "Administrador",
+            Login = "admin",
+            PasswordHash = PasswordHasher.Hash("db120588"),
+            Ativo = true
+        };
+        _context.Set<Administrador>().Add(admin);
+        _context.SaveChanges();
+    }
+
+    private async Task SeedAdminUserAsync()
+    {
+        if (await _context.Set<Administrador>().AnyAsync()) return;
+
+        var admin = new Administrador
+        {
+            Nome = "Administrador",
+            Login = "admin",
+            PasswordHash = PasswordHasher.Hash("admin123"),
+            Ativo = true
+        };
+        _context.Set<Administrador>().Add(admin);
+        await _context.SaveChangesAsync();
     }
 
     private static string ResolveSeedsPath()

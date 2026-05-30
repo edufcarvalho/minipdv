@@ -1,10 +1,12 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using FluentValidation;
 using Microsoft.IdentityModel.Tokens;
 using minipdv.Application.DTOs.Auth;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
+using minipdv.Domain.Entities.Base;
 using minipdv.Domain.Interfaces;
 using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Security;
@@ -13,23 +15,32 @@ namespace minipdv.Application.Services;
 
 public class AuthService : IAuthService
 {
+    private readonly IAbstractUsuarioRepository _abstractUsuarioRepository;
     private readonly IUsuarioRepository _usuarioRepository;
+    private readonly IFarmaceuticoRepository _farmaceuticoRepository;
+    private readonly IAdministradorRepository _administradorRepository;
     private readonly ISessionRepository _sessionRepository;
     private readonly AppSettings _settings;
 
     public AuthService(
+        IAbstractUsuarioRepository abstractUsuarioRepository,
         IUsuarioRepository usuarioRepository,
+        IFarmaceuticoRepository farmaceuticoRepository,
+        IAdministradorRepository administradorRepository,
         ISessionRepository sessionRepository,
         AppSettings settings)
     {
+        _abstractUsuarioRepository = abstractUsuarioRepository;
         _usuarioRepository = usuarioRepository;
+        _farmaceuticoRepository = farmaceuticoRepository;
+        _administradorRepository = administradorRepository;
         _sessionRepository = sessionRepository;
         _settings = settings;
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
-        var usuario = await _usuarioRepository.GetByLoginAsync(request.Login);
+        var usuario = await _abstractUsuarioRepository.GetByLoginAsync(request.Login);
 
         if (usuario is null || !PasswordHasher.Verify(request.Password, usuario.PasswordHash))
             return new AuthResponse(0, string.Empty, string.Empty, string.Empty, "Login ou senha inválidos");
@@ -51,27 +62,51 @@ public class AuthService : IAuthService
 
         await _sessionRepository.AddAsync(session);
 
-        var jwt = GenerateJwt(usuario.Id, usuario.Nome, sessionToken, expiresAt);
+        var jwt = GenerateJwt(usuario.Id, usuario.Nome, sessionToken, expiresAt, usuario.TipoUsuario);
 
         return new AuthResponse(usuario.Id, usuario.Nome, usuario.Login, jwt, "Login realizado com sucesso");
     }
 
     public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
     {
-        var existing = await _usuarioRepository.GetByLoginAsync(request.Login);
+        var existing = await _abstractUsuarioRepository.GetByLoginAsync(request.Login);
+
         if (existing is not null)
             return new AuthResponse(0, string.Empty, string.Empty, string.Empty, "Login já está em uso");
 
-        var usuario = new Usuario
+        switch (request.Tipo)
         {
-            Nome = request.Nome,
-            Login = request.Login,
-            PasswordHash = PasswordHasher.Hash(request.Password)
-        };
+            case "Administrador":
+                var admin = new Administrador
+                {
+                    Nome = request.Nome,
+                    Login = request.Login,
+                    PasswordHash = PasswordHasher.Hash(request.Password)
+                };
+                await _administradorRepository.AddAsync(admin);
+                return new AuthResponse(admin.Id, admin.Nome, admin.Login, string.Empty, "Administrador registrado com sucesso");
 
-        await _usuarioRepository.AddAsync(usuario);
+            case "Farmaceutico":
+                var farm = new Farmaceutico
+                {
+                    Nome = request.Nome,
+                    Login = request.Login,
+                    PasswordHash = PasswordHasher.Hash(request.Password),
+                    Crf = request.Crf ?? throw new ValidationException("CRF é obrigatório para Farmacêutico")
+                };
+                await _farmaceuticoRepository.AddAsync(farm);
+                return new AuthResponse(farm.Id, farm.Nome, farm.Login, string.Empty, "Farmacêutico registrado com sucesso");
 
-        return new AuthResponse(usuario.Id, usuario.Nome, usuario.Login, string.Empty, "Usuário registrado com sucesso");
+            default:
+                var user = new Usuario
+                {
+                    Nome = request.Nome,
+                    Login = request.Login,
+                    PasswordHash = PasswordHasher.Hash(request.Password)
+                };
+                await _usuarioRepository.AddAsync(user);
+                return new AuthResponse(user.Id, user.Nome, user.Login, string.Empty, "Usuário registrado com sucesso");
+        }
     }
 
     public async Task LogoutAsync(string jti)
@@ -117,7 +152,8 @@ public class AuthService : IAuthService
             }
 
             var nome = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Name)?.Value;
-            return new CheckTokenResponse(true, nome);
+            var tipo = jwt.Claims.FirstOrDefault(c => c.Type == "tipo")?.Value;
+            return new CheckTokenResponse(true, nome, Tipo: tipo);
         }
         catch
         {
@@ -125,7 +161,7 @@ public class AuthService : IAuthService
         }
     }
 
-    private string GenerateJwt(int usuarioId, string nome, string jti, DateTime expiresAt)
+    private string GenerateJwt(int usuarioId, string nome, string jti, DateTime expiresAt, string tipo)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSecret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -135,6 +171,7 @@ public class AuthService : IAuthService
             new Claim(JwtRegisteredClaimNames.Sub, usuarioId.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
             new Claim(JwtRegisteredClaimNames.Name, nome),
+            new Claim("tipo", tipo),
         };
 
         var token = new JwtSecurityToken(

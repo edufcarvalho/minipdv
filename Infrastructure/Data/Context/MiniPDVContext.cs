@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using minipdv.Domain.Entities;
+using minipdv.Domain.Entities.Base;
 
 namespace minipdv.Infrastructure.Data.Context;
 
@@ -8,6 +9,7 @@ public class MiniPDVContext : DbContext
 
     public MiniPDVContext(DbContextOptions<MiniPDVContext> options) : base(options) { }
 
+    public DbSet<AbstractUsuario> AbstractUsuarios { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Farmaceutico> Farmaceuticos { get; set; }
     public DbSet<Produto> Produtos { get; set; }
