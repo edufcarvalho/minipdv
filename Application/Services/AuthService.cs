@@ -83,6 +83,48 @@ public class AuthService : IAuthService
         }
     }
 
+    public async Task<CheckTokenResponse> CheckTokenAsync(string token)
+    {
+        try
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSecret));
+
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            handler.ValidateToken(token, parameters, out var validatedToken);
+            var jwt = (JwtSecurityToken)validatedToken;
+            var jti = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+
+            if (string.IsNullOrEmpty(jti))
+                return new CheckTokenResponse(false);
+
+            var session = await _sessionRepository.GetByTokenAsync(jti);
+            if (session is null || session.IsRevoked || session.ExpiresAt <= DateTime.UtcNow)
+            {
+                if (session is not null && !session.IsRevoked)
+                    await _sessionRepository.RevokeAsync(session.Id);
+
+                return new CheckTokenResponse(false);
+            }
+
+            var nome = jwt.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Name)?.Value;
+            return new CheckTokenResponse(true, nome);
+        }
+        catch
+        {
+            return new CheckTokenResponse(false);
+        }
+    }
+
     private string GenerateJwt(int usuarioId, string nome, string jti, DateTime expiresAt)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSecret));

@@ -12,15 +12,18 @@ public class AuthController : ControllerBase
     private readonly LoginUseCase _loginUseCase;
     private readonly RegisterUseCase _registerUseCase;
     private readonly LogoutUseCase _logoutUseCase;
+    private readonly CheckTokenUseCase _checkTokenUseCase;
 
     public AuthController(
         LoginUseCase loginUseCase,
         RegisterUseCase registerUseCase,
-        LogoutUseCase logoutUseCase)
+        LogoutUseCase logoutUseCase,
+        CheckTokenUseCase checkTokenUseCase)
     {
         _loginUseCase = loginUseCase;
         _registerUseCase = registerUseCase;
         _logoutUseCase = logoutUseCase;
+        _checkTokenUseCase = checkTokenUseCase;
     }
 
     [HttpPost("login")]
@@ -57,5 +60,19 @@ public class AuthController : ControllerBase
 
         await _logoutUseCase.ExecuteAsync(jti);
         return Ok(new { message = "Logout realizado com sucesso" });
+    }
+
+    [HttpPost("check")]
+    public async Task<IActionResult> Check()
+    {
+        var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            return Ok(new CheckTokenResponse(false));
+
+        var token = authHeader["Bearer ".Length..];
+        var result = await _checkTokenUseCase.ExecuteAsync(token);
+
+        return Ok(result);
     }
 }

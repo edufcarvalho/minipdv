@@ -77,21 +77,26 @@ static class Program
                         var jti = context.Principal?.Claims
                             .FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
 
-                        if (jti is not null)
+                        if (jti is null) return;
+
+                        var sessionRepo = context.HttpContext.RequestServices
+                            .GetRequiredService<ISessionRepository>();
+
+                        var session = await sessionRepo.GetByTokenAsync(jti);
+
+                        if (session is null || session.IsRevoked)
                         {
-                            var sessionRepo = context.HttpContext.RequestServices
-                                .GetRequiredService<ISessionRepository>();
-
-                            var session = await sessionRepo.GetByTokenAsync(jti);
-
-                            if (session is null || session.IsRevoked || session.ExpiresAt <= DateTime.UtcNow)
-                            {
-                                context.Fail("Token revoked or expired");
-                                return;
-                            }
-
-                            context.HttpContext.Items["SessionId"] = session.Id;
+                            context.Fail("Token revoked");
+                            return;
                         }
+
+                        if (session.ExpiresAt <= DateTime.UtcNow)
+                        {
+                            await sessionRepo.RevokeAsync(session.Id);
+                            context.Fail("Token expired");
+                            return;
+                        }
+                        context.HttpContext.Items["Session"] = session;
                     }
                 };
             });
@@ -106,6 +111,7 @@ static class Program
         builder.Services.AddScoped<LoginUseCase>();
         builder.Services.AddScoped<RegisterUseCase>();
         builder.Services.AddScoped<LogoutUseCase>();
+        builder.Services.AddScoped<CheckTokenUseCase>();
         builder.Services.AddTransient<IValidator<LoginRequest>, LoginRequestValidator>();
         builder.Services.AddTransient<IValidator<RegisterRequest>, RegisterRequestValidator>();
 

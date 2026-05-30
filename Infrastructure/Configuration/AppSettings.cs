@@ -23,6 +23,6 @@ public class AppSettings
         JwtSecret = EnvConfig.Get("JWT_SECRET") ?? "change-in-production-should-be-at-least-32-chars";
         JwtIssuer = "MiniPDV";
         JwtAudience = "MiniPDV";
-        JwtExpirationDays = 7;
+        JwtExpirationDays = int.TryParse(EnvConfig.Get("JWT_EXPIRATION_DAYS"), out var days) ? days : 1;
     }
 }
