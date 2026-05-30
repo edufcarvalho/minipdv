@@ -1,7 +1,8 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs.Auth;
-using minipdv.Application.UseCases.Auth;
+using minipdv.Application.Interfaces;
 
 namespace minipdv.Presentation.API.Controllers;
 
@@ -9,44 +10,59 @@ namespace minipdv.Presentation.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly LoginUseCase _loginUseCase;
-    private readonly RegisterUseCase _registerUseCase;
-    private readonly LogoutUseCase _logoutUseCase;
-    private readonly CheckTokenUseCase _checkTokenUseCase;
+    private readonly IAuthService _authService;
+    private readonly IValidator<LoginRequest> _loginValidator;
+    private readonly IValidator<RegisterRequest> _registerValidator;
 
     public AuthController(
-        LoginUseCase loginUseCase,
-        RegisterUseCase registerUseCase,
-        LogoutUseCase logoutUseCase,
-        CheckTokenUseCase checkTokenUseCase)
+        IAuthService authService,
+        IValidator<LoginRequest> loginValidator,
+        IValidator<RegisterRequest> registerValidator)
     {
-        _loginUseCase = loginUseCase;
-        _registerUseCase = registerUseCase;
-        _logoutUseCase = logoutUseCase;
-        _checkTokenUseCase = checkTokenUseCase;
+        _authService = authService;
+        _loginValidator = loginValidator;
+        _registerValidator = registerValidator;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var result = await _loginUseCase.ExecuteAsync(request);
+        try
+        {
+            await _loginValidator.ValidateAndThrowAsync(request);
 
-        if (result.Id == 0)
-            return Unauthorized(new { message = result.Message });
+            var result = await _authService.LoginAsync(request);
 
-        return Ok(result);
+            if (result.Id == 0)
+                return Unauthorized(new { message = result.Message });
+
+            return Ok(result);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors });
+        }
     }
 
     [Authorize(Policy = "RequireAdministrador")]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        var result = await _registerUseCase.ExecuteAsync(request);
+        try
+        {
+            await _registerValidator.ValidateAndThrowAsync(request);
 
-        if (result.Id == 0)
-            return Conflict(new { message = result.Message });
+            var result = await _authService.RegisterAsync(request);
 
-        return CreatedAtAction(null, result);
+            if (result.Id == 0)
+                return Conflict(new { message = result.Message });
+
+            return CreatedAtAction(null, result);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors });
+        }
     }
 
     [Authorize]
@@ -59,7 +75,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(jti))
             return Unauthorized(new { message = "Token inválido" });
 
-        await _logoutUseCase.ExecuteAsync(jti);
+        await _authService.LogoutAsync(jti);
         return Ok(new { message = "Logout realizado com sucesso" });
     }
 
@@ -72,7 +88,7 @@ public class AuthController : ControllerBase
             return Ok(new CheckTokenResponse(false));
 
         var token = authHeader["Bearer ".Length..];
-        var result = await _checkTokenUseCase.ExecuteAsync(token);
+        var result = await _authService.CheckTokenAsync(token);
 
         return Ok(result);
     }

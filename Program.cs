@@ -7,7 +7,6 @@ using Microsoft.OpenApi;
 using minipdv.Application.DTOs.Auth;
 using minipdv.Application.Interfaces;
 using minipdv.Application.Services;
-using minipdv.Application.UseCases.Auth;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Domain.Rules;
@@ -186,10 +185,6 @@ static class Program
         builder.Services.AddScoped<IReceitaService, ReceitaService>();
         builder.Services.AddScoped<IVendaService, VendaService>();
         builder.Services.AddScoped<IAdministradorService, AdministradorService>();
-        builder.Services.AddScoped<LoginUseCase>();
-        builder.Services.AddScoped<RegisterUseCase>();
-        builder.Services.AddScoped<LogoutUseCase>();
-        builder.Services.AddScoped<CheckTokenUseCase>();
         builder.Services.AddTransient<IValidator<LoginRequest>, LoginRequestValidator>();
         builder.Services.AddTransient<IValidator<RegisterRequest>, RegisterRequestValidator>();
         builder.Services.AddTransient<IValidator<Usuario>, UsuarioValidator>();
