@@ -25,6 +25,7 @@ static class Program
     static void Main(string[] args)
     {
         var runAsApi = args.Contains("--api")
+            || Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") is not null
             || Environment.GetEnvironmentVariable("ASPNETCORE_IIS_PHYSICAL_PATH") is not null;
 
         if (runAsApi)
@@ -51,7 +52,8 @@ static class Program
         var settings = new AppSettings();
 
         builder.Services.AddDbContext<MiniPDVContext>(options =>
-            options.UseSqlServer(settings.ConnectionString));
+            options.UseSqlServer(settings.ConnectionString,
+                sql => sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null)));
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSecret));
 
@@ -123,11 +125,19 @@ static class Program
 
         var app = builder.Build();
 
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
+        }
+
         app.UseAuthentication();
         app.UseAuthorization();
 
         using (var scope = app.Services.CreateScope())
         {
+            var context = scope.ServiceProvider.GetRequiredService<MiniPDVContext>();
+            await context.Database.EnsureCreatedAsync();
+
             var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
             try
             {
@@ -153,7 +163,8 @@ static class Program
         {
             var settings = new AppSettings();
             var options = new DbContextOptionsBuilder<MiniPDVContext>()
-                .UseSqlServer(settings.ConnectionString)
+                .UseSqlServer(settings.ConnectionString,
+                    sql => sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null))
                 .Options;
 
             using var context = new MiniPDVContext(options);

@@ -16,6 +16,14 @@ config:
 
 request:
   variables:
+    - name: nome
+      value: Eduardo Freitas de Carvalho
+    - name: login
+      value: eduardo
+    - name: senha
+      value: Teste@123
+    - name: token
+      value: ""
     - name: baseUrl
       value: http://localhost:5000
 bundled: false

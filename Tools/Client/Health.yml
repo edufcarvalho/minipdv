@@ -1,6 +1,7 @@
 info:
   name: Health
   type: http
+  seq: 5
 
 http:
   method: GET

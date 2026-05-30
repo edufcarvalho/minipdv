@@ -1,14 +1,13 @@
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2025-latest
-    env_file: .env
+    image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${SA_PASSWORD:-MiniPDV@2026!}"
-    volumes:
-      - mssql-data:/var/opt/mssql/data
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-MiniPDV@2026!}
     ports:
       - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
     healthcheck:
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/1433"]
       interval: 5s
@@ -16,19 +15,41 @@ services:
       retries: 8
       start_period: 5s
 
-  api:
-    build:
-      context: .
-      dockerfile: Containerfile
-    image: minipdv-api
-    env_file: .env
-    environment:
-      DB_SERVER: "db"
-    ports:
-      - "5000:5000"
+  api-dev:
+    image: mcr.microsoft.com/dotnet/sdk:10.0
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:5000
+      DB_SERVER: db,1433
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/bin
+      - /app/obj
+    working_dir: /app
+    entrypoint: ["/bin/sh", "/app/entrypoint.sh"]
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:5000
+      DB_SERVER: db,1433
+    ports:
+      - "5000:5000"
 
 volumes:
-  mssql-data:
+  sqlserver_data:
