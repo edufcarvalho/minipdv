@@ -15,6 +15,9 @@ config:
       bypassProxy: ""
 
 request:
+  headers:
+    - name: Content-Type
+      value: application/json
   auth:
     type: bearer
     token: "{{token}}"

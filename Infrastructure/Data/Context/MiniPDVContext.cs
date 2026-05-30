@@ -24,6 +24,8 @@ public class MiniPDVContext : DbContext
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<Session> Sessions { get; set; }
     public DbSet<Prescritor> Prescritores { get; set; }
+    public DbSet<Receita> Receitas { get; set; }
+    public DbSet<Venda> Vendas { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -111,6 +111,8 @@ static class Program
                 policy.RequireClaim("tipo", "Administrador"));
             options.AddPolicy("RequireFarmaceutico", policy =>
                 policy.RequireClaim("tipo", "Farmaceutico", "Administrador"));
+            options.AddPolicy("RequireAutenticado", policy =>
+                policy.RequireClaim("tipo", "Usuario", "Farmaceutico", "Administrador"));
         });
 
         builder.Services.AddControllers()
@@ -164,6 +166,8 @@ static class Program
         builder.Services.AddScoped<IProdutoEstoqueRepository, ProdutoEstoqueRepository>();
         builder.Services.AddScoped<ISessionRepository, SessionRepository>();
         builder.Services.AddScoped<IPrescritorRepository, PrescritorRepository>();
+        builder.Services.AddScoped<IReceitaRepository, ReceitaRepository>();
+        builder.Services.AddScoped<IVendaRepository, VendaRepository>();
         builder.Services.AddScoped<IAdministradorRepository, AdministradorRepository>();
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IUsuarioService, UsuarioService>();
@@ -179,6 +183,8 @@ static class Program
         builder.Services.AddScoped<IProdutoCodBarraService, ProdutoCodBarraService>();
         builder.Services.AddScoped<IProdutoEstoqueService, ProdutoEstoqueService>();
         builder.Services.AddScoped<IPrescritorService, PrescritorService>();
+        builder.Services.AddScoped<IReceitaService, ReceitaService>();
+        builder.Services.AddScoped<IVendaService, VendaService>();
         builder.Services.AddScoped<IAdministradorService, AdministradorService>();
         builder.Services.AddScoped<LoginUseCase>();
         builder.Services.AddScoped<RegisterUseCase>();
@@ -199,6 +205,8 @@ static class Program
         builder.Services.AddTransient<IValidator<ProdutoCodBarra>, ProdutoCodBarraValidator>();
         builder.Services.AddTransient<IValidator<ProdutoEstoque>, ProdutoEstoqueValidator>();
         builder.Services.AddTransient<IValidator<Prescritor>, PrescritorValidator>();
+        builder.Services.AddTransient<IValidator<Receita>, ReceitaValidator>();
+        builder.Services.AddTransient<IValidator<Venda>, VendaValidator>();
         builder.Services.AddTransient<IValidator<Administrador>, AdministradorValidator>();
 
         builder.Services.AddSingleton(sp =>
