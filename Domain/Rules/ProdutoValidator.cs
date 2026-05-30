@@ -12,7 +12,7 @@ public class ProdutoValidator : AbstractValidator<Produto>
             .MaximumLength(200);
 
         RuleFor(e => e.CodBarra)
-            .GreaterThanOrEqualTo(10^8)
+            .GreaterThanOrEqualTo(10_000_000)
             .WithMessage("CodBarra deve ter pelo menos 8 caracteres");
 
         RuleFor(p => p.Dosagem)

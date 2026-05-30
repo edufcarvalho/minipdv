@@ -26,7 +26,7 @@ public class UsuarioMapping : IEntityTypeConfiguration<AbstractUsuario>
 
         builder.Property(u => u.PasswordHash)
             .IsRequired()
-            .HasMaxLength(128);
+            .HasMaxLength(512);
 
         builder.Property(u => u.Ativo)
             .IsRequired();

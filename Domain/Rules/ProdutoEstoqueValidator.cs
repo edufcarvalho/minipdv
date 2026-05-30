@@ -29,9 +29,9 @@ public class ProdutoEstoqueValidator : AbstractValidator<ProdutoEstoque>
             .When(e => e.Produto.Controlado)
             .WithMessage("Data de validade é obrigatória em medicamentos controlados");
 
-            RuleFor(e => e.Fabricacao)
-            .NotEmpty()
-            .When(e => e.Produto.Controlado)
-            .WithMessage("Data de fabricação é obrigatória em medicamentos controlados");
+        RuleFor(e => e.Fabricacao)
+        .NotEmpty()
+        .When(e => e.Produto.Controlado)
+        .WithMessage("Data de fabricação é obrigatória em medicamentos controlados");
     }
 }

@@ -1,6 +1,17 @@
+using System.Text;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using minipdv.Application.DTOs.Auth;
+using minipdv.Application.Interfaces;
+using minipdv.Application.Services;
+using minipdv.Application.UseCases.Auth;
+using minipdv.Domain.Interfaces;
+using minipdv.Domain.Rules;
 using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Data.Context;
+using minipdv.Infrastructure.Data.Repositories;
 using minipdv.Infrastructure.Data.Seed;
 #if WINDOWS
 using minipdv.Presentation.Desktop.Forms.Shared;
@@ -42,7 +53,62 @@ static class Program
         builder.Services.AddDbContext<MiniPDVContext>(options =>
             options.UseSqlServer(dbConfig.ConnectionString));
 
+        var jwtSecret = EnvConfig.Get("JWT_SECRET")
+            ?? "MiniPDV_Dev_Secret_Key_Must_Be_At_Least_32_Chars";
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+
+        builder.Services.AddAuthentication("Bearer")
+            .AddJwtBearer("Bearer", options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = signingKey,
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = async context =>
+                    {
+                        var jti = context.Principal?.Claims
+                            .FirstOrDefault(c => c.Type == System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Jti)?.Value;
+
+                        if (jti is not null)
+                        {
+                            var sessionRepo = context.HttpContext.RequestServices
+                                .GetRequiredService<ISessionRepository>();
+
+                            var session = await sessionRepo.GetByTokenAsync(jti);
+
+                            if (session is null || session.IsRevoked || session.ExpiresAt <= DateTime.UtcNow)
+                            {
+                                context.Fail("Token revoked or expired");
+                                return;
+                            }
+
+                            context.HttpContext.Items["SessionId"] = session.Id;
+                        }
+                    }
+                };
+            });
+
+        builder.Services.AddAuthorization();
+
         builder.Services.AddControllers();
+
+        builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        builder.Services.AddScoped<ISessionRepository, SessionRepository>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<LoginUseCase>();
+        builder.Services.AddScoped<RegisterUseCase>();
+        builder.Services.AddScoped<LogoutUseCase>();
+        builder.Services.AddTransient<IValidator<LoginRequest>, LoginRequestValidator>();
+        builder.Services.AddTransient<IValidator<RegisterRequest>, RegisterRequestValidator>();
+
         builder.Services.AddSingleton(sp =>
         {
             var context = sp.GetRequiredService<MiniPDVContext>();
@@ -50,6 +116,9 @@ static class Program
         });
 
         var app = builder.Build();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         using (var scope = app.Services.CreateScope())
         {
