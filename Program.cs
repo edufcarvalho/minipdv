@@ -48,14 +48,14 @@ static class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        var dbConfig = DatabaseConfig.Load();
+        var settings = new AppSettings();
 
         builder.Services.AddDbContext<MiniPDVContext>(options =>
-            options.UseSqlServer(dbConfig.ConnectionString));
+            options.UseSqlServer(settings.ConnectionString));
 
-        var jwtSecret = EnvConfig.Get("JWT_SECRET")
-            ?? "MiniPDV_Dev_Secret_Key_Must_Be_At_Least_32_Chars";
-        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.JwtSecret));
+
+        builder.Services.AddSingleton(settings);
 
         builder.Services.AddAuthentication("Bearer")
             .AddJwtBearer("Bearer", options =>
@@ -112,7 +112,7 @@ static class Program
         builder.Services.AddSingleton(sp =>
         {
             var context = sp.GetRequiredService<MiniPDVContext>();
-            return new DatabaseInitializer(context, dbConfig);
+            return new DatabaseInitializer(context);
         });
 
         var app = builder.Build();
@@ -145,14 +145,14 @@ static class Program
 
         try
         {
-            var config = DatabaseConfig.Load();
+            var settings = new AppSettings();
             var options = new DbContextOptionsBuilder<MiniPDVContext>()
-                .UseSqlServer(config.ConnectionString)
+                .UseSqlServer(settings.ConnectionString)
                 .Options;
 
             using var context = new MiniPDVContext(options);
 
-            var initializer = new DatabaseInitializer(context, config);
+            var initializer = new DatabaseInitializer(context);
 
             if (!initializer.IsDatabaseSeeded())
                 initializer.Seed();

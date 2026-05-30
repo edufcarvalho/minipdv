@@ -8,10 +8,10 @@ public class MiniPDVContextFactory : IDesignTimeDbContextFactory<MiniPDVContext>
 {
     public MiniPDVContext CreateDbContext(string[] args)
     {
-        var config = DatabaseConfig.Load();
+        var settings = new AppSettings();
 
         var optionsBuilder = new DbContextOptionsBuilder<MiniPDVContext>();
-        optionsBuilder.UseSqlServer(config.ConnectionString);
+        optionsBuilder.UseSqlServer(settings.ConnectionString);
 
         return new MiniPDVContext(optionsBuilder.Options);
     }

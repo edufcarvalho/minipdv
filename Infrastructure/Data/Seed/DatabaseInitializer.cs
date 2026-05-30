@@ -8,12 +8,10 @@ namespace minipdv.Infrastructure.Data.Seed;
 public class DatabaseInitializer : IDatabaseInitializer
 {
     private readonly MiniPDVContext _context;
-    private readonly DatabaseConfig _config;
 
-    public DatabaseInitializer(MiniPDVContext context, DatabaseConfig config)
+    public DatabaseInitializer(MiniPDVContext context)
     {
         _context = context;
-        _config = config;
     }
 
     public bool IsDatabaseSeeded()

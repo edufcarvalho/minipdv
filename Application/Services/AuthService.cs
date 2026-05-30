@@ -15,11 +15,16 @@ public class AuthService : IAuthService
 {
     private readonly IUsuarioRepository _usuarioRepository;
     private readonly ISessionRepository _sessionRepository;
+    private readonly AppSettings _settings;
 
-    public AuthService(IUsuarioRepository usuarioRepository, ISessionRepository sessionRepository)
+    public AuthService(
+        IUsuarioRepository usuarioRepository,
+        ISessionRepository sessionRepository,
+        AppSettings settings)
     {
         _usuarioRepository = usuarioRepository;
         _sessionRepository = sessionRepository;
+        _settings = settings;
     }
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
@@ -32,13 +37,13 @@ public class AuthService : IAuthService
         if (!usuario.Ativo)
             return new AuthResponse(0, string.Empty, string.Empty, string.Empty, "Usuário inativo");
 
-        var token = Guid.NewGuid().ToString();
-        var expiresAt = DateTime.UtcNow.AddDays(7);
+        var sessionToken = Guid.NewGuid().ToString();
+        var expiresAt = DateTime.UtcNow.AddDays(_settings.JwtExpirationDays);
 
         var session = new Session
         {
             UsuarioId = usuario.Id,
-            Token = token,
+            Token = sessionToken,
             DeviceInfo = request.DeviceInfo ?? "Desconhecido",
             ExpiresAt = expiresAt,
             IsRevoked = false
@@ -46,7 +51,7 @@ public class AuthService : IAuthService
 
         await _sessionRepository.AddAsync(session);
 
-        var jwt = GenerateJwt(usuario.Id, usuario.Nome, token, expiresAt);
+        var jwt = GenerateJwt(usuario.Id, usuario.Nome, sessionToken, expiresAt);
 
         return new AuthResponse(usuario.Id, usuario.Nome, usuario.Login, jwt, "Login realizado com sucesso");
     }
@@ -78,10 +83,9 @@ public class AuthService : IAuthService
         }
     }
 
-    private static string GenerateJwt(int usuarioId, string nome, string jti, DateTime expiresAt)
+    private string GenerateJwt(int usuarioId, string nome, string jti, DateTime expiresAt)
     {
-        var secret = EnvConfig.Get("JWT_SECRET") ?? "change-in-production-should-be-at-least-32-chars";
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.JwtSecret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -92,8 +96,8 @@ public class AuthService : IAuthService
         };
 
         var token = new JwtSecurityToken(
-            issuer: "MiniPDV",
-            audience: "MiniPDV",
+            issuer: _settings.JwtIssuer,
+            audience: _settings.JwtAudience,
             claims: claims,
             expires: expiresAt,
             signingCredentials: credentials);
