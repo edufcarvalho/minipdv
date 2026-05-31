@@ -194,6 +194,7 @@ public class UsuariosForm : Form
                     }
                 }
 
+                txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                 await LoadData();
                 dialog.DialogResult = DialogResult.OK;
                 dialog.Close();
@@ -279,6 +280,7 @@ public class UsuariosForm : Form
                 });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();

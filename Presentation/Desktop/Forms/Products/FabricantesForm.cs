@@ -147,6 +147,7 @@ public class FabricantesForm : Form
                 var response = await ApiClient.Instance.PostAsync("api/fabricantes", new { nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj, contatoId });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNF.Clear(); txtRS.Clear(); mtxtCNPJ.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -216,6 +217,7 @@ public class FabricantesForm : Form
                 var response = await ApiClient.Instance.PutAsync($"api/fabricantes/{item.Id}", new { id = item.Id, nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj, contatoId });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNF.Clear(); txtRS.Clear(); mtxtCNPJ.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();

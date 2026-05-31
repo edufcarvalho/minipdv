@@ -148,6 +148,7 @@ public class ProdutoEstoquesForm : Form
                 });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtLote.Clear(); mtxtRegMs.Clear(); nudQtd.Value = 1; dtpFab.Checked = false; dtpVal.Checked = false;
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -230,6 +231,7 @@ public class ProdutoEstoquesForm : Form
                 });
                 if (response.IsSuccessStatusCode)
                 {
+                    mtxtRegMs.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();

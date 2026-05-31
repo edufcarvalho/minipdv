@@ -92,6 +92,7 @@ public class ProdutoGruposForm : Form
                 var response = await ApiClient.Instance.PostAsync("api/produtogrupos", new { nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
                 if (response.IsSuccessStatusCode)
                 {
+                    txt.Clear(); chkAtivo.Checked = true;
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -132,6 +133,7 @@ public class ProdutoGruposForm : Form
                 var response = await ApiClient.Instance.PutAsync($"api/produtogrupos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
                 if (response.IsSuccessStatusCode)
                 {
+                    txt.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();

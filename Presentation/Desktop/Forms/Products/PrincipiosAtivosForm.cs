@@ -92,6 +92,7 @@ public class PrincipiosAtivosForm : Form
                 var response = await ApiClient.Instance.PostAsync("api/principiosativos", new { nome = txt.Text.Trim() });
                 if (response.IsSuccessStatusCode)
                 {
+                    txt.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -129,6 +130,7 @@ public class PrincipiosAtivosForm : Form
                 var response = await ApiClient.Instance.PutAsync($"api/principiosativos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim() });
                 if (response.IsSuccessStatusCode)
                 {
+                    txt.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();

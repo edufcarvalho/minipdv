@@ -195,6 +195,7 @@ public class FarmaceuticosForm : Form
                     }
                 }
 
+                txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtCrf.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                 dialog.DialogResult = DialogResult.OK;
                 dialog.Close();
                 await LoadData();
@@ -283,6 +284,7 @@ public class FarmaceuticosForm : Form
                 });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtCrf.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();

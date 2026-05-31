@@ -199,6 +199,7 @@ public class ClientesForm : Form
                 var response = await ApiClient.Instance.PostAsync("api/clientes", new { nome, cpf, contatoId });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNome.Clear(); mtxtCpf.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
@@ -283,6 +284,7 @@ public class ClientesForm : Form
                 var response = await ApiClient.Instance.PutAsync($"api/clientes/{item.Id}", new { id = item.Id, nome = txtNome.Text.Trim(), cpf = mtxtCpf.Text.Trim(), contatoId });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNome.Clear(); mtxtCpf.Clear(); txtEmail.Clear(); txtTelefone.Clear();
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();

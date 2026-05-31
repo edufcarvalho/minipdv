@@ -201,6 +201,7 @@ public class ProdutosForm : Form
                 var response = await ApiClient.Instance.PostAsync("api/produtos", request);
                 if (response.IsSuccessStatusCode)
                 {
+                    txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); mtxtRegMs.Clear();
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
@@ -327,6 +328,7 @@ public class ProdutosForm : Form
                 var response = await ApiClient.Instance.PutAsync($"api/produtos/{item.Id}", request);
                 if (response.IsSuccessStatusCode)
                 {
+                    txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); mtxtRegMs.Clear();
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();

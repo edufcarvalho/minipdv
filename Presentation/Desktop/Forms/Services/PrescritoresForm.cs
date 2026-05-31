@@ -124,6 +124,7 @@ public class PrescritoresForm : Form
                 });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNome.Clear(); txtNumero.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -190,6 +191,7 @@ public class PrescritoresForm : Form
                 });
                 if (response.IsSuccessStatusCode)
                 {
+                    txtNome.Clear(); txtNumero.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();

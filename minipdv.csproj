@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <DS>$([System.IO.Path]::DirectorySeparatorChar)</DS>
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows')) And '$(DisableWindowsForms)' != 'true'">
@@ -15,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="!$([MSBuild]::IsOSPlatform('Windows')) Or '$(DisableWindowsForms)' == 'true'">
-    <Compile Remove="Presentation\Desktop\**\*.cs" />
+    <Compile Remove="Presentation$(DS)Desktop$(DS)**$(DS)*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,15 +33,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Tests\**\*.cs" />
+    <Compile Remove="Tests$(DS)**$(DS)*.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Watch Remove=".git\**" />
+    <Watch Remove=".git$(DS)**" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include=".env" CopyToOutputDirectory="PreserveNewest" Condition="Exists('.env')" />
-    <Content Include="Infrastructure\Data\Seed\*.sql" CopyToOutputDirectory="PreserveNewest" LinkBase="Infrastructure\Data\Seed\" />
+    <Content Include="Infrastructure$(DS)Data$(DS)Seed$(DS)*.sql" CopyToOutputDirectory="PreserveNewest" LinkBase="Infrastructure$(DS)Data$(DS)Seed$(DS)" />
   </ItemGroup>
 </Project>

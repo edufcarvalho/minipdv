@@ -266,6 +266,7 @@ public class ReceitasForm : Form
                 });
                 if (response.IsSuccessStatusCode)
                 {
+                    receitaProdutos.Clear();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
