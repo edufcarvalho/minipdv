@@ -8,9 +8,6 @@ public class ProdutoControladoMapping : IEntityTypeConfiguration<ProdutoControla
 {
     public void Configure(EntityTypeBuilder<ProdutoControlado> builder)
     {
-        builder.Property(p => p.RegistroMS)
-            .HasMaxLength(20);
-
         builder.Property(p => p.ClasseTerapeutica)
             .IsRequired()
             .HasMaxLength(100);

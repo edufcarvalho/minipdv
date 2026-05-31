@@ -24,5 +24,10 @@ public class ProdutoValidator : AbstractValidator<Produto>
 
         RuleFor(p => p.PrincipioAtivoId)
             .GreaterThan(0);
+
+        RuleFor(p => p.RegistroMS)
+            .NotEmpty()
+            .When(p => p.Controlado)
+            .WithMessage("RegistroMS é obrigatório para medicamentos controlados");
     }
 }

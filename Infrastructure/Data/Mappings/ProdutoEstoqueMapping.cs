@@ -14,6 +14,9 @@ public class ProdutoEstoqueMapping : IEntityTypeConfiguration<ProdutoEstoque>
             .IsRequired()
             .HasMaxLength(50);
 
+        builder.Property(p => p.RegistroMS)
+            .HasMaxLength(20);
+
         builder.Property(p => p.Fabricacao)
             .HasColumnType("date");
 

@@ -32,6 +32,9 @@ public class ProdutoMapping : IEntityTypeConfiguration<Produto>
             .IsRequired()
             .HasMaxLength(50);
 
+        builder.Property(p => p.RegistroMS)
+            .HasMaxLength(20);
+
         builder.HasOne(p => p.Grupo)
             .WithMany(g => g.Produtos)
             .HasForeignKey(p => p.ProdutoGrupoId)
