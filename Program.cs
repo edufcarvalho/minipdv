@@ -8,6 +8,7 @@ using Microsoft.OpenApi;
 using minipdv.Application.DTOs.Auth;
 using minipdv.Application.Interfaces;
 using minipdv.Application.Services;
+using minipdv.Application.Validators;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Domain.Rules;
@@ -15,6 +16,7 @@ using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Data.Context;
 using minipdv.Infrastructure.Data.Repositories;
 using minipdv.Infrastructure.Data.Seed;
+using minipdv.Presentation.API.Middleware;
 
 #if WINDOWS
 using minipdv.Presentation.Desktop.Forms.Auth;
@@ -206,18 +208,22 @@ static class Program
         builder.Services.AddTransient<IValidator<Administrador>, AdministradorValidator>();
         builder.Services.AddScoped<DatabaseInitializer>();
 
-        builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/keys"));
+        var keysPath = EnvConfig.Get("DATA_PROTECTION_KEYS_PATH") ?? Path.Combine(AppContext.BaseDirectory, "keys");
+        Directory.CreateDirectory(keysPath);
+        builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo(keysPath));
 
         var app = builder.Build();
+
+        app.UseMiddleware<ExceptionMiddleware>();
 
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
 
-        app.UseSwagger();
-        app.UseSwaggerUI();
-
+        app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
 
