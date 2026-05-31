@@ -42,26 +42,21 @@ public class VendasController : ControllerBase
             ClienteId = request.ClienteId,
             Vendedor = null!,
             Cliente = null!,
-            VendaProdutoEstoques = request.Produtos
-                    .Select(p => new VendaProdutoEstoque
+            VendaItens = request.Produtos
+                    .Select(p => new VendaItem
                     {
                         VendaId = 0,
                         ProdutoId = p.ProdutoId,
-                        Lote = p.Lote,
                         Quantidade = p.Quantidade,
                         Venda = null!,
-                        ProdutoEstoque = null!
+                        Produto = null!
                     })
                     .ToList()
         };
 
         try
         {
-            var created = await _service.AddAsync(entity);
-
-            if (request.ReceitaIds is { Count: > 0 })
-                await _service.LinkReceitasAsync(created.Id, request.ReceitaIds);
-
+            var created = await _service.AddAsync(entity, request.ReceitaIds);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (InvalidOperationException ex)
