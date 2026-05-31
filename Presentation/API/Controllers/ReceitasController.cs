@@ -39,6 +39,8 @@ public class ReceitasController : ControllerBase
     {
         var entity = new Receita
         {
+            DataReceita = request.DataReceita ?? DateTime.UtcNow,
+            DataCadastro = request.DataCadastro ?? DateTime.UtcNow,
             PrescritorId = request.PrescritorId,
             PacienteId = request.PacienteId,
             CompradorId = request.CompradorId,
@@ -81,6 +83,8 @@ public class ReceitasController : ControllerBase
         var entity = new Receita
         {
             Id = request.Id,
+            DataReceita = request.DataReceita ?? DateTime.UtcNow,
+            DataCadastro = request.DataCadastro ?? DateTime.UtcNow,
             PrescritorId = request.PrescritorId,
             PacienteId = request.PacienteId,
             CompradorId = request.CompradorId,

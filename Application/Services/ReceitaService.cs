@@ -115,6 +115,8 @@ public class ReceitaService : IReceitaService
                 }
             }
 
+            existing.DataReceita = entity.DataReceita;
+            existing.DataCadastro = entity.DataCadastro;
             existing.PrescritorId = entity.PrescritorId;
             existing.PacienteId = entity.PacienteId;
             existing.CompradorId = entity.CompradorId;

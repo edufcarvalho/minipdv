@@ -5,7 +5,8 @@ public record CreateProdutoEstoqueRequest(
     string Lote,
     DateTime? Fabricacao,
     DateTime? Validade,
-    int Quantidade
+    int Quantidade,
+    string? RegistroMS = null
 );
 
 public record UpdateProdutoEstoqueRequest(
@@ -13,5 +14,6 @@ public record UpdateProdutoEstoqueRequest(
     string Lote,
     DateTime? Fabricacao,
     DateTime? Validade,
-    int Quantidade
+    int Quantidade,
+    string? RegistroMS = null
 );

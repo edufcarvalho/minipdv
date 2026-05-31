@@ -13,10 +13,19 @@ namespace minipdv.Presentation.API.Controllers;
 public class ProdutoEstoquesController : ControllerBase
 {
     private readonly IProdutoEstoqueService _service;
+    private readonly IProdutoService _produtoService;
 
-    public ProdutoEstoquesController(IProdutoEstoqueService service)
+    public ProdutoEstoquesController(IProdutoEstoqueService service, IProdutoService produtoService)
     {
         _service = service;
+        _produtoService = produtoService;
+    }
+
+    [HttpGet("~/api/estoques")]
+    public async Task<IActionResult> GetAll()
+    {
+        var items = await _service.GetAllAsync();
+        return Ok(items);
     }
 
     [HttpGet]
@@ -39,6 +48,11 @@ public class ProdutoEstoquesController : ControllerBase
     {
         if (produtoId != request.ProdutoId) return BadRequest();
 
+        var produto = await _produtoService.GetByIdAsync(request.ProdutoId);
+
+        if (produto is null)
+            return BadRequest(new { error = "Produto não encontrado" });
+
         var entity = new ProdutoEstoque
         {
             ProdutoId = request.ProdutoId,
@@ -46,7 +60,8 @@ public class ProdutoEstoquesController : ControllerBase
             Fabricacao = request.Fabricacao,
             Validade = request.Validade,
             Quantidade = request.Quantidade,
-            Produto = null!
+            RegistroMS = request.RegistroMS,
+            Produto = produto
         };
 
         try
@@ -65,6 +80,11 @@ public class ProdutoEstoquesController : ControllerBase
     {
         if (produtoId != request.ProdutoId || lote != request.Lote) return BadRequest();
 
+        var produto = await _produtoService.GetByIdAsync(request.ProdutoId);
+
+        if (produto is null)
+            return BadRequest(new { error = "Produto não encontrado" });
+
         var entity = new ProdutoEstoque
         {
             ProdutoId = request.ProdutoId,
@@ -72,7 +92,8 @@ public class ProdutoEstoquesController : ControllerBase
             Fabricacao = request.Fabricacao,
             Validade = request.Validade,
             Quantidade = request.Quantidade,
-            Produto = null!
+            RegistroMS = request.RegistroMS,
+            Produto = produto
         };
 
         try

@@ -15,6 +15,12 @@ public class ReceitaMapping : IEntityTypeConfiguration<Receita>
         builder.Property(r => r.Id)
             .ValueGeneratedOnAdd();
 
+        builder.Property(r => r.DataReceita)
+            .IsRequired();
+
+        builder.Property(r => r.DataCadastro)
+            .IsRequired();
+
         builder.Property(r => r.CriadoEm)
             .IsRequired();
 

@@ -1,3 +1,4 @@
+using System.Globalization;
 using minipdv.Domain.Entities;
 using minipdv.Presentation.Desktop.Components.Controls;
 
@@ -172,8 +173,8 @@ public class ProdutosForm : Form
         tbl.Controls.Add(chkControlado, 1, 7);
 
         tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 8);
-        var txtRegMs = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), PlaceholderText = "(opcional)" };
-        tbl.Controls.Add(txtRegMs, 1, 8);
+        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), HidePromptOnLeave = true };
+        tbl.Controls.Add(mtxtRegMs, 1, 8);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
@@ -192,7 +193,7 @@ public class ProdutosForm : Form
         try
         {
             var isControlado = chkControlado.Checked;
-            var regMs = txtRegMs.Text.Trim();
+            var regMs = mtxtRegMs.Text.Trim();
             var request = new
             {
                 descricao = txtDesc.Text.Trim(),
@@ -200,7 +201,7 @@ public class ProdutosForm : Form
                 codBarra = int.Parse(txtCod.Text.Trim()),
                 controlado = isControlado,
                 dosagem = txtDosagem.Text.Trim(),
-                registroMS = string.IsNullOrEmpty(regMs) ? null : regMs,
+                registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
                 produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
                 fabricanteId = (int?)cmbFab.SelectedValue,
                 principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
@@ -290,8 +291,8 @@ public class ProdutosForm : Form
         tbl.Controls.Add(chkControlado, 1, 7);
 
         tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 8);
-        var txtRegMs = new TextBox { Text = item.RegistroMS ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), PlaceholderText = "(opcional)" };
-        tbl.Controls.Add(txtRegMs, 1, 8);
+        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Text = item.RegistroMS ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), HidePromptOnLeave = true };
+        tbl.Controls.Add(mtxtRegMs, 1, 8);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
@@ -310,7 +311,7 @@ public class ProdutosForm : Form
         try
         {
             var isControlado = chkControlado.Checked;
-            var regMs = txtRegMs.Text.Trim();
+            var regMs = mtxtRegMs.Text.Trim();
             var request = new
             {
                 id = item.Id,
@@ -319,7 +320,7 @@ public class ProdutosForm : Form
                 codBarra = int.Parse(txtCod.Text.Trim()),
                 controlado = isControlado,
                 dosagem = txtDosagem.Text.Trim(),
-                registroMS = string.IsNullOrEmpty(regMs) ? null : regMs,
+                registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
                 produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
                 fabricanteId = (int?)cmbFab.SelectedValue,
                 principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)

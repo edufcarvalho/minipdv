@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using minipdv.Domain.Entities;
 
@@ -172,11 +173,12 @@ public class ClientesForm : Form
         tbl.Controls.Add(txtNome, 1, 0);
 
         tbl.Controls.Add(new Label { Text = "CPF:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtCpf = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtCpf, 1, 1);
+        var mtxtCpf = new MaskedTextBox { Mask = "000.000.000-00", Culture = CultureInfo.InvariantCulture, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(mtxtCpf, 1, 1);
 
         tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
         var txtEmail = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        txtEmail.KeyPress += (_, e) => { if (e.KeyChar == ' ') e.Handled = true; };
         tbl.Controls.Add(txtEmail, 1, 2);
 
         tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
@@ -198,7 +200,7 @@ public class ClientesForm : Form
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
         var nome = txtNome.Text.Trim();
-        var cpf = txtCpf.Text.Trim();
+        var cpf = mtxtCpf.Text.Trim();
         if (string.IsNullOrEmpty(nome) || string.IsNullOrEmpty(cpf))
         {
             MessageBox.Show("Nome e CPF são obrigatórios.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -257,11 +259,12 @@ public class ClientesForm : Form
         tbl.Controls.Add(txtNome, 1, 0);
 
         tbl.Controls.Add(new Label { Text = "CPF:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtCpf = new TextBox { Text = item.Cpf, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtCpf, 1, 1);
+        var mtxtCpf = new MaskedTextBox { Mask = "000.000.000-00", Culture = CultureInfo.InvariantCulture, Text = item.Cpf, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(mtxtCpf, 1, 1);
 
         tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
         var txtEmail = new TextBox { Text = contato?.Email ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        txtEmail.KeyPress += (_, e) => { if (e.KeyChar == ' ') e.Handled = true; };
         tbl.Controls.Add(txtEmail, 1, 2);
 
         tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
@@ -288,7 +291,7 @@ public class ClientesForm : Form
             var telefone = txtTelefone.Text.Trim();
             var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
 
-            var response = await ApiClient.Instance.PutAsync($"api/clientes/{item.Id}", new { id = item.Id, nome = txtNome.Text.Trim(), cpf = txtCpf.Text.Trim(), contatoId });
+            var response = await ApiClient.Instance.PutAsync($"api/clientes/{item.Id}", new { id = item.Id, nome = txtNome.Text.Trim(), cpf = mtxtCpf.Text.Trim(), contatoId });
             if (response.IsSuccessStatusCode)
                 await LoadData();
             else

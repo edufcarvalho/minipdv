@@ -18,7 +18,7 @@ public class ProdutoEstoqueRepository : IProdutoEstoqueRepository
 
     public async Task<IEnumerable<ProdutoEstoque>> GetAllAsync()
     {
-        return await _dbSet.ToListAsync();
+        return await _dbSet.Include(e => e.Produto).ToListAsync();
     }
 
     public async Task<IEnumerable<ProdutoEstoque>> GetByProdutoIdAsync(int produtoId)

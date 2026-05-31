@@ -14,7 +14,7 @@ public class ProdutoEstoque
     public required int Quantidade { get; set; }
     public virtual ICollection<ReceitaProdutoEstoque> ReceitaProdutoEstoques { get; set; } = [];
     public virtual ICollection<VendaProdutoEstoque> VendaProdutoEstoques { get; set; } = [];
-    public string ProdutoDescricao => Produto.Descricao;
+    public string? ProdutoDescricao => Produto?.Descricao;
     [NotMapped]
     public IEnumerable<Receita> Receitas =>
         ReceitaProdutoEstoques?.Select(rpe => rpe.Receita).Where(r => r is not null)!;

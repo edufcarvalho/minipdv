@@ -5,6 +5,8 @@ namespace minipdv.Domain.Entities;
 
 public class Receita : Entity
 {
+    public required DateTime DataReceita { get; set; }
+    public required DateTime DataCadastro { get; set; }
     public required int PrescritorId { get; set; }
     [ForeignKey(nameof(PrescritorId))]
     public required virtual Prescritor Prescritor { get; set; }

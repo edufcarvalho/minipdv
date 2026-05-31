@@ -124,6 +124,7 @@ public class FarmaceuticosForm : Form
 
         tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
         var txtEmail = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        txtEmail.KeyPress += (_, e) => { if (e.KeyChar == ' ') e.Handled = true; };
         tbl.Controls.Add(txtEmail, 1, 4);
 
         tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
@@ -233,6 +234,7 @@ public class FarmaceuticosForm : Form
 
         tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
         var txtEmail = new TextBox { Text = contato?.Email ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        txtEmail.KeyPress += (_, e) => { if (e.KeyChar == ' ') e.Handled = true; };
         tbl.Controls.Add(txtEmail, 1, 5);
 
         tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 6);

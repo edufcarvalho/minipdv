@@ -4,6 +4,8 @@ public record CreateReceitaRequest(
     int PrescritorId,
     int PacienteId,
     int CompradorId,
+    DateTime? DataReceita,
+    DateTime? DataCadastro,
     List<ReceitaProdutoItem>? Produtos
 );
 
@@ -12,6 +14,8 @@ public record UpdateReceitaRequest(
     int PrescritorId,
     int PacienteId,
     int CompradorId,
+    DateTime? DataReceita,
+    DateTime? DataCadastro,
     List<ReceitaProdutoItem>? Produtos
 );
 

@@ -52,12 +52,14 @@ public class ReceitasForm : Form
             _items = await ApiClient.Instance.GetAsync<List<Receita>>("api/receitas") ?? [];
             dgv.Columns.Clear();
             dgv.Columns.Add("Id", "ID");
+            dgv.Columns.Add("DataReceita", "Data Receita");
+            dgv.Columns.Add("DataCadastro", "Data Cadastro");
             dgv.Columns.Add("PrescritorId", "Prescritor");
             dgv.Columns.Add("PacienteId", "Paciente");
             dgv.Columns.Add("CompradorId", "Comprador");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.PrescritorId, item.PacienteId, item.CompradorId);
+                dgv.Rows.Add(item.Id, item.DataReceita.ToString("dd/MM/yyyy"), item.DataCadastro.ToString("dd/MM/yyyy"), item.PrescritorId, item.PacienteId, item.CompradorId);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
@@ -71,39 +73,47 @@ public class ReceitasForm : Form
         var receitaProdutos = new List<ReceitaProdutoItem>();
         var font = new Font("Segoe UI", 10);
 
-        using var dialog = new Form { Text = "Nova Receita", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(650, 520) };
+        using var dialog = new Form { Text = "Nova Receita", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(650, 570) };
 
         var outerLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(10) };
-        outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 130));
+        outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 210));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 180));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
 
-        // === Top section: Prescritor, Paciente, Comprador ===
-        var topTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, Padding = new Padding(5) };
+        // === Top section: Prescritor, Paciente, Comprador, dates ===
+        var topTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(5) };
         topTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
         topTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-        topTbl.Controls.Add(new Label { Text = "Prescritor:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 0);
+        topTbl.Controls.Add(new Label { Text = "Data Receita:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 0);
+        var dtpDataReceita = new DateTimePicker { Dock = DockStyle.Fill, Font = font, Format = DateTimePickerFormat.Short, Value = DateTime.Today };
+        topTbl.Controls.Add(dtpDataReceita, 1, 0);
+
+        topTbl.Controls.Add(new Label { Text = "Data Cadastro:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 1);
+        var dtpDataCadastro = new DateTimePicker { Dock = DockStyle.Fill, Font = font, Format = DateTimePickerFormat.Short, Value = DateTime.Today };
+        topTbl.Controls.Add(dtpDataCadastro, 1, 1);
+
+        topTbl.Controls.Add(new Label { Text = "Prescritor:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 2);
         var cmbPresc = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione...", Font = font };
         cmbPresc.DataSource = prescritores;
         cmbPresc.DisplayMember = "Nome";
         cmbPresc.ValueMember = "Id";
-        topTbl.Controls.Add(cmbPresc, 1, 0);
+        topTbl.Controls.Add(cmbPresc, 1, 2);
 
-        topTbl.Controls.Add(new Label { Text = "Paciente:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 1);
+        topTbl.Controls.Add(new Label { Text = "Paciente:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 3);
         var cmbPac = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione...", Font = font };
         cmbPac.DataSource = clientes;
         cmbPac.DisplayMember = "Nome";
         cmbPac.ValueMember = "Id";
-        topTbl.Controls.Add(cmbPac, 1, 1);
+        topTbl.Controls.Add(cmbPac, 1, 3);
 
-        topTbl.Controls.Add(new Label { Text = "Comprador:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 2);
+        topTbl.Controls.Add(new Label { Text = "Comprador:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 4);
         var cmbComp = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione...", Font = font };
         cmbComp.DataSource = clientes;
         cmbComp.DisplayMember = "Nome";
         cmbComp.ValueMember = "Id";
-        topTbl.Controls.Add(cmbComp, 1, 2);
+        topTbl.Controls.Add(cmbComp, 1, 4);
 
         outerLayout.Controls.Add(topTbl, 0, 0);
 
@@ -246,6 +256,8 @@ public class ReceitasForm : Form
                 prescritorId = (int)cmbPresc.SelectedValue,
                 pacienteId = (int)cmbPac.SelectedValue,
                 compradorId = (int)cmbComp.SelectedValue,
+                dataReceita = dtpDataReceita.Value,
+                dataCadastro = dtpDataCadastro.Value,
                 produtos = receitaProdutos.Count > 0 ? receitaProdutos : null
             });
             if (response.IsSuccessStatusCode) await LoadData();

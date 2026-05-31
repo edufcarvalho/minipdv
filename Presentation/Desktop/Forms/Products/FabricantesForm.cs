@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using minipdv.Domain.Entities;
 
@@ -113,11 +114,12 @@ public class FabricantesForm : Form
         tbl.Controls.Add(txtRS, 1, 1);
 
         tbl.Controls.Add(new Label { Text = "CNPJ:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtCNPJ = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtCNPJ, 1, 2);
+        var mtxtCNPJ = new MaskedTextBox { Mask = "00.000.000/0000-00", Culture = CultureInfo.InvariantCulture, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(mtxtCNPJ, 1, 2);
 
         tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
         var txtEmail = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        txtEmail.KeyPress += (_, e) => { if (e.KeyChar == ' ') e.Handled = true; };
         tbl.Controls.Add(txtEmail, 1, 3);
 
         tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
@@ -140,7 +142,8 @@ public class FabricantesForm : Form
             var telefone = txtTelefone.Text.Trim();
             var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
 
-            var response = await ApiClient.Instance.PostAsync("api/fabricantes", new { nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj = txtCNPJ.Text.Trim(), contatoId });
+            var cnpj = mtxtCNPJ.Text.Replace(".", "").Replace("/", "").Replace("-", "").Trim();
+            var response = await ApiClient.Instance.PostAsync("api/fabricantes", new { nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj, contatoId });
             if (response.IsSuccessStatusCode) await LoadData();
             else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -173,11 +176,12 @@ public class FabricantesForm : Form
         tbl.Controls.Add(txtRS, 1, 1);
 
         tbl.Controls.Add(new Label { Text = "CNPJ:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtCNPJ = new TextBox { Text = item.Cnpj, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtCNPJ, 1, 2);
+        var mtxtCNPJ = new MaskedTextBox { Mask = "00.000.000/0000-00", Culture = CultureInfo.InvariantCulture, Text = item.Cnpj, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(mtxtCNPJ, 1, 2);
 
         tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
         var txtEmail = new TextBox { Text = contato?.Email ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        txtEmail.KeyPress += (_, e) => { if (e.KeyChar == ' ') e.Handled = true; };
         tbl.Controls.Add(txtEmail, 1, 3);
 
         tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
@@ -200,7 +204,8 @@ public class FabricantesForm : Form
             var telefone = txtTelefone.Text.Trim();
             var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
 
-            var response = await ApiClient.Instance.PutAsync($"api/fabricantes/{item.Id}", new { id = item.Id, nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj = txtCNPJ.Text.Trim(), contatoId });
+            var cnpj = mtxtCNPJ.Text.Replace(".", "").Replace("/", "").Replace("-", "").Trim();
+            var response = await ApiClient.Instance.PutAsync($"api/fabricantes/{item.Id}", new { id = item.Id, nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj, contatoId });
             if (response.IsSuccessStatusCode) await LoadData();
             else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
