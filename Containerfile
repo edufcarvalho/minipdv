@@ -1,12 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY . .
-RUN dotnet publish -c Release -o /app --self-contained false
+RUN dotnet restore
+RUN dotnet build -c Release --no-restore
+RUN dotnet publish -c Release -o /app/publish --no-build
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
-COPY --from=build /app .
-COPY entrypoint.sh /app/
-RUN chmod +x /app/entrypoint.sh
-ENV ASPNETCORE_URLS=http://+:5000
-ENTRYPOINT ["/app/entrypoint.sh"]
+COPY --from=build /app/publish .
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+EXPOSE 5000
+ENTRYPOINT ["/bin/bash", "entrypoint.sh"]
