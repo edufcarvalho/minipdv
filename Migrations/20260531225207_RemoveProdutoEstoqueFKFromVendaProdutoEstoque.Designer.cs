@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using minipdv.Infrastructure.Data.Context;
 
@@ -11,9 +12,11 @@ using minipdv.Infrastructure.Data.Context;
 namespace minipdv.Migrations
 {
     [DbContext(typeof(MiniPDVContext))]
-    partial class MiniPDVContextModelSnapshot : ModelSnapshot
+    [Migration("20260531225207_RemoveProdutoEstoqueFKFromVendaProdutoEstoque")]
+    partial class RemoveProdutoEstoqueFKFromVendaProdutoEstoque
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -548,7 +551,7 @@ namespace minipdv.Migrations
                     b.ToTable("Vendas", (string)null);
                 });
 
-            modelBuilder.Entity("minipdv.Domain.Entities.VendaItem", b =>
+            modelBuilder.Entity("minipdv.Domain.Entities.VendaProdutoEstoque", b =>
                 {
                     b.Property<int>("VendaId")
                         .HasColumnType("int");
@@ -556,16 +559,17 @@ namespace minipdv.Migrations
                     b.Property<int>("ProdutoId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Lote")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("Quantidade")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasDefaultValue(1);
 
-                    b.HasKey("VendaId", "ProdutoId");
+                    b.HasKey("VendaId", "ProdutoId", "Lote");
 
-                    b.HasIndex("ProdutoId");
-
-                    b.ToTable("VendaItem");
+                    b.ToTable("VendaProdutoEstoque");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Administrador", b =>
@@ -772,21 +776,13 @@ namespace minipdv.Migrations
                     b.Navigation("Vendedor");
                 });
 
-            modelBuilder.Entity("minipdv.Domain.Entities.VendaItem", b =>
+            modelBuilder.Entity("minipdv.Domain.Entities.VendaProdutoEstoque", b =>
                 {
-                    b.HasOne("minipdv.Domain.Entities.Produto", "Produto")
-                        .WithMany()
-                        .HasForeignKey("ProdutoId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("minipdv.Domain.Entities.Venda", "Venda")
-                        .WithMany("VendaItens")
+                        .WithMany("VendaProdutoEstoques")
                         .HasForeignKey("VendaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Produto");
 
                     b.Navigation("Venda");
                 });
@@ -827,7 +823,7 @@ namespace minipdv.Migrations
                 {
                     b.Navigation("Receitas");
 
-                    b.Navigation("VendaItens");
+                    b.Navigation("VendaProdutoEstoques");
                 });
 #pragma warning restore 612, 618
         }
