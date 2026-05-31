@@ -36,6 +36,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Watch Remove=".git\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include=".env" CopyToOutputDirectory="PreserveNewest" Condition="Exists('.env')" />
     <Content Include="Infrastructure\Data\Seed\*.sql" CopyToOutputDirectory="PreserveNewest" LinkBase="Infrastructure\Data\Seed\" />
   </ItemGroup>

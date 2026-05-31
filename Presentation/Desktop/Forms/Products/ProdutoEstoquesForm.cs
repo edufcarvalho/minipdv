@@ -7,6 +7,7 @@ namespace minipdv.Presentation.Desktop.Forms.Products;
 public class ProdutoEstoquesForm : Form
 {
     private readonly DataGridView dgv;
+    private readonly SearchFilter _searchFilter;
     private List<ProdutoEstoque> _items = [];
     private List<Produto> _produtos = [];
 
@@ -34,11 +35,13 @@ public class ProdutoEstoquesForm : Form
         var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
+        topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
 
         dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
         dgv.CellDoubleClick += async (_, _) => await EditItem();
         tbl.Controls.Add(dgv, 0, 1);
+        _searchFilter = new SearchFilter(topPanel, dgv);
 
         var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
         var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
@@ -71,6 +74,7 @@ public class ProdutoEstoquesForm : Form
             dgv.Rows.Clear();
             foreach (var item in _items)
                 dgv.Rows.Add(item.Produto?.Descricao ?? $"ID {item.ProdutoId}", item.Lote ?? "", item.Quantidade, item.RegistroMS ?? "", item.Fabricacao?.ToString("dd/MM/yyyy") ?? "", item.Validade?.ToString("dd/MM/yyyy") ?? "");
+            _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }

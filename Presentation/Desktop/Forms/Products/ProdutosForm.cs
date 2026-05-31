@@ -7,7 +7,7 @@ namespace minipdv.Presentation.Desktop.Forms.Products;
 public class ProdutosForm : Form
 {
     private readonly DataGridView dgv;
-    private readonly TextBox txtSearch;
+    private readonly SearchFilter _searchFilter;
     private List<Produto> _produtos = [];
 
     public ProdutosForm()
@@ -15,8 +15,7 @@ public class ProdutosForm : Form
         Text = "Produtos";
         Dock = DockStyle.Fill;
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(10) };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
         tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
         tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
@@ -40,14 +39,8 @@ public class ProdutosForm : Form
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
 
+        topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
-
-        var searchPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        searchPanel.Controls.Add(new Label { Text = "Buscar:", TextAlign = ContentAlignment.MiddleLeft, Width = 55, Height = 32 });
-        txtSearch = new TextBox { Width = 300, Height = 32, Font = new Font("Segoe UI", 10) };
-        txtSearch.KeyDown += async (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; await LoadData(); } };
-        searchPanel.Controls.Add(txtSearch);
-        tbl.Controls.Add(searchPanel, 0, 1);
 
         dgv = new DataGridView
         {
@@ -62,13 +55,14 @@ public class ProdutosForm : Form
             BorderStyle = BorderStyle.None,
             Font = new Font("Segoe UI", 10)
         };
-        tbl.Controls.Add(dgv, 0, 2);
+        tbl.Controls.Add(dgv, 0, 1);
+        _searchFilter = new SearchFilter(topPanel, dgv);
 
         var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
         var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
         dgv.DataSourceChanged += (_, _) => lblCount.Text = $"Registros: {dgv.Rows.Count}";
         statusPanel.Controls.Add(lblCount);
-        tbl.Controls.Add(statusPanel, 0, 3);
+        tbl.Controls.Add(statusPanel, 0, 2);
 
         Controls.Add(tbl);
         Load += async (_, _) => await LoadData();
@@ -78,11 +72,7 @@ public class ProdutosForm : Form
     {
         try
         {
-            var all = await ApiClient.Instance.GetAsync<List<Produto>>("api/produtos") ?? [];
-            var search = txtSearch.Text.Trim();
-            _produtos = string.IsNullOrEmpty(search)
-                ? all
-                : all.Where(p => p.Descricao.Contains(search, StringComparison.OrdinalIgnoreCase) || p.CodBarra.ToString().Contains(search)).ToList();
+            _produtos = await ApiClient.Instance.GetAsync<List<Produto>>("api/produtos") ?? [];
 
             dgv.Columns.Clear();
             dgv.Columns.Add("Id", "ID");
@@ -97,6 +87,7 @@ public class ProdutosForm : Form
             dgv.Rows.Clear();
             foreach (var p in _produtos)
                 dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Ativo ? "Sim" : "Não", p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.ProdutoGrupoId);
+            _searchFilter.ApplyFilter();
         }
         catch (Exception ex)
         {

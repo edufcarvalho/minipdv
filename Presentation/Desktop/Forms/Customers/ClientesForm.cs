@@ -1,13 +1,14 @@
 using System.Globalization;
 using System.Text.Json;
 using minipdv.Domain.Entities;
+using minipdv.Presentation.Desktop.Components.Controls;
 
 namespace minipdv.Presentation.Desktop.Forms.Customers;
 
 public class ClientesForm : Form
 {
     private readonly DataGridView dgv;
-    private readonly TextBox txtSearch;
+    private readonly SearchFilter _searchFilter;
     private List<Cliente> _clientes = [];
 
     public ClientesForm()
@@ -19,10 +20,9 @@ public class ClientesForm : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 4,
+            RowCount = 3,
             Padding = new Padding(10)
         };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
         tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
         tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
@@ -47,14 +47,8 @@ public class ClientesForm : Form
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
 
+        topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
-
-        var searchPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        searchPanel.Controls.Add(new Label { Text = "Buscar:", TextAlign = ContentAlignment.MiddleLeft, Width = 55, Height = 32 });
-        txtSearch = new TextBox { Width = 300, Height = 32, Font = new Font("Segoe UI", 10) };
-        txtSearch.KeyDown += async (s, e) => { if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; await LoadData(); } };
-        searchPanel.Controls.Add(txtSearch);
-        tbl.Controls.Add(searchPanel, 0, 1);
 
         dgv = new DataGridView
         {
@@ -69,13 +63,14 @@ public class ClientesForm : Form
             BorderStyle = BorderStyle.None,
             Font = new Font("Segoe UI", 10)
         };
-        tbl.Controls.Add(dgv, 0, 2);
+        tbl.Controls.Add(dgv, 0, 1);
+        _searchFilter = new SearchFilter(topPanel, dgv);
 
         var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
         var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
         dgv.DataSourceChanged += (_, _) => lblCount.Text = $"Registros: {dgv.Rows.Count}";
         statusPanel.Controls.Add(lblCount);
-        tbl.Controls.Add(statusPanel, 0, 3);
+        tbl.Controls.Add(statusPanel, 0, 2);
 
         Controls.Add(tbl);
         Load += async (_, _) => await LoadData();
@@ -85,11 +80,7 @@ public class ClientesForm : Form
     {
         try
         {
-            var all = await ApiClient.Instance.GetAsync<List<Cliente>>("api/clientes") ?? [];
-            var search = txtSearch.Text.Trim();
-            _clientes = string.IsNullOrEmpty(search)
-                ? all
-                : all.Where(c => c.Nome.Contains(search, StringComparison.OrdinalIgnoreCase) || c.Cpf.Contains(search)).ToList();
+            _clientes = await ApiClient.Instance.GetAsync<List<Cliente>>("api/clientes") ?? [];
 
             dgv.Columns.Clear();
             dgv.Columns.Add("Id", "ID");
@@ -101,6 +92,7 @@ public class ClientesForm : Form
             dgv.Rows.Clear();
             foreach (var c in _clientes)
                 dgv.Rows.Add(c.Id, c.Nome, c.Cpf, c.Contato?.Email ?? "", c.Contato?.Telefone ?? "");
+            _searchFilter.ApplyFilter();
         }
         catch (Exception ex)
         {

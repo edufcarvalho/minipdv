@@ -7,6 +7,7 @@ namespace minipdv.Presentation.Desktop.Forms.Shared;
 public class PosForm : Form
 {
     private readonly TextBox txtSearch;
+    private readonly System.Windows.Forms.Timer _debounceTimer;
     private readonly DataGridView dgvProducts;
     private readonly DataGridView dgvCart;
     private readonly SearchableComboBox cmbCliente;
@@ -52,13 +53,16 @@ public class PosForm : Form
         searchPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         searchPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
 
+        _debounceTimer = new System.Windows.Forms.Timer { Interval = 300 };
+        _debounceTimer.Tick += async (_, _) => { _debounceTimer.Stop(); await SearchProducts(); };
+
         txtSearch = new TextBox
         {
             Dock = DockStyle.Fill,
             Font = new Font("Segoe UI", 12),
             PlaceholderText = "Buscar produto por código de barras ou descrição..."
         };
-        txtSearch.KeyDown += TxtSearch_KeyDown;
+        txtSearch.TextChanged += (_, _) => { _debounceTimer.Stop(); _debounceTimer.Start(); };
 
         var btnSearch = new Button
         {
@@ -257,15 +261,6 @@ public class PosForm : Form
         foreach (var p in _searchResults)
         {
             dgvProducts.Rows.Add(p.CodBarra, p.Descricao, p.Dosagem, p.Controlado ? "Sim" : "Não");
-        }
-    }
-
-    private async void TxtSearch_KeyDown(object? sender, KeyEventArgs e)
-    {
-        if (e.KeyCode == Keys.Enter)
-        {
-            e.SuppressKeyPress = true;
-            await SearchProducts();
         }
     }
 

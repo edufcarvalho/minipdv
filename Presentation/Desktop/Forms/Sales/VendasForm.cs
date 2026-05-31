@@ -1,11 +1,13 @@
 using System.Text.Json;
 using minipdv.Domain.Entities;
+using minipdv.Presentation.Desktop.Components.Controls;
 
 namespace minipdv.Presentation.Desktop.Forms.Sales;
 
 public class VendasForm : Form
 {
     private readonly DataGridView dgv;
+    private readonly SearchFilter _searchFilter;
     private List<Venda> _items = [];
 
     public VendasForm()
@@ -26,10 +28,12 @@ public class VendasForm : Form
         var btnDelete = new Button { Text = "Cancelar Venda", Width = 110, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
+        topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
 
         dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
         tbl.Controls.Add(dgv, 0, 1);
+        _searchFilter = new SearchFilter(topPanel, dgv);
 
         var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
         var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
@@ -55,6 +59,7 @@ public class VendasForm : Form
             dgv.Rows.Clear();
             foreach (var item in _items)
                 dgv.Rows.Add(item.Id, item.ClienteId, item.VendedorId, item.ReceitaId?.ToString() ?? "-", item.CriadoEm.ToString("dd/MM/yyyy HH:mm"));
+            _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
