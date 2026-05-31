@@ -101,7 +101,6 @@ public class PosForm : Form
         dgvCart = CreateDataGrid();
         dgvCart.Columns.Add("CodBarra", "Cód. Barras");
         dgvCart.Columns.Add("Descricao", "Descrição");
-        dgvCart.Columns.Add("Lote", "Lote");
         dgvCart.Columns.Add("Quantidade", "Qtd");
         dgvCart.ReadOnly = false;
         dgvCart.CellEndEdit += DgvCart_CellEndEdit;
@@ -256,12 +255,14 @@ public class PosForm : Form
         dgvProducts.Columns.Clear();
         dgvProducts.Columns.Add("CodBarra", "Cód. Barras");
         dgvProducts.Columns.Add("Descricao", "Descrição");
+        dgvProducts.Columns.Add("Estoque", "Estoque");
         dgvProducts.Columns.Add("Dosagem", "Dosagem");
         dgvProducts.Columns.Add("Controlado", "Controlado");
 
         foreach (var p in _searchResults)
         {
-            dgvProducts.Rows.Add(p.CodBarra, p.Descricao, p.Dosagem, p.Controlado ? "Sim" : "Não");
+            var inCart = _cart.Where(c => c.ProdutoId == p.Id).Sum(c => c.Quantidade);
+            dgvProducts.Rows.Add(p.CodBarra, p.Descricao, p.Estoque - inCart, p.Dosagem, p.Controlado ? "Sim" : "Não");
         }
     }
 
@@ -290,6 +291,7 @@ public class PosForm : Form
         }
 
         BindCartGrid();
+        BindProductGrid();
     }
 
     private void BindCartGrid()
@@ -297,7 +299,7 @@ public class PosForm : Form
         dgvCart.Rows.Clear();
         foreach (var item in _cart)
         {
-            dgvCart.Rows.Add(item.CodBarra, item.Descricao, item.Lote, item.Quantidade);
+            dgvCart.Rows.Add(item.CodBarra, item.Descricao, item.Quantidade);
         }
         lblTotalItens.Text = $"{_cart.Sum(c => c.Quantidade)} itens";
     }
@@ -305,7 +307,7 @@ public class PosForm : Form
     private void DgvCart_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.RowIndex >= _cart.Count) return;
-        if (e.ColumnIndex == 3)
+        if (e.ColumnIndex == 2)
         {
             if (int.TryParse(dgvCart.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString(), out var qtd) && qtd > 0)
                 _cart[e.RowIndex].Quantidade = qtd;
@@ -313,10 +315,7 @@ public class PosForm : Form
                 _cart[e.RowIndex].Quantidade = 1;
 
             BindCartGrid();
-        }
-        else if (e.ColumnIndex == 2)
-        {
-            _cart[e.RowIndex].Lote = dgvCart.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString() ?? "";
+            BindProductGrid();
         }
     }
 
@@ -326,6 +325,7 @@ public class PosForm : Form
         {
             _cart.RemoveAt(dgvCart.SelectedRows[0].Index);
             BindCartGrid();
+            BindProductGrid();
         }
     }
 
@@ -343,16 +343,16 @@ public class PosForm : Form
             return;
         }
 
-        foreach (var item in _cart)
+        var controlados = _cart.Where(c => c.Controlado).ToList();
+        foreach (var item in controlados)
         {
             if (string.IsNullOrEmpty(item.Lote))
             {
-                MessageBox.Show($"Informe o lote para o produto: {item.Descricao}", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Informe o lote para o produto controlado: {item.Descricao}", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
         }
 
-        var controlados = _cart.Where(c => c.Controlado).ToList();
         var receitaIds = new List<int>();
 
         if (controlados.Count > 0)
@@ -390,7 +390,6 @@ public class PosForm : Form
                 produtos = _cart.Select(c => new
                 {
                     produtoId = c.ProdutoId,
-                    lote = c.Lote,
                     quantidade = c.Quantidade
                 }).ToList(),
                 receitaIds = receitaIds.Count > 0 ? receitaIds : null
@@ -404,6 +403,7 @@ public class PosForm : Form
                 _cart.Clear();
                 BindCartGrid();
                 cmbCliente.ClearSelection();
+                await SearchProducts();
             }
             else
             {
