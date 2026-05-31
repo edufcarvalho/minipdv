@@ -23,7 +23,7 @@ echo "Database at ${DB_HOST}:${DB_PORT} is ready"
 
 if [ "$ASPNETCORE_ENVIRONMENT" = "Development" ]; then
   echo "Starting in DEVELOPMENT mode with hot reload..."
-  exec dotnet watch run --project /app --no-launch-profile
+  exec dotnet watch run --project /app --no-launch-profile -- --api
 else
   echo "Starting in PRODUCTION mode..."
   exec dotnet minipdv.dll --api
