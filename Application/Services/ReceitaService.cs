@@ -40,9 +40,10 @@ public class ReceitaService : IReceitaService
     {
         await _validator.ValidateAndThrowAsync(entity);
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             foreach (var rpe in entity.ReceitaProdutoEstoques)
             {
                 var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote)
@@ -63,21 +64,17 @@ public class ReceitaService : IReceitaService
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
             return entity;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        });
     }
 
     public async Task UpdateAsync(Receita entity)
     {
         await _validator.ValidateAndThrowAsync(entity);
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             var existing = await _context.Receitas
                 .Include(r => r.ReceitaProdutoEstoques)
                 .FirstAsync(r => r.Id == entity.Id);
@@ -127,19 +124,15 @@ public class ReceitaService : IReceitaService
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        });
     }
 
     public async Task DeleteAsync(int id)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             var entity = await _context.Receitas
                 .Include(r => r.ReceitaProdutoEstoques)
                 .FirstOrDefaultAsync(r => r.Id == id);
@@ -160,12 +153,7 @@ public class ReceitaService : IReceitaService
             _context.Receitas.Remove(entity);
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        });
     }
 
     public async Task<bool> ExistsAsync(int id)

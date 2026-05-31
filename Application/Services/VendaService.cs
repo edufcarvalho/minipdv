@@ -40,9 +40,10 @@ public class VendaService : IVendaService
     {
         await _validator.ValidateAndThrowAsync(entity);
 
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        var strategy = _context.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             foreach (var vpe in entity.VendaProdutoEstoques)
             {
                 var estoque = await _produtoEstoqueRepository.GetByIdAsync(vpe.ProdutoId, vpe.Lote)
@@ -77,12 +78,7 @@ public class VendaService : IVendaService
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
             return entity;
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        });
     }
 
     public async Task LinkReceitasAsync(int vendaId, List<int> receitaIds)
@@ -102,9 +98,10 @@ public class VendaService : IVendaService
 
     public async Task DeleteAsync(int id)
     {
-        using var transaction = await _context.Database.BeginTransactionAsync();
-        try
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             var entity = await _context.Vendas
                 .Include(v => v.VendaProdutoEstoques)
                 .FirstOrDefaultAsync(v => v.Id == id);
@@ -122,11 +119,6 @@ public class VendaService : IVendaService
             entity.AtualizadoEm = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+        });
     }
 }
