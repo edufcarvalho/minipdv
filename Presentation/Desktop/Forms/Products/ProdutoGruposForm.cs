@@ -89,6 +89,8 @@ public class ProdutoGruposForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var response = await ApiClient.Instance.PostAsync("api/produtogrupos", new { nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
                 if (response.IsSuccessStatusCode)
                 {
@@ -100,6 +102,7 @@ public class ProdutoGruposForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
@@ -130,10 +133,12 @@ public class ProdutoGruposForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var response = await ApiClient.Instance.PutAsync($"api/produtogrupos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
                 if (response.IsSuccessStatusCode)
                 {
-                    txt.Clear();
+                    txt.Clear(); chkAtivo.Checked = item.Ativo;
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -141,6 +146,7 @@ public class ProdutoGruposForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);

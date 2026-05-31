@@ -149,6 +149,8 @@ public class UsuariosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var jsonOptions = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
@@ -195,11 +197,13 @@ public class UsuariosForm : Form
                 }
 
                 txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtEmail.Clear(); txtTelefone.Clear();
+                cmbTipo.SelectedValue = "Usuario";
                 await LoadData();
                 dialog.DialogResult = DialogResult.OK;
                 dialog.Close();
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         dialog.ShowDialog(this);
     }
@@ -264,6 +268,8 @@ public class UsuariosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var email = txtEmail.Text.Trim();
                 var telefone = txtTelefone.Text.Trim();
                 var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
@@ -281,6 +287,8 @@ public class UsuariosForm : Form
                 if (response.IsSuccessStatusCode)
                 {
                     txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtEmail.Clear(); txtTelefone.Clear();
+                    cmbTipo.SelectedValue = item.TipoUsuario;
+                    chkAtivo.Checked = item.Ativo;
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
@@ -288,6 +296,7 @@ public class UsuariosForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         dialog.ShowDialog(this);
     }

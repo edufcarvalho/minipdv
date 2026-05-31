@@ -115,6 +115,8 @@ public class PrescritoresForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var response = await ApiClient.Instance.PostAsync("api/prescritores", new
                 {
                     nome = txtNome.Text.Trim(),
@@ -125,6 +127,7 @@ public class PrescritoresForm : Form
                 if (response.IsSuccessStatusCode)
                 {
                     txtNome.Clear(); txtNumero.Clear();
+                    cmbConselho.ClearSelection(); cmbUf.ClearSelection();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -132,6 +135,7 @@ public class PrescritoresForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
 
         dialog.ShowDialog(this);
@@ -181,6 +185,8 @@ public class PrescritoresForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var response = await ApiClient.Instance.PutAsync($"api/prescritores/{capturedItem.Id}", new
                 {
                     id = capturedItem.Id,
@@ -192,6 +198,7 @@ public class PrescritoresForm : Form
                 if (response.IsSuccessStatusCode)
                 {
                     txtNome.Clear(); txtNumero.Clear();
+                    cmbConselho.ClearSelection(); cmbUf.ClearSelection();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -199,6 +206,7 @@ public class PrescritoresForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
 
         dialog.ShowDialog(this);

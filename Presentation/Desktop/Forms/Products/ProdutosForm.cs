@@ -183,6 +183,8 @@ public class ProdutosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var isControlado = chkControlado.Checked;
                 var regMs = mtxtRegMs.Text.Trim();
                 var request = new
@@ -202,6 +204,8 @@ public class ProdutosForm : Form
                 if (response.IsSuccessStatusCode)
                 {
                     txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); mtxtRegMs.Clear();
+                    cmbGrupo.ClearSelection(); cmbPrinc.ClearSelection(); cmbFab.ClearSelection();
+                    chkAtivo.Checked = true; chkControlado.Checked = false;
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
@@ -215,6 +219,10 @@ public class ProdutosForm : Form
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                dialog.Enabled = true;
             }
         };
 
@@ -309,6 +317,8 @@ public class ProdutosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var isControlado = chkControlado.Checked;
                 var regMs = mtxtRegMs.Text.Trim();
                 var request = new
@@ -329,6 +339,8 @@ public class ProdutosForm : Form
                 if (response.IsSuccessStatusCode)
                 {
                     txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); mtxtRegMs.Clear();
+                    cmbGrupo.ClearSelection(); cmbPrinc.ClearSelection(); cmbFab.ClearSelection();
+                    chkAtivo.Checked = true; chkControlado.Checked = false;
                     await LoadData();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
@@ -343,6 +355,11 @@ public class ProdutosForm : Form
             {
                 MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                dialog.Enabled = true;
+            }
+
         };
 
         dialog.ShowDialog(this);

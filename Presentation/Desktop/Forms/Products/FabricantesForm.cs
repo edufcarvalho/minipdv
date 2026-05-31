@@ -139,6 +139,8 @@ public class FabricantesForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var email = txtEmail.Text.Trim();
                 var telefone = txtTelefone.Text.Trim();
                 var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
@@ -155,6 +157,7 @@ public class FabricantesForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         dialog.ShowDialog(this);
     }
@@ -209,6 +212,8 @@ public class FabricantesForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var email = txtEmail.Text.Trim();
                 var telefone = txtTelefone.Text.Trim();
                 var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
@@ -225,6 +230,7 @@ public class FabricantesForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         dialog.ShowDialog(this);
     }

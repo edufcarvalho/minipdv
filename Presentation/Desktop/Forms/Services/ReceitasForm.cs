@@ -255,6 +255,8 @@ public class ReceitasForm : Form
 
             try
             {
+                dialog.Enabled = false;
+
                 var response = await ApiClient.Instance.PostAsync("api/receitas", new
                 {
                     prescritorId = (int)cmbPresc.SelectedValue,
@@ -267,6 +269,11 @@ public class ReceitasForm : Form
                 if (response.IsSuccessStatusCode)
                 {
                     receitaProdutos.Clear();
+                    dgvProdutos.Rows.Clear();
+                    dtpDataReceita.Value = DateTime.Today;
+                    dtpDataCadastro.Value = DateTime.Today;
+                    cmbPresc.ClearSelection(); cmbPac.ClearSelection(); cmbComp.ClearSelection();
+                    cmbProd.ClearSelection(); cmbLote.Items.Clear(); cmbLote.SelectedIndex = -1; nudQtd.Value = 1;
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -275,6 +282,7 @@ public class ReceitasForm : Form
                     MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
 
         dialog.ShowDialog(this);

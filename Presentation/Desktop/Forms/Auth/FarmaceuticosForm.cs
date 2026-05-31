@@ -148,6 +148,8 @@ public class FarmaceuticosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var jsonOptions = new JsonSerializerOptions
                 {
                     PropertyNameCaseInsensitive = true,
@@ -201,6 +203,7 @@ public class FarmaceuticosForm : Form
                 await LoadData();
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         dialog.ShowDialog(this);
     }
@@ -263,6 +266,8 @@ public class FarmaceuticosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var passwordHash = string.IsNullOrEmpty(txtSenha.Text)
                     ? item.PasswordHash
                     : PasswordHasher.Hash(txtSenha.Text);
@@ -285,6 +290,7 @@ public class FarmaceuticosForm : Form
                 if (response.IsSuccessStatusCode)
                 {
                     txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtCrf.Clear(); txtEmail.Clear(); txtTelefone.Clear();
+                    chkAtivo.Checked = item.Ativo;
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
@@ -292,6 +298,7 @@ public class FarmaceuticosForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         dialog.ShowDialog(this);
     }

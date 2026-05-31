@@ -89,6 +89,8 @@ public class PrincipiosAtivosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var response = await ApiClient.Instance.PostAsync("api/principiosativos", new { nome = txt.Text.Trim() });
                 if (response.IsSuccessStatusCode)
                 {
@@ -100,6 +102,7 @@ public class PrincipiosAtivosForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
@@ -127,6 +130,8 @@ public class PrincipiosAtivosForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var response = await ApiClient.Instance.PutAsync($"api/principiosativos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim() });
                 if (response.IsSuccessStatusCode)
                 {
@@ -138,6 +143,7 @@ public class PrincipiosAtivosForm : Form
                 else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally { dialog.Enabled = true; }
         };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);

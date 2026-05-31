@@ -192,6 +192,8 @@ public class ClientesForm : Form
 
             try
             {
+                dialog.Enabled = false;
+
                 var email = txtEmail.Text.Trim();
                 var telefone = txtTelefone.Text.Trim();
                 var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
@@ -213,6 +215,10 @@ public class ClientesForm : Form
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                dialog.Enabled = true;
             }
         };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
@@ -277,6 +283,8 @@ public class ClientesForm : Form
         {
             try
             {
+                dialog.Enabled = false;
+
                 var email = txtEmail.Text.Trim();
                 var telefone = txtTelefone.Text.Trim();
                 var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
@@ -298,6 +306,10 @@ public class ClientesForm : Form
             catch (Exception ex)
             {
                 MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                dialog.Enabled = true;
             }
         };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
