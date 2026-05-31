@@ -169,7 +169,7 @@ public class ProdutosForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
@@ -179,38 +179,45 @@ public class ProdutosForm : Form
         dialog.AcceptButton = btnOk;
         dialog.CancelButton = btnCancel;
 
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var isControlado = chkControlado.Checked;
-            var regMs = mtxtRegMs.Text.Trim();
-            var request = new
+            try
             {
-                descricao = txtDesc.Text.Trim(),
-                ativo = chkAtivo.Checked,
-                codBarra = int.Parse(txtCod.Text.Trim()),
-                controlado = isControlado,
-                dosagem = txtDosagem.Text.Trim(),
-                registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
-                produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
-                fabricanteId = (int?)cmbFab.SelectedValue,
-                principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
-            };
+                var isControlado = chkControlado.Checked;
+                var regMs = mtxtRegMs.Text.Trim();
+                var request = new
+                {
+                    descricao = txtDesc.Text.Trim(),
+                    ativo = chkAtivo.Checked,
+                    codBarra = int.Parse(txtCod.Text.Trim()),
+                    controlado = isControlado,
+                    dosagem = txtDosagem.Text.Trim(),
+                    registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
+                    produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
+                    fabricanteId = (int?)cmbFab.SelectedValue,
+                    principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
+                };
 
-            var response = await ApiClient.Instance.PostAsync("api/produtos", request);
-            if (response.IsSuccessStatusCode)
-                await LoadData();
-            else
-            {
-                var err = await response.Content.ReadAsStringAsync();
-                MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var response = await ApiClient.Instance.PostAsync("api/produtos", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                }
+                else
+                {
+                    var err = await ErrorHelper.ExtractAsync(response);
+                    MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        };
+
+        dialog.ShowDialog(this);
     }
 
     private async Task EditItem()
@@ -287,7 +294,7 @@ public class ProdutosForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
@@ -297,39 +304,46 @@ public class ProdutosForm : Form
         dialog.AcceptButton = btnOk;
         dialog.CancelButton = btnCancel;
 
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var isControlado = chkControlado.Checked;
-            var regMs = mtxtRegMs.Text.Trim();
-            var request = new
+            try
             {
-                id = item.Id,
-                descricao = txtDesc.Text.Trim(),
-                ativo = chkAtivo.Checked,
-                codBarra = int.Parse(txtCod.Text.Trim()),
-                controlado = isControlado,
-                dosagem = txtDosagem.Text.Trim(),
-                registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
-                produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
-                fabricanteId = (int?)cmbFab.SelectedValue,
-                principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
-            };
+                var isControlado = chkControlado.Checked;
+                var regMs = mtxtRegMs.Text.Trim();
+                var request = new
+                {
+                    id = item.Id,
+                    descricao = txtDesc.Text.Trim(),
+                    ativo = chkAtivo.Checked,
+                    codBarra = int.Parse(txtCod.Text.Trim()),
+                    controlado = isControlado,
+                    dosagem = txtDosagem.Text.Trim(),
+                    registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
+                    produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
+                    fabricanteId = (int?)cmbFab.SelectedValue,
+                    principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
+                };
 
-            var response = await ApiClient.Instance.PutAsync($"api/produtos/{item.Id}", request);
-            if (response.IsSuccessStatusCode)
-                await LoadData();
-            else
-            {
-                var err = await response.Content.ReadAsStringAsync();
-                MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var response = await ApiClient.Instance.PutAsync($"api/produtos/{item.Id}", request);
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                }
+                else
+                {
+                    var err = await ErrorHelper.ExtractAsync(response);
+                    MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        };
+
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -347,7 +361,7 @@ public class ProdutosForm : Form
                 await LoadData();
             else
             {
-                var err = await response.Content.ReadAsStringAsync();
+                var err = await ErrorHelper.ExtractAsync(response);
                 MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

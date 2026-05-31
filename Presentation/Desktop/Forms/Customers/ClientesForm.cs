@@ -124,7 +124,7 @@ public class ClientesForm : Form
             var response = await ApiClient.Instance.PutAsync($"api/contatos/{contatoId.Value}", payload);
             if (!response.IsSuccessStatusCode)
             {
-                var err = await response.Content.ReadAsStringAsync();
+                var err = await ErrorHelper.ExtractAsync(response);
                 MessageBox.Show($"Erro ao atualizar contato: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return contatoId;
@@ -134,7 +134,7 @@ public class ClientesForm : Form
         var response2 = await ApiClient.Instance.PostAsync("api/contatos", payload2);
         if (!response2.IsSuccessStatusCode)
         {
-            var err2 = await response2.Content.ReadAsStringAsync();
+            var err2 = await ErrorHelper.ExtractAsync(response2);
             MessageBox.Show($"Erro ao criar contato: {err2}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return null;
         }
@@ -179,7 +179,41 @@ public class ClientesForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnOk.Click += async (_, _) =>
+        {
+            var nome = txtNome.Text.Trim();
+            var cpf = mtxtCpf.Text.Trim();
+            if (string.IsNullOrEmpty(nome) || string.IsNullOrEmpty(cpf))
+            {
+                MessageBox.Show("Nome e CPF são obrigatórios.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                var email = txtEmail.Text.Trim();
+                var telefone = txtTelefone.Text.Trim();
+                var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
+
+                var response = await ApiClient.Instance.PostAsync("api/clientes", new { nome, cpf, contatoId });
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                }
+                else
+                {
+                    var err = await ErrorHelper.ExtractAsync(response);
+                    MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
@@ -189,35 +223,7 @@ public class ClientesForm : Form
         dialog.AcceptButton = btnOk;
         dialog.CancelButton = btnCancel;
 
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        var nome = txtNome.Text.Trim();
-        var cpf = mtxtCpf.Text.Trim();
-        if (string.IsNullOrEmpty(nome) || string.IsNullOrEmpty(cpf))
-        {
-            MessageBox.Show("Nome e CPF são obrigatórios.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        try
-        {
-            var email = txtEmail.Text.Trim();
-            var telefone = txtTelefone.Text.Trim();
-            var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
-
-            var response = await ApiClient.Instance.PostAsync("api/clientes", new { nome, cpf, contatoId });
-            if (response.IsSuccessStatusCode)
-                await LoadData();
-            else
-            {
-                var err = await response.Content.ReadAsStringAsync();
-                MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+        dialog.ShowDialog(this);
     }
 
     private async Task EditItem()
@@ -265,7 +271,33 @@ public class ClientesForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnOk.Click += async (_, _) =>
+        {
+            try
+            {
+                var email = txtEmail.Text.Trim();
+                var telefone = txtTelefone.Text.Trim();
+                var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
+
+                var response = await ApiClient.Instance.PutAsync($"api/clientes/{item.Id}", new { id = item.Id, nome = txtNome.Text.Trim(), cpf = mtxtCpf.Text.Trim(), contatoId });
+                if (response.IsSuccessStatusCode)
+                {
+                    await LoadData();
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                }
+                else
+                {
+                    var err = await ErrorHelper.ExtractAsync(response);
+                    MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
@@ -275,27 +307,7 @@ public class ClientesForm : Form
         dialog.AcceptButton = btnOk;
         dialog.CancelButton = btnCancel;
 
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
-        {
-            var email = txtEmail.Text.Trim();
-            var telefone = txtTelefone.Text.Trim();
-            var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
-
-            var response = await ApiClient.Instance.PutAsync($"api/clientes/{item.Id}", new { id = item.Id, nome = txtNome.Text.Trim(), cpf = mtxtCpf.Text.Trim(), contatoId });
-            if (response.IsSuccessStatusCode)
-                await LoadData();
-            else
-            {
-                var err = await response.Content.ReadAsStringAsync();
-                MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -313,7 +325,7 @@ public class ClientesForm : Form
                 await LoadData();
             else
             {
-                var err = await response.Content.ReadAsStringAsync();
+                var err = await ErrorHelper.ExtractAsync(response);
                 MessageBox.Show($"Erro: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }

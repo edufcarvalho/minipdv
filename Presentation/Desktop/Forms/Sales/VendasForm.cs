@@ -77,7 +77,7 @@ public class VendasForm : Form
         {
             var response = await ApiClient.Instance.DeleteAsync($"api/vendas/{item.Id}");
             if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }

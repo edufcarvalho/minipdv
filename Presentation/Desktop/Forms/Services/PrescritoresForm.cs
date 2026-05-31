@@ -104,27 +104,36 @@ public class PrescritoresForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 4);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var response = await ApiClient.Instance.PostAsync("api/prescritores", new
+            try
             {
-                nome = txtNome.Text.Trim(),
-                numero = txtNumero.Text.Trim(),
-                conselho = cmbConselho.SelectedValue?.ToString() ?? "",
-                uf = cmbUf.SelectedValue?.ToString() ?? ""
-            });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                var response = await ApiClient.Instance.PostAsync("api/prescritores", new
+                {
+                    nome = txtNome.Text.Trim(),
+                    numero = txtNumero.Text.Trim(),
+                    conselho = cmbConselho.SelectedValue?.ToString() ?? "",
+                    uf = cmbUf.SelectedValue?.ToString() ?? ""
+                });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
+
+        dialog.ShowDialog(this);
     }
 
     private async Task EditItem()
@@ -159,28 +168,38 @@ public class PrescritoresForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 4);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        var capturedItem = item;
 
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var response = await ApiClient.Instance.PutAsync($"api/prescritores/{item.Id}", new
+            try
             {
-                id = item.Id,
-                nome = txtNome.Text.Trim(),
-                numero = txtNumero.Text.Trim(),
-                conselho = cmbConselho.SelectedValue?.ToString() ?? "",
-                uf = cmbUf.SelectedValue?.ToString() ?? ""
-            });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                var response = await ApiClient.Instance.PutAsync($"api/prescritores/{capturedItem.Id}", new
+                {
+                    id = capturedItem.Id,
+                    nome = txtNome.Text.Trim(),
+                    numero = txtNumero.Text.Trim(),
+                    conselho = cmbConselho.SelectedValue?.ToString() ?? "",
+                    uf = cmbUf.SelectedValue?.ToString() ?? ""
+                });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
+
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -193,7 +212,7 @@ public class PrescritoresForm : Form
         {
             var response = await ApiClient.Instance.DeleteAsync($"api/prescritores/{item.Id}");
             if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }

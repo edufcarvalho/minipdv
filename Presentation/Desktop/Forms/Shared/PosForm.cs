@@ -378,19 +378,7 @@ public class PosForm : Form
             }
             else
             {
-                var json = await response.Content.ReadAsStringAsync();
-                var msg = json;
-                try
-                {
-                    using var doc = JsonDocument.Parse(json);
-                    if (doc.RootElement.TryGetProperty("error", out var err))
-                        msg = err.GetString() ?? json;
-                    else if (doc.RootElement.TryGetProperty("errors", out var errors))
-                        msg = errors.ToString();
-                }
-                catch { }
-
-                MessageBox.Show($"Erro ao registrar venda: {msg}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Erro ao registrar venda: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         catch (Exception ex)

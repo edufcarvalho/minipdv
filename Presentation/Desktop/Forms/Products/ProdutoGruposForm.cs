@@ -1,4 +1,5 @@
 using minipdv.Domain.Entities;
+using minipdv.Presentation.Desktop.Components.Controls;
 
 namespace minipdv.Presentation.Desktop.Forms.Products;
 
@@ -83,21 +84,28 @@ public class ProdutoGruposForm : Form
         tbl.Controls.Add(chkAtivo, 1, 1);
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnOk.Click += async (_, _) =>
+        {
+            try
+            {
+                var response = await ApiClient.Instance.PostAsync("api/produtogrupos", new { nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 2);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
-        {
-            var response = await ApiClient.Instance.PostAsync("api/produtogrupos", new { nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        dialog.ShowDialog(this);
     }
 
     private async Task EditItem()
@@ -116,21 +124,28 @@ public class ProdutoGruposForm : Form
         tbl.Controls.Add(chkAtivo, 1, 1);
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnOk.Click += async (_, _) =>
+        {
+            try
+            {
+                var response = await ApiClient.Instance.PutAsync($"api/produtogrupos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 2);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
-        {
-            var response = await ApiClient.Instance.PutAsync($"api/produtogrupos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim(), ativo = chkAtivo.Checked });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -143,7 +158,7 @@ public class ProdutoGruposForm : Form
         {
             var response = await ApiClient.Instance.DeleteAsync($"api/produtogrupos/{item.Id}");
             if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }

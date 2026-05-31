@@ -84,21 +84,28 @@ public class PrincipiosAtivosForm : Form
         tbl.Controls.Add(txt, 1, 0);
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnOk.Click += async (_, _) =>
+        {
+            try
+            {
+                var response = await ApiClient.Instance.PostAsync("api/principiosativos", new { nome = txt.Text.Trim() });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 1);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
-        {
-            var response = await ApiClient.Instance.PostAsync("api/principiosativos", new { nome = txt.Text.Trim() });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        dialog.ShowDialog(this);
     }
 
     private async Task EditItem()
@@ -114,21 +121,28 @@ public class PrincipiosAtivosForm : Form
         tbl.Controls.Add(txt, 1, 0);
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnOk.Click += async (_, _) =>
+        {
+            try
+            {
+                var response = await ApiClient.Instance.PutAsync($"api/principiosativos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim() });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 1);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
-        {
-            var response = await ApiClient.Instance.PutAsync($"api/principiosativos/{item.Id}", new { id = item.Id, nome = txt.Text.Trim() });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -141,7 +155,7 @@ public class PrincipiosAtivosForm : Form
         {
             var response = await ApiClient.Instance.DeleteAsync($"api/principiosativos/{item.Id}");
             if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }

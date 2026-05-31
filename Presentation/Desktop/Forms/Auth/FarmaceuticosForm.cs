@@ -138,66 +138,70 @@ public class FarmaceuticosForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 6);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var jsonOptions = new JsonSerializerOptions
+            try
             {
-                PropertyNameCaseInsensitive = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            };
-
-            var response = await ApiClient.Instance.PostAsync("api/auth/register", new
-            {
-                nome = txtNome.Text.Trim(),
-                login = txtLogin.Text.Trim(),
-                password = txtSenha.Text,
-                tipo = "Farmaceutico",
-                crf = txtCrf.Text.Trim()
-            });
-            if (!response.IsSuccessStatusCode)
-            {
-                MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            var json = await response.Content.ReadAsStringAsync();
-            var authResult = JsonSerializer.Deserialize<Application.DTOs.Auth.AuthResponse>(json, jsonOptions);
-            if (authResult == null || authResult.Id == 0) return;
-
-            var email = txtEmail.Text.Trim();
-            var telefone = txtTelefone.Text.Trim();
-            var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
-
-            if (contatoId.HasValue)
-            {
-                var farm = await ApiClient.Instance.GetAsync<Farmaceutico>($"api/farmaceuticos/{authResult.Id}");
-                if (farm != null)
+                var jsonOptions = new JsonSerializerOptions
                 {
-                    await ApiClient.Instance.PutAsync($"api/farmaceuticos/{authResult.Id}", new
-                    {
-                        id = authResult.Id,
-                        nome = farm.Nome,
-                        login = farm.Login,
-                        passwordHash = farm.PasswordHash,
-                        ativo = farm.Ativo,
-                        tipoUsuario = farm.TipoUsuario,
-                        crf = farm.Crf,
-                        contatoId
-                    });
-                }
-            }
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
 
-            await LoadData();
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                var response = await ApiClient.Instance.PostAsync("api/auth/register", new
+                {
+                    nome = txtNome.Text.Trim(),
+                    login = txtLogin.Text.Trim(),
+                    password = txtSenha.Text,
+                    tipo = "Farmaceutico",
+                    crf = txtCrf.Text.Trim()
+                });
+                if (!response.IsSuccessStatusCode)
+                {
+                    MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var authResult = JsonSerializer.Deserialize<Application.DTOs.Auth.AuthResponse>(json, jsonOptions);
+                if (authResult == null || authResult.Id == 0) return;
+
+                var email = txtEmail.Text.Trim();
+                var telefone = txtTelefone.Text.Trim();
+                var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
+
+                if (contatoId.HasValue)
+                {
+                    var farm = await ApiClient.Instance.GetAsync<Farmaceutico>($"api/farmaceuticos/{authResult.Id}");
+                    if (farm != null)
+                    {
+                        await ApiClient.Instance.PutAsync($"api/farmaceuticos/{authResult.Id}", new
+                        {
+                            id = authResult.Id,
+                            nome = farm.Nome,
+                            login = farm.Login,
+                            passwordHash = farm.PasswordHash,
+                            ativo = farm.Ativo,
+                            tipoUsuario = farm.TipoUsuario,
+                            crf = farm.Crf,
+                            contatoId
+                        });
+                    }
+                }
+
+                dialog.DialogResult = DialogResult.OK;
+                dialog.Close();
+                await LoadData();
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
+        dialog.ShowDialog(this);
     }
 
     private async Task EditItem()
@@ -248,39 +252,46 @@ public class FarmaceuticosForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 7);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var passwordHash = string.IsNullOrEmpty(txtSenha.Text)
-                ? item.PasswordHash
-                : PasswordHasher.Hash(txtSenha.Text);
-
-            var email = txtEmail.Text.Trim();
-            var telefone = txtTelefone.Text.Trim();
-            var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
-
-            var response = await ApiClient.Instance.PutAsync($"api/farmaceuticos/{item.Id}", new
+            try
             {
-                id = item.Id,
-                nome = txtNome.Text.Trim(),
-                login = txtLogin.Text.Trim(),
-                passwordHash,
-                ativo = chkAtivo.Checked,
-                tipoUsuario = "Farmaceutico",
-                crf = txtCrf.Text.Trim(),
-                contatoId
-            });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                var passwordHash = string.IsNullOrEmpty(txtSenha.Text)
+                    ? item.PasswordHash
+                    : PasswordHasher.Hash(txtSenha.Text);
+
+                var email = txtEmail.Text.Trim();
+                var telefone = txtTelefone.Text.Trim();
+                var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
+
+                var response = await ApiClient.Instance.PutAsync($"api/farmaceuticos/{item.Id}", new
+                {
+                    id = item.Id,
+                    nome = txtNome.Text.Trim(),
+                    login = txtLogin.Text.Trim(),
+                    passwordHash,
+                    ativo = chkAtivo.Checked,
+                    tipoUsuario = "Farmaceutico",
+                    crf = txtCrf.Text.Trim(),
+                    contatoId
+                });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -293,7 +304,7 @@ public class FarmaceuticosForm : Form
         {
             var response = await ApiClient.Instance.DeleteAsync($"api/farmaceuticos/{item.Id}");
             if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }

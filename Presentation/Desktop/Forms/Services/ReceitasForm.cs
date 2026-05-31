@@ -176,7 +176,7 @@ public class ReceitasForm : Form
 
         // === Save/Cancel buttons ===
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
-        var btnOk = new Button { Text = "Salvar", Width = 90, Height = 35, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK, Font = font };
+        var btnOk = new Button { Text = "Salvar", Width = 90, Height = 35, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
         var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 35, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0), Font = font };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
@@ -245,29 +245,38 @@ public class ReceitasForm : Form
             }
         };
 
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        if (cmbPresc.SelectedValue == null || cmbPac.SelectedValue == null || cmbComp.SelectedValue == null)
+        btnOk.Click += async (_, _) =>
         {
-            MessageBox.Show("Selecione prescritor, paciente e comprador.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        try
-        {
-            var response = await ApiClient.Instance.PostAsync("api/receitas", new
+            if (cmbPresc.SelectedValue == null || cmbPac.SelectedValue == null || cmbComp.SelectedValue == null)
             {
-                prescritorId = (int)cmbPresc.SelectedValue,
-                pacienteId = (int)cmbPac.SelectedValue,
-                compradorId = (int)cmbComp.SelectedValue,
-                dataReceita = dtpDataReceita.Value,
-                dataCadastro = dtpDataCadastro.Value,
-                produtos = receitaProdutos.Count > 0 ? receitaProdutos : null
-            });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                MessageBox.Show("Selecione prescritor, paciente e comprador.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                var response = await ApiClient.Instance.PostAsync("api/receitas", new
+                {
+                    prescritorId = (int)cmbPresc.SelectedValue,
+                    pacienteId = (int)cmbPac.SelectedValue,
+                    compradorId = (int)cmbComp.SelectedValue,
+                    dataReceita = dtpDataReceita.Value,
+                    dataCadastro = dtpDataCadastro.Value,
+                    produtos = receitaProdutos.Count > 0 ? receitaProdutos : null
+                });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else
+                    MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
+
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -283,7 +292,7 @@ public class ReceitasForm : Form
         {
             var response = await ApiClient.Instance.DeleteAsync($"api/receitas/{item.Id}");
             if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }

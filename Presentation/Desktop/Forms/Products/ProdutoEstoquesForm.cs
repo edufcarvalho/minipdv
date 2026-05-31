@@ -122,34 +122,41 @@ public class ProdutoEstoquesForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 6);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        var prodId = (int)(cmbProd.SelectedValue ?? 0);
-        if (prodId == 0) { MessageBox.Show("Selecione um produto.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-        if (string.IsNullOrWhiteSpace(txtLote.Text)) { MessageBox.Show("Informe o lote.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
-
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var regMs = mtxtRegMs.Text.Trim();
-            var response = await ApiClient.Instance.PostAsync($"api/produtos/{prodId}/estoques", new
+            var prodId = (int)(cmbProd.SelectedValue ?? 0);
+            if (prodId == 0) { MessageBox.Show("Selecione um produto.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+            if (string.IsNullOrWhiteSpace(txtLote.Text)) { MessageBox.Show("Informe o lote.", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+
+            try
             {
-                produtoId = prodId,
-                lote = txtLote.Text.Trim(),
-                quantidade = (int)nudQtd.Value,
-                registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
-                fabricacao = dtpFab.Checked ? dtpFab.Value.ToString("yyyy-MM-dd") : null,
-                validade = dtpVal.Checked ? dtpVal.Value.ToString("yyyy-MM-dd") : null
-            });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                var regMs = mtxtRegMs.Text.Trim();
+                var response = await ApiClient.Instance.PostAsync($"api/produtos/{prodId}/estoques", new
+                {
+                    produtoId = prodId,
+                    lote = txtLote.Text.Trim(),
+                    quantidade = (int)nudQtd.Value,
+                    registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
+                    fabricacao = dtpFab.Checked ? dtpFab.Value.ToString("yyyy-MM-dd") : null,
+                    validade = dtpVal.Checked ? dtpVal.Value.ToString("yyyy-MM-dd") : null
+                });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
+        dialog.ShowDialog(this);
     }
 
     private async Task EditItem()
@@ -201,30 +208,37 @@ public class ProdutoEstoquesForm : Form
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 6);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
-        if (dialog.ShowDialog(this) != DialogResult.OK) return;
-
-        try
+        btnOk.Click += async (_, _) =>
         {
-            var regMs = mtxtRegMs.Text.Trim();
-            var response = await ApiClient.Instance.PutAsync($"api/produtos/{item.ProdutoId}/estoques/{item.Lote}", new
+            try
             {
-                produtoId = item.ProdutoId,
-                lote = item.Lote,
-                quantidade = (int)nudQtd.Value,
-                registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
-                fabricacao = dtpFab.Checked ? dtpFab.Value.ToString("yyyy-MM-dd") : null,
-                validade = dtpVal.Checked ? dtpVal.Value.ToString("yyyy-MM-dd") : null
-            });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-        catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                var regMs = mtxtRegMs.Text.Trim();
+                var response = await ApiClient.Instance.PutAsync($"api/produtos/{item.ProdutoId}/estoques/{item.Lote}", new
+                {
+                    produtoId = item.ProdutoId,
+                    lote = item.Lote,
+                    quantidade = (int)nudQtd.Value,
+                    registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
+                    fabricacao = dtpFab.Checked ? dtpFab.Value.ToString("yyyy-MM-dd") : null,
+                    validade = dtpVal.Checked ? dtpVal.Value.ToString("yyyy-MM-dd") : null
+                });
+                if (response.IsSuccessStatusCode)
+                {
+                    dialog.DialogResult = DialogResult.OK;
+                    dialog.Close();
+                    await LoadData();
+                }
+                else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        };
+        dialog.ShowDialog(this);
     }
 
     private async Task DeleteItem()
@@ -238,7 +252,7 @@ public class ProdutoEstoquesForm : Form
         {
             var response = await ApiClient.Instance.DeleteAsync($"api/produtos/{item.ProdutoId}/estoques/{item.Lote}");
             if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            else MessageBox.Show($"Erro: {await ErrorHelper.ExtractAsync(response)}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
