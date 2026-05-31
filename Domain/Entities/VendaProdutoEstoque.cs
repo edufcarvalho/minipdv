@@ -10,5 +10,5 @@ public class VendaProdutoEstoque
     public required int ProdutoId { get; set; }
     public required string Lote { get; set; }
     public required int Quantidade { get; set; } = 1;
-    public required virtual ProdutoEstoque ProdutoEstoque { get; set; }
+    public virtual ProdutoEstoque? ProdutoEstoque { get; set; }
 }

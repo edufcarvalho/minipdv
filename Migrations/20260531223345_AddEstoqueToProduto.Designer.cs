@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using minipdv.Infrastructure.Data.Context;
 
@@ -11,9 +12,11 @@ using minipdv.Infrastructure.Data.Context;
 namespace minipdv.Migrations
 {
     [DbContext(typeof(MiniPDVContext))]
-    partial class MiniPDVContextModelSnapshot : ModelSnapshot
+    [Migration("20260531223345_AddEstoqueToProduto")]
+    partial class AddEstoqueToProduto
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -108,7 +111,7 @@ namespace minipdv.Migrations
                         .IsUnique()
                         .HasFilter("[ContatoId] IS NOT NULL");
 
-                    b.ToTable("Clientes", (string)null);
+                    b.ToTable("Clientes");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Contato", b =>
@@ -135,7 +138,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Contatos", (string)null);
+                    b.ToTable("Contatos");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Fabricante", b =>
@@ -176,7 +179,7 @@ namespace minipdv.Migrations
                         .IsUnique()
                         .HasFilter("[ContatoId] IS NOT NULL");
 
-                    b.ToTable("Fabricantes", (string)null);
+                    b.ToTable("Fabricantes");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Prescritor", b =>
@@ -242,7 +245,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PrincipiosAtivos", (string)null);
+                    b.ToTable("PrincipiosAtivos");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Produto", b =>
@@ -302,7 +305,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoGrupoId");
 
-                    b.ToTable("Produtos", (string)null);
+                    b.ToTable("Produtos");
 
                     b.HasDiscriminator<bool>("Controlado").HasValue(false);
 
@@ -324,7 +327,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoId");
 
-                    b.ToTable("ProdutoCodBarras", (string)null);
+                    b.ToTable("ProdutoCodBarras");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.ProdutoEstoque", b =>
@@ -351,7 +354,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("ProdutoId", "Lote");
 
-                    b.ToTable("ProdutoEstoques", (string)null);
+                    b.ToTable("ProdutoEstoques");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.ProdutoGrupo", b =>
@@ -378,7 +381,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProdutoGrupos", (string)null);
+                    b.ToTable("ProdutoGrupos");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.ProdutoTipo", b =>
@@ -402,7 +405,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProdutoTipos", (string)null);
+                    b.ToTable("ProdutoTipos");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Receita", b =>
@@ -470,7 +473,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoId", "Lote");
 
-                    b.ToTable("ReceitaProdutoEstoque", (string)null);
+                    b.ToTable("ReceitaProdutoEstoque");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Session", b =>
@@ -568,7 +571,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoId", "Lote");
 
-                    b.ToTable("VendaProdutoEstoque", (string)null);
+                    b.ToTable("VendaProdutoEstoque");
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Administrador", b =>

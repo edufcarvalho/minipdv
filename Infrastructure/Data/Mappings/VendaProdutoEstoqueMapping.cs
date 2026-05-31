@@ -19,9 +19,6 @@ public class VendaProdutoEstoqueMapping : IEntityTypeConfiguration<VendaProdutoE
             .HasForeignKey(vpe => vpe.VendaId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(vpe => vpe.ProdutoEstoque)
-            .WithMany(pe => pe.VendaProdutoEstoques)
-            .HasForeignKey(vpe => new { vpe.ProdutoId, vpe.Lote })
-            .OnDelete(DeleteBehavior.Cascade);
+        builder.Ignore(vpe => vpe.ProdutoEstoque);
     }
 }

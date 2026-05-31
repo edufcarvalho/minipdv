@@ -46,20 +46,20 @@ public class VendaService : IVendaService
             using var transaction = await _context.Database.BeginTransactionAsync();
             foreach (var vpe in entity.VendaProdutoEstoques)
             {
-                var estoque = await _produtoEstoqueRepository.GetByIdAsync(vpe.ProdutoId, vpe.Lote)
-                    ?? throw new InvalidOperationException(
-                        $"Estoque não encontrado para o produto {vpe.ProdutoId} lote {vpe.Lote}");
-
-                if (estoque.Quantidade < vpe.Quantidade)
-                    throw new InvalidOperationException(
-                        $"Estoque insuficiente para o produto {vpe.ProdutoId} lote {vpe.Lote}. " +
-                        $"Disponível: {estoque.Quantidade}, solicitado: {vpe.Quantidade}");
-
                 var produto = await _context.Set<Produto>()
                     .FirstAsync(p => p.Id == vpe.ProdutoId);
 
                 if (produto.Controlado)
                 {
+                    var estoque = await _produtoEstoqueRepository.GetByIdAsync(vpe.ProdutoId, vpe.Lote)
+                        ?? throw new InvalidOperationException(
+                            $"Estoque não encontrado para o produto controlado {vpe.ProdutoId} lote {vpe.Lote}");
+
+                    if (estoque.Quantidade < vpe.Quantidade)
+                        throw new InvalidOperationException(
+                            $"Estoque insuficiente para o produto controlado {vpe.ProdutoId} lote {vpe.Lote}. " +
+                            $"Disponível: {estoque.Quantidade}, solicitado: {vpe.Quantidade}");
+
                     if (string.IsNullOrWhiteSpace(estoque.Lote))
                         throw new InvalidOperationException(
                             $"Lote é obrigatório para o produto controlado {vpe.ProdutoId}");
@@ -67,10 +67,12 @@ public class VendaService : IVendaService
                     if (string.IsNullOrWhiteSpace(produto.RegistroMS))
                         throw new InvalidOperationException(
                             $"Registro MS é obrigatório para o produto controlado {vpe.ProdutoId}");
+
+                    estoque.Quantidade -= vpe.Quantidade;
+                    vpe.ProdutoEstoque = estoque;
                 }
 
-                estoque.Quantidade -= vpe.Quantidade;
-                vpe.ProdutoEstoque = estoque;
+                produto.Estoque -= vpe.Quantidade;
             }
 
             entity.CriadoEm = DateTime.UtcNow;
@@ -110,9 +112,15 @@ public class VendaService : IVendaService
 
             foreach (var vpe in entity.VendaProdutoEstoques)
             {
-                var estoque = await _produtoEstoqueRepository.GetByIdAsync(vpe.ProdutoId, vpe.Lote);
-                if (estoque is not null)
-                    estoque.Quantidade += vpe.Quantidade;
+                var produto = await _context.Set<Produto>()
+                    .FirstAsync(p => p.Id == vpe.ProdutoId);
+
+                if (produto.Controlado && vpe.ProdutoEstoque != null)
+                {
+                    vpe.ProdutoEstoque.Quantidade += vpe.Quantidade;
+                }
+
+                produto.Estoque += vpe.Quantidade;
             }
 
             entity.CanceladoEm = DateTime.UtcNow;

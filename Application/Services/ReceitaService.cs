@@ -57,6 +57,7 @@ public class ReceitaService : IReceitaService
 
                 estoque.Quantidade -= rpe.Quantidade;
                 rpe.ProdutoEstoque = estoque;
+                await SyncProdutoEstoqueAsync(rpe.ProdutoId);
             }
 
             entity.CriadoEm = DateTime.UtcNow;
@@ -81,6 +82,7 @@ public class ReceitaService : IReceitaService
 
             var oldItems = existing.ReceitaProdutoEstoques.ToList();
             var newItems = entity.ReceitaProdutoEstoques.ToList();
+            var affectedProdutos = new HashSet<int>();
 
             foreach (var old in oldItems)
             {
@@ -90,6 +92,7 @@ public class ReceitaService : IReceitaService
                     var estoque = await _produtoEstoqueRepository.GetByIdAsync(old.ProdutoId, old.Lote);
                     if (estoque is not null)
                         estoque.Quantidade += old.Quantidade;
+                    affectedProdutos.Add(old.ProdutoId);
                 }
             }
 
@@ -109,6 +112,7 @@ public class ReceitaService : IReceitaService
 
                     estoque.Quantidade -= newItem.Quantidade;
                     newItem.ProdutoEstoque = estoque;
+                    affectedProdutos.Add(newItem.ProdutoId);
                 }
             }
 
@@ -121,6 +125,9 @@ public class ReceitaService : IReceitaService
             _context.Set<ReceitaProdutoEstoque>().RemoveRange(oldItems);
             existing.ReceitaProdutoEstoques = newItems;
             existing.AtualizadoEm = DateTime.UtcNow;
+
+            foreach (var prodId in affectedProdutos)
+                await SyncProdutoEstoqueAsync(prodId);
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -148,6 +155,7 @@ public class ReceitaService : IReceitaService
                 var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote);
                 if (estoque is not null)
                     estoque.Quantidade += rpe.Quantidade;
+                await SyncProdutoEstoqueAsync(rpe.ProdutoId);
             }
 
             _context.Receitas.Remove(entity);
@@ -159,5 +167,16 @@ public class ReceitaService : IReceitaService
     public async Task<bool> ExistsAsync(int id)
     {
         return await _repository.ExistsAsync(id);
+    }
+
+    private async Task SyncProdutoEstoqueAsync(int produtoId)
+    {
+        var total = await _context.Set<ProdutoEstoque>()
+            .Where(e => e.ProdutoId == produtoId)
+            .SumAsync(e => e.Quantidade);
+
+        await _context.Set<Produto>()
+            .Where(p => p.Id == produtoId)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estoque, total));
     }
 }

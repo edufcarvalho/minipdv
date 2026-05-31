@@ -15,8 +15,6 @@ public class VendaRepository : Repository<Venda>, IVendaRepository
             .Include(v => v.Vendedor)
             .Include(v => v.Cliente)
             .Include(v => v.VendaProdutoEstoques)
-                .ThenInclude(vpe => vpe.ProdutoEstoque)
-                    .ThenInclude(pe => pe.Produto)
             .FirstOrDefaultAsync(v => v.Id == id);
     }
 
@@ -26,8 +24,6 @@ public class VendaRepository : Repository<Venda>, IVendaRepository
             .Include(v => v.Vendedor)
             .Include(v => v.Cliente)
             .Include(v => v.VendaProdutoEstoques)
-                .ThenInclude(vpe => vpe.ProdutoEstoque)
-                    .ThenInclude(pe => pe.Produto)
             .ToListAsync();
     }
 }
