@@ -34,6 +34,7 @@ services:
       - .:/app
       - /app/bin
       - /app/obj
+      - /app/keys
     working_dir: /app
     entrypoint: ["/bin/bash", "/app/entrypoint.sh"]
 
@@ -58,6 +59,11 @@ services:
       DB_SERVER: db,1433
     ports:
       - "5000:5000"
+    volumes:
+      - .:/app
+      - /app/bin
+      - /app/obj
+      - /app/keys
 
 volumes:
   sqlserver_data:
