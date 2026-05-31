@@ -17,7 +17,7 @@ public class SessionMapping : IEntityTypeConfiguration<Session>
 
         builder.Property(s => s.Token)
             .IsRequired()
-            .HasMaxLength(128);
+            .HasMaxLength(2048);
 
         builder.Property(s => s.DeviceInfo)
             .IsRequired()

@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using minipdv.Data.Interfaces;
+using minipdv.Infrastructure.Data.Interfaces;
 using minipdv.Domain.Entities;
 using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Data.Context;
@@ -137,11 +137,13 @@ public class DatabaseInitializer : IDatabaseInitializer
     {
         if (_context.Set<Administrador>().Any()) return;
 
+        var adminPassword = EnvConfig.Get("ADMIN_PASSWORD") ?? throw new InvalidOperationException("ADMIN_PASSWORD environment variable is required for database seeding");
+
         var admin = new Administrador
         {
             Nome = "Administrador",
             Login = "admin",
-            PasswordHash = PasswordHasher.Hash("admin123"),
+            PasswordHash = PasswordHasher.Hash(adminPassword),
             Ativo = true,
             TipoUsuario = "Administrador",
             CriadoEm = DateTime.UtcNow
@@ -154,11 +156,13 @@ public class DatabaseInitializer : IDatabaseInitializer
     {
         if (await _context.Set<Administrador>().AnyAsync()) return;
 
+        var adminPassword = EnvConfig.Get("ADMIN_PASSWORD") ?? throw new InvalidOperationException("ADMIN_PASSWORD environment variable is required for database seeding");
+
         var admin = new Administrador
         {
             Nome = "Administrador",
             Login = "admin",
-            PasswordHash = PasswordHasher.Hash("admin123"),
+            PasswordHash = PasswordHasher.Hash(adminPassword),
             Ativo = true,
             TipoUsuario = "Administrador",
             CriadoEm = DateTime.UtcNow
