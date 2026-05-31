@@ -1,4 +1,5 @@
 using minipdv.Domain.Entities;
+using minipdv.Presentation.Desktop.Components.Controls;
 
 namespace minipdv.Presentation.Desktop.Forms.Products;
 
@@ -87,12 +88,14 @@ public class ProdutosForm : Form
             dgv.Columns.Add("CodBarra", "Cód. Barras");
             dgv.Columns.Add("Descricao", "Descrição");
             dgv.Columns.Add("Dosagem", "Dosagem");
+            dgv.Columns.Add("Ativo", "Ativo");
             dgv.Columns.Add("Controlado", "Controlado");
+            dgv.Columns.Add("RegistroMS", "Reg. MS");
             dgv.Columns.Add("GrupoId", "Grupo ID");
 
             dgv.Rows.Clear();
             foreach (var p in _produtos)
-                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Controlado ? "Sim" : "Não", p.ProdutoGrupoId);
+                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Ativo ? "Sim" : "Não", p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.ProdutoGrupoId);
         }
         catch (Exception ex)
         {
@@ -109,6 +112,10 @@ public class ProdutosForm : Form
 
     private async Task AddItem()
     {
+        var grupos = await ApiClient.Instance.GetAsync<List<ProdutoGrupo>>("api/produtogrupos") ?? [];
+        var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
+        var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
+
         using var dialog = new Form
         {
             Text = "Novo Produto",
@@ -116,10 +123,10 @@ public class ProdutosForm : Form
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
             MinimizeBox = false,
-            ClientSize = new Size(450, 320)
+            ClientSize = new Size(450, 420)
         };
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 7, Padding = new Padding(15) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 10, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -135,17 +142,38 @@ public class ProdutosForm : Form
         var txtDosagem = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
         tbl.Controls.Add(txtDosagem, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "Grupo ID:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
-        var txtGrupo = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtGrupo, 1, 3);
+        tbl.Controls.Add(new Label { Text = "Grupo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var cmbGrupo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbGrupo.DataSource = grupos;
+        cmbGrupo.DisplayMember = "Nome";
+        cmbGrupo.ValueMember = "Id";
+        tbl.Controls.Add(cmbGrupo, 1, 3);
 
-        tbl.Controls.Add(new Label { Text = "Princ. Ativo ID:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
-        var txtPrinc = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtPrinc, 1, 4);
+        tbl.Controls.Add(new Label { Text = "Princ. Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var cmbPrinc = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbPrinc.DataSource = principios;
+        cmbPrinc.DisplayMember = "Nome";
+        cmbPrinc.ValueMember = "Id";
+        tbl.Controls.Add(cmbPrinc, 1, 4);
 
-        tbl.Controls.Add(new Label { Text = "Fabr. ID:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
-        var txtFab = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtFab, 1, 5);
+        tbl.Controls.Add(new Label { Text = "Fabricante:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        var cmbFab = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
+        cmbFab.DataSource = fabricantes;
+        cmbFab.DisplayMember = "NomeFantasia";
+        cmbFab.ValueMember = "Id";
+        tbl.Controls.Add(cmbFab, 1, 5);
+
+        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 6);
+        var chkAtivo = new CheckBox { Text = "Ativo", Checked = true, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(chkAtivo, 1, 6);
+
+        tbl.Controls.Add(new Label { Text = "Controlado:", TextAlign = ContentAlignment.MiddleLeft }, 0, 7);
+        var chkControlado = new CheckBox { Text = "Controlado", Checked = false, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(chkControlado, 1, 7);
+
+        tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 8);
+        var txtRegMs = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), PlaceholderText = "(opcional)" };
+        tbl.Controls.Add(txtRegMs, 1, 8);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
@@ -153,7 +181,7 @@ public class ProdutosForm : Form
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 6);
+        tbl.Controls.Add(btnPanel, 0, 9);
 
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk;
@@ -163,17 +191,19 @@ public class ProdutosForm : Form
 
         try
         {
+            var isControlado = chkControlado.Checked;
+            var regMs = txtRegMs.Text.Trim();
             var request = new
             {
                 descricao = txtDesc.Text.Trim(),
-                ativo = true,
+                ativo = chkAtivo.Checked,
                 codBarra = int.Parse(txtCod.Text.Trim()),
-                controlado = false,
+                controlado = isControlado,
                 dosagem = txtDosagem.Text.Trim(),
-                registroMS = (string?)null,
-                produtoGrupoId = int.Parse(txtGrupo.Text.Trim()),
-                fabricanteId = string.IsNullOrEmpty(txtFab.Text.Trim()) ? null : (int?)int.Parse(txtFab.Text.Trim()),
-                principioAtivoId = int.Parse(txtPrinc.Text.Trim())
+                registroMS = string.IsNullOrEmpty(regMs) ? null : regMs,
+                produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
+                fabricanteId = (int?)cmbFab.SelectedValue,
+                principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
             };
 
             var response = await ApiClient.Instance.PostAsync("api/produtos", request);
@@ -196,6 +226,10 @@ public class ProdutosForm : Form
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um produto.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
+        var grupos = await ApiClient.Instance.GetAsync<List<ProdutoGrupo>>("api/produtogrupos") ?? [];
+        var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
+        var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
+
         using var dialog = new Form
         {
             Text = "Editar Produto",
@@ -203,10 +237,10 @@ public class ProdutosForm : Form
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
             MinimizeBox = false,
-            ClientSize = new Size(450, 320)
+            ClientSize = new Size(450, 420)
         };
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 7, Padding = new Padding(15) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 10, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -222,17 +256,42 @@ public class ProdutosForm : Form
         var txtDosagem = new TextBox { Text = item.Dosagem, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
         tbl.Controls.Add(txtDosagem, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "Grupo ID:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
-        var txtGrupo = new TextBox { Text = item.ProdutoGrupoId.ToString(), Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtGrupo, 1, 3);
+        tbl.Controls.Add(new Label { Text = "Grupo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var cmbGrupo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbGrupo.DataSource = grupos;
+        cmbGrupo.DisplayMember = "Nome";
+        cmbGrupo.ValueMember = "Id";
+        cmbGrupo.SelectedValue = item.ProdutoGrupoId;
+        tbl.Controls.Add(cmbGrupo, 1, 3);
 
-        tbl.Controls.Add(new Label { Text = "Princ. Ativo ID:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
-        var txtPrinc = new TextBox { Text = item.PrincipioAtivoId.ToString(), Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtPrinc, 1, 4);
+        tbl.Controls.Add(new Label { Text = "Princ. Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var cmbPrinc = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbPrinc.DataSource = principios;
+        cmbPrinc.DisplayMember = "Nome";
+        cmbPrinc.ValueMember = "Id";
+        cmbPrinc.SelectedValue = item.PrincipioAtivoId;
+        tbl.Controls.Add(cmbPrinc, 1, 4);
 
-        tbl.Controls.Add(new Label { Text = "Fabr. ID:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
-        var txtFab = new TextBox { Text = item.FabricanteId?.ToString() ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtFab, 1, 5);
+        tbl.Controls.Add(new Label { Text = "Fabricante:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        var cmbFab = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
+        cmbFab.DataSource = fabricantes;
+        cmbFab.DisplayMember = "NomeFantasia";
+        cmbFab.ValueMember = "Id";
+        if (item.FabricanteId.HasValue)
+            cmbFab.SelectedValue = item.FabricanteId.Value;
+        tbl.Controls.Add(cmbFab, 1, 5);
+
+        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 6);
+        var chkAtivo = new CheckBox { Text = "Ativo", Checked = item.Ativo, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(chkAtivo, 1, 6);
+
+        tbl.Controls.Add(new Label { Text = "Controlado:", TextAlign = ContentAlignment.MiddleLeft }, 0, 7);
+        var chkControlado = new CheckBox { Text = "Controlado", Checked = item.Controlado, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(chkControlado, 1, 7);
+
+        tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 8);
+        var txtRegMs = new TextBox { Text = item.RegistroMS ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), PlaceholderText = "(opcional)" };
+        tbl.Controls.Add(txtRegMs, 1, 8);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
@@ -240,7 +299,7 @@ public class ProdutosForm : Form
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 6);
+        tbl.Controls.Add(btnPanel, 0, 9);
 
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk;
@@ -250,18 +309,20 @@ public class ProdutosForm : Form
 
         try
         {
+            var isControlado = chkControlado.Checked;
+            var regMs = txtRegMs.Text.Trim();
             var request = new
             {
                 id = item.Id,
                 descricao = txtDesc.Text.Trim(),
-                ativo = true,
+                ativo = chkAtivo.Checked,
                 codBarra = int.Parse(txtCod.Text.Trim()),
-                controlado = item.Controlado,
+                controlado = isControlado,
                 dosagem = txtDosagem.Text.Trim(),
-                registroMS = (string?)null,
-                produtoGrupoId = int.Parse(txtGrupo.Text.Trim()),
-                fabricanteId = string.IsNullOrEmpty(txtFab.Text.Trim()) ? null : (int?)int.Parse(txtFab.Text.Trim()),
-                principioAtivoId = int.Parse(txtPrinc.Text.Trim())
+                registroMS = string.IsNullOrEmpty(regMs) ? null : regMs,
+                produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
+                fabricanteId = (int?)cmbFab.SelectedValue,
+                principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
             };
 
             var response = await ApiClient.Instance.PutAsync($"api/produtos/{item.Id}", request);

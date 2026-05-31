@@ -15,7 +15,9 @@ if ($Env -eq "Production") {
 }
 
 Write-Host "`n=== Starting services with Podman Compose ==="
-podman compose down 2>$null; if (-not $?) { }
+# Ignore errors from "down" — it's just cleanup, and podman's external compose provider warning
+# triggers a NativeCommandError under $ErrorActionPreference "Stop"
+try { podman compose down 2>&1 | Out-Null } catch { }
 podman compose up -d $service
 
 Write-Host "`n=== Setup complete ($Env) ==="

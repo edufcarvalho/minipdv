@@ -1,5 +1,6 @@
 using System.Text.Json;
 using minipdv.Domain.Entities;
+using minipdv.Presentation.Desktop.Components.Controls;
 
 namespace minipdv.Presentation.Desktop.Forms.Shared;
 
@@ -8,9 +9,7 @@ public class PosForm : Form
     private readonly TextBox txtSearch;
     private readonly DataGridView dgvProducts;
     private readonly DataGridView dgvCart;
-    private readonly TextBox txtCliente;
-    private readonly Button btnBuscarCliente;
-    private readonly Label lblClienteId;
+    private readonly SearchableComboBox cmbCliente;
     private readonly Label lblTotalItens;
     private readonly Button btnFinalizar;
     private readonly Button btnRemover;
@@ -119,30 +118,8 @@ public class PosForm : Form
             Font = new Font("Segoe UI", 10)
         });
 
-        txtCliente = new TextBox { Width = 200, Height = 30, Font = new Font("Segoe UI", 10) };
-
-        btnBuscarCliente = new Button
-        {
-            Text = "Buscar",
-            Width = 70,
-            Height = 30,
-            Font = new Font("Segoe UI", 9),
-            Cursor = Cursors.Hand
-        };
-        btnBuscarCliente.Click += BtnBuscarCliente_Click;
-
-        lblClienteId = new Label
-        {
-            Text = "",
-            ForeColor = Color.Gray,
-            TextAlign = ContentAlignment.MiddleLeft,
-            Width = 80,
-            Height = 30
-        };
-
-        bottomPanel.Controls.Add(txtCliente);
-        bottomPanel.Controls.Add(btnBuscarCliente);
-        bottomPanel.Controls.Add(lblClienteId);
+        cmbCliente = new SearchableComboBox { Width = 260, Height = 30, PlaceholderText = "Buscar cliente..." };
+        bottomPanel.Controls.Add(cmbCliente);
 
         rightPanel.Controls.Add(bottomPanel, 0, 1);
 
@@ -209,7 +186,14 @@ public class PosForm : Form
 
         Controls.Add(mainTable);
 
-        Load += async (_, _) => await SearchProducts();
+        Load += async (_, _) =>
+        {
+            await SearchProducts();
+            var clientes = await ApiClient.Instance.GetAsync<List<Cliente>>("api/clientes") ?? [];
+            cmbCliente.DataSource = clientes;
+            cmbCliente.DisplayMember = "Nome";
+            cmbCliente.ValueMember = "Id";
+        };
     }
 
     private static DataGridView CreateDataGrid()
@@ -348,35 +332,6 @@ public class PosForm : Form
         }
     }
 
-    private async void BtnBuscarCliente_Click(object? sender, EventArgs e)
-    {
-        var nome = txtCliente.Text.Trim();
-        if (string.IsNullOrEmpty(nome)) return;
-
-        try
-        {
-            var clientes = await ApiClient.Instance.GetAsync<List<Cliente>>("api/clientes");
-            var match = clientes?.FirstOrDefault(c =>
-                c.Nome.Contains(nome, StringComparison.OrdinalIgnoreCase) ||
-                c.Cpf.Contains(nome));
-
-            if (match != null)
-            {
-                txtCliente.Text = match.Nome;
-                lblClienteId.Text = $"ID: {match.Id}";
-                lblClienteId.Tag = match.Id;
-            }
-            else
-            {
-                MessageBox.Show("Cliente não encontrado.", "Busca", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Erro ao buscar cliente: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
-    }
-
     private async Task FinalizarVenda()
     {
         if (_cart.Count == 0)
@@ -385,7 +340,7 @@ public class PosForm : Form
             return;
         }
 
-        if (lblClienteId.Tag == null)
+        if (cmbCliente.SelectedValue == null)
         {
             MessageBox.Show("Selecione um cliente para a venda.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
@@ -407,7 +362,7 @@ public class PosForm : Form
             var request = new
             {
                 vendedorId = ApiClient.Instance.UserId,
-                clienteId = (int)lblClienteId.Tag,
+                clienteId = (int)cmbCliente.SelectedValue,
                 receitaId = (int?)null,
                 produtos = _cart.Select(c => new
                 {
@@ -424,9 +379,7 @@ public class PosForm : Form
                 MessageBox.Show("Venda registrada com sucesso!", "Sucesso", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 _cart.Clear();
                 BindCartGrid();
-                txtCliente.Clear();
-                lblClienteId.Text = "";
-                lblClienteId.Tag = null;
+                cmbCliente.ClearSelection();
             }
             else
             {

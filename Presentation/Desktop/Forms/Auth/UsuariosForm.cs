@@ -1,4 +1,7 @@
+using System.Text.Json;
+using minipdv.Application.DTOs.Auth;
 using minipdv.Domain.Entities;
+using minipdv.Presentation.Desktop.Components.Controls;
 
 namespace minipdv.Presentation.Desktop.Forms.Auth;
 
@@ -56,9 +59,11 @@ public class UsuariosForm : Form
             dgv.Columns.Add("Nome", "Nome");
             dgv.Columns.Add("Login", "Login");
             dgv.Columns.Add("Ativo", "Ativo");
+            dgv.Columns.Add("Email", "Email");
+            dgv.Columns.Add("Telefone", "Telefone");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.Nome, item.Login, item.Ativo ? "Sim" : "Não");
+                dgv.Rows.Add(item.Id, item.Nome, item.Login, item.Ativo ? "Sim" : "Não", item.Contato?.Email ?? "", item.Contato?.Telefone ?? "");
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
@@ -70,10 +75,34 @@ public class UsuariosForm : Form
         return null;
     }
 
+    private async Task<int?> CreateOrUpdateContatoAsync(int? contatoId, string email, string telefone)
+    {
+        if (string.IsNullOrEmpty(email) && string.IsNullOrEmpty(telefone))
+            return contatoId;
+
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        if (contatoId.HasValue)
+        {
+            await ApiClient.Instance.PutAsync($"api/contatos/{contatoId.Value}", new { id = contatoId.Value, email, telefone });
+            return contatoId;
+        }
+
+        var response = await ApiClient.Instance.PostAsync("api/contatos", new { email, telefone });
+        if (!response.IsSuccessStatusCode) return null;
+        var json = await response.Content.ReadAsStringAsync();
+        var contato = JsonSerializer.Deserialize<Contato>(json, jsonOptions);
+        return contato?.Id;
+    }
+
     private async Task AddItem()
     {
-        using var dialog = new Form { Text = "Novo Usuário", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 200) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(15) };
+        using var dialog = new Form { Text = "Novo Usuário", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 280) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 7, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -90,30 +119,77 @@ public class UsuariosForm : Form
         tbl.Controls.Add(txtSenha, 1, 2);
 
         tbl.Controls.Add(new Label { Text = "Tipo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
-        var txtTipo = new TextBox { Text = "Usuario", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtTipo, 1, 3);
+        var cmbTipo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbTipo.DataSource = new List<string> { "Usuario", "Farmaceutico", "Administrador" };
+        cmbTipo.SelectedValue = "Usuario";
+        tbl.Controls.Add(cmbTipo, 1, 3);
+
+        tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var txtEmail = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtEmail, 1, 4);
+
+        tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        var txtTelefone = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtTelefone, 1, 5);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
         var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 4);
+        tbl.Controls.Add(btnPanel, 0, 6);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
         try
         {
+            var jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+
             var response = await ApiClient.Instance.PostAsync("api/auth/register", new
             {
                 nome = txtNome.Text.Trim(),
                 login = txtLogin.Text.Trim(),
                 password = txtSenha.Text,
-                tipo = txtTipo.Text.Trim()
+                tipo = cmbTipo.SelectedValue?.ToString() ?? "Usuario"
             });
-            if (response.IsSuccessStatusCode) await LoadData();
-            else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!response.IsSuccessStatusCode)
+            {
+                MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            var authResult = JsonSerializer.Deserialize<AuthResponse>(json, jsonOptions);
+            if (authResult == null || authResult.Id == 0) return;
+
+            var email = txtEmail.Text.Trim();
+            var telefone = txtTelefone.Text.Trim();
+            var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
+
+            if (contatoId.HasValue)
+            {
+                var user = await ApiClient.Instance.GetAsync<Usuario>($"api/usuarios/{authResult.Id}");
+                if (user != null)
+                {
+                    await ApiClient.Instance.PutAsync($"api/usuarios/{authResult.Id}", new
+                    {
+                        id = authResult.Id,
+                        nome = user.Nome,
+                        login = user.Login,
+                        passwordHash = user.PasswordHash,
+                        ativo = user.Ativo,
+                        tipoUsuario = user.TipoUsuario,
+                        contatoId
+                    });
+                }
+            }
+
+            await LoadData();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
@@ -123,8 +199,15 @@ public class UsuariosForm : Form
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um usuário.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
-        using var dialog = new Form { Text = "Editar Usuário", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 200) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(15) };
+        Contato? contato = null;
+        if (item.ContatoId.HasValue)
+        {
+            try { contato = await ApiClient.Instance.GetAsync<Contato>($"api/contatos/{item.ContatoId.Value}"); }
+            catch { }
+        }
+
+        using var dialog = new Form { Text = "Editar Usuário", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 320) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 8, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -140,30 +223,49 @@ public class UsuariosForm : Form
         var txtSenha = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), UseSystemPasswordChar = true };
         tbl.Controls.Add(txtSenha, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
-        var txtAtivo = new TextBox { Text = item.Ativo ? "true" : "false", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtAtivo, 1, 3);
+        tbl.Controls.Add(new Label { Text = "Tipo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var cmbTipo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbTipo.DataSource = new List<string> { "Usuario", "Farmaceutico", "Administrador" };
+        cmbTipo.SelectedValue = item.TipoUsuario;
+        tbl.Controls.Add(cmbTipo, 1, 3);
+
+        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var chkAtivo = new CheckBox { Text = "Ativo", Checked = item.Ativo, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(chkAtivo, 1, 4);
+
+        tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        var txtEmail = new TextBox { Text = contato?.Email ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtEmail, 1, 5);
+
+        tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 6);
+        var txtTelefone = new TextBox { Text = contato?.Telefone ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtTelefone, 1, 6);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
         var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 4);
+        tbl.Controls.Add(btnPanel, 0, 7);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
         try
         {
+            var email = txtEmail.Text.Trim();
+            var telefone = txtTelefone.Text.Trim();
+            var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
+
             var response = await ApiClient.Instance.PutAsync($"api/usuarios/{item.Id}", new
             {
                 id = item.Id,
                 nome = txtNome.Text.Trim(),
                 login = txtLogin.Text.Trim(),
                 passwordHash = item.PasswordHash,
-                ativo = txtAtivo.Text.Trim() == "true",
-                tipoUsuario = item.TipoUsuario
+                ativo = chkAtivo.Checked,
+                tipoUsuario = cmbTipo.SelectedValue?.ToString() ?? item.TipoUsuario,
+                contatoId
             });
             if (response.IsSuccessStatusCode) await LoadData();
             else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);

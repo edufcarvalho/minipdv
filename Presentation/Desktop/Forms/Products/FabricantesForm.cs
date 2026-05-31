@@ -1,3 +1,4 @@
+using System.Text.Json;
 using minipdv.Domain.Entities;
 
 namespace minipdv.Presentation.Desktop.Forms.Products;
@@ -56,9 +57,11 @@ public class FabricantesForm : Form
             dgv.Columns.Add("NomeFantasia", "Nome Fantasia");
             dgv.Columns.Add("RazaoSocial", "Razão Social");
             dgv.Columns.Add("Cnpj", "CNPJ");
+            dgv.Columns.Add("Email", "Email");
+            dgv.Columns.Add("Telefone", "Telefone");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.NomeFantasia, item.RazaoSocial, item.Cnpj);
+                dgv.Rows.Add(item.Id, item.NomeFantasia, item.RazaoSocial, item.Cnpj, item.Contato?.Email ?? "", item.Contato?.Telefone ?? "");
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
@@ -70,10 +73,34 @@ public class FabricantesForm : Form
         return null;
     }
 
+    private async Task<int?> CreateOrUpdateContatoAsync(int? contatoId, string email, string telefone)
+    {
+        if (string.IsNullOrEmpty(email) && string.IsNullOrEmpty(telefone))
+            return contatoId;
+
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        if (contatoId.HasValue)
+        {
+            await ApiClient.Instance.PutAsync($"api/contatos/{contatoId.Value}", new { id = contatoId.Value, email, telefone });
+            return contatoId;
+        }
+
+        var response = await ApiClient.Instance.PostAsync("api/contatos", new { email, telefone });
+        if (!response.IsSuccessStatusCode) return null;
+        var json = await response.Content.ReadAsStringAsync();
+        var contato = JsonSerializer.Deserialize<Contato>(json, jsonOptions);
+        return contato?.Id;
+    }
+
     private async Task AddItem()
     {
-        using var dialog = new Form { Text = "Novo Fabricante", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 200) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 4, Padding = new Padding(15) };
+        using var dialog = new Form { Text = "Novo Fabricante", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 280) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 6, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -89,19 +116,31 @@ public class FabricantesForm : Form
         var txtCNPJ = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
         tbl.Controls.Add(txtCNPJ, 1, 2);
 
+        tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var txtEmail = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtEmail, 1, 3);
+
+        tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var txtTelefone = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtTelefone, 1, 4);
+
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
         var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 3);
+        tbl.Controls.Add(btnPanel, 0, 5);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
         try
         {
-            var response = await ApiClient.Instance.PostAsync("api/fabricantes", new { nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj = txtCNPJ.Text.Trim() });
+            var email = txtEmail.Text.Trim();
+            var telefone = txtTelefone.Text.Trim();
+            var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
+
+            var response = await ApiClient.Instance.PostAsync("api/fabricantes", new { nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj = txtCNPJ.Text.Trim(), contatoId });
             if (response.IsSuccessStatusCode) await LoadData();
             else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -112,8 +151,16 @@ public class FabricantesForm : Form
     {
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um fabricante.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-        using var dialog = new Form { Text = "Editar Fabricante", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 200) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 4, Padding = new Padding(15) };
+
+        Contato? contato = null;
+        if (item.ContatoId.HasValue)
+        {
+            try { contato = await ApiClient.Instance.GetAsync<Contato>($"api/contatos/{item.ContatoId.Value}"); }
+            catch { }
+        }
+
+        using var dialog = new Form { Text = "Editar Fabricante", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 280) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 6, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -129,19 +176,31 @@ public class FabricantesForm : Form
         var txtCNPJ = new TextBox { Text = item.Cnpj, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
         tbl.Controls.Add(txtCNPJ, 1, 2);
 
+        tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var txtEmail = new TextBox { Text = contato?.Email ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtEmail, 1, 3);
+
+        tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var txtTelefone = new TextBox { Text = contato?.Telefone ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtTelefone, 1, 4);
+
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
         var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 3);
+        tbl.Controls.Add(btnPanel, 0, 5);
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk; dialog.CancelButton = btnCancel;
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
         try
         {
-            var response = await ApiClient.Instance.PutAsync($"api/fabricantes/{item.Id}", new { id = item.Id, nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj = txtCNPJ.Text.Trim() });
+            var email = txtEmail.Text.Trim();
+            var telefone = txtTelefone.Text.Trim();
+            var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
+
+            var response = await ApiClient.Instance.PutAsync($"api/fabricantes/{item.Id}", new { id = item.Id, nomeFantasia = txtNF.Text.Trim(), razaoSocial = txtRS.Text.Trim(), cnpj = txtCNPJ.Text.Trim(), contatoId });
             if (response.IsSuccessStatusCode) await LoadData();
             else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }

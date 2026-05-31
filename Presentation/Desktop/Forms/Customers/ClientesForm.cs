@@ -94,10 +94,12 @@ public class ClientesForm : Form
             dgv.Columns.Add("Id", "ID");
             dgv.Columns.Add("Nome", "Nome");
             dgv.Columns.Add("Cpf", "CPF");
+            dgv.Columns.Add("Email", "Email");
+            dgv.Columns.Add("Telefone", "Telefone");
 
             dgv.Rows.Clear();
             foreach (var c in _clientes)
-                dgv.Rows.Add(c.Id, c.Nome, c.Cpf);
+                dgv.Rows.Add(c.Id, c.Nome, c.Cpf, c.Contato?.Email ?? "", c.Contato?.Telefone ?? "");
         }
         catch (Exception ex)
         {
@@ -112,6 +114,43 @@ public class ClientesForm : Form
         return null;
     }
 
+    private async Task<int?> CreateOrUpdateContatoAsync(int? contatoId, string email, string telefone)
+    {
+        if (string.IsNullOrEmpty(email) && string.IsNullOrEmpty(telefone))
+            return contatoId;
+
+        var jsonOptions = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+        };
+
+        if (contatoId.HasValue)
+        {
+            var payload = new { id = contatoId.Value, email, telefone };
+            var response = await ApiClient.Instance.PutAsync($"api/contatos/{contatoId.Value}", payload);
+            if (!response.IsSuccessStatusCode)
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                MessageBox.Show($"Erro ao atualizar contato: {err}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            return contatoId;
+        }
+
+        var payload2 = new { email, telefone };
+        var response2 = await ApiClient.Instance.PostAsync("api/contatos", payload2);
+        if (!response2.IsSuccessStatusCode)
+        {
+            var err2 = await response2.Content.ReadAsStringAsync();
+            MessageBox.Show($"Erro ao criar contato: {err2}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return null;
+        }
+
+        var json = await response2.Content.ReadAsStringAsync();
+        var contato = System.Text.Json.JsonSerializer.Deserialize<Contato>(json, jsonOptions);
+        return contato?.Id;
+    }
+
     private async Task AddItem()
     {
         using var dialog = new Form
@@ -121,10 +160,10 @@ public class ClientesForm : Form
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
             MinimizeBox = false,
-            ClientSize = new Size(400, 200)
+            ClientSize = new Size(400, 240)
         };
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 4, Padding = new Padding(15) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -140,13 +179,17 @@ public class ClientesForm : Form
         var txtEmail = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
         tbl.Controls.Add(txtEmail, 1, 2);
 
+        tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var txtTelefone = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtTelefone, 1, 3);
+
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
         var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 3);
+        tbl.Controls.Add(btnPanel, 0, 4);
 
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk;
@@ -164,7 +207,11 @@ public class ClientesForm : Form
 
         try
         {
-            var response = await ApiClient.Instance.PostAsync("api/clientes", new { nome, cpf });
+            var email = txtEmail.Text.Trim();
+            var telefone = txtTelefone.Text.Trim();
+            var contatoId = await CreateOrUpdateContatoAsync(null, email, telefone);
+
+            var response = await ApiClient.Instance.PostAsync("api/clientes", new { nome, cpf, contatoId });
             if (response.IsSuccessStatusCode)
                 await LoadData();
             else
@@ -184,6 +231,13 @@ public class ClientesForm : Form
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um cliente.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
+        Contato? contato = null;
+        if (item.ContatoId.HasValue)
+        {
+            try { contato = await ApiClient.Instance.GetAsync<Contato>($"api/contatos/{item.ContatoId.Value}"); }
+            catch { }
+        }
+
         using var dialog = new Form
         {
             Text = "Editar Cliente",
@@ -191,10 +245,10 @@ public class ClientesForm : Form
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
             MinimizeBox = false,
-            ClientSize = new Size(400, 200)
+            ClientSize = new Size(400, 240)
         };
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 4, Padding = new Padding(15) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(15) };
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -207,8 +261,12 @@ public class ClientesForm : Form
         tbl.Controls.Add(txtCpf, 1, 1);
 
         tbl.Controls.Add(new Label { Text = "Email:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtEmail = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        var txtEmail = new TextBox { Text = contato?.Email ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
         tbl.Controls.Add(txtEmail, 1, 2);
+
+        tbl.Controls.Add(new Label { Text = "Telefone:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var txtTelefone = new TextBox { Text = contato?.Telefone ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txtTelefone, 1, 3);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
@@ -216,7 +274,7 @@ public class ClientesForm : Form
         var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnOk);
         btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 3);
+        tbl.Controls.Add(btnPanel, 0, 4);
 
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk;
@@ -226,7 +284,11 @@ public class ClientesForm : Form
 
         try
         {
-            var response = await ApiClient.Instance.PutAsync($"api/clientes/{item.Id}", new { id = item.Id, nome = txtNome.Text.Trim(), cpf = txtCpf.Text.Trim() });
+            var email = txtEmail.Text.Trim();
+            var telefone = txtTelefone.Text.Trim();
+            var contatoId = await CreateOrUpdateContatoAsync(item.ContatoId, email, telefone);
+
+            var response = await ApiClient.Instance.PutAsync($"api/clientes/{item.Id}", new { id = item.Id, nome = txtNome.Text.Trim(), cpf = txtCpf.Text.Trim(), contatoId });
             if (response.IsSuccessStatusCode)
                 await LoadData();
             else

@@ -1,4 +1,6 @@
 using minipdv.Domain.Entities;
+using minipdv.Domain.Enums;
+using minipdv.Presentation.Desktop.Components.Controls;
 
 namespace minipdv.Presentation.Desktop.Forms.Services;
 
@@ -87,12 +89,14 @@ public class PrescritoresForm : Form
         tbl.Controls.Add(txtNumero, 1, 1);
 
         tbl.Controls.Add(new Label { Text = "Conselho:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtConselho = new TextBox { Text = "CRM", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtConselho, 1, 2);
+        var cmbConselho = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbConselho.DataSource = Enum.GetValues<Conselho>().Cast<object>().ToList();
+        tbl.Controls.Add(cmbConselho, 1, 2);
 
         tbl.Controls.Add(new Label { Text = "UF:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
-        var txtUf = new TextBox { Text = "SP", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtUf, 1, 3);
+        var cmbUf = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbUf.DataSource = Enum.GetValues<UF>().Cast<object>().ToList();
+        tbl.Controls.Add(cmbUf, 1, 3);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
@@ -110,8 +114,8 @@ public class PrescritoresForm : Form
             {
                 nome = txtNome.Text.Trim(),
                 numero = txtNumero.Text.Trim(),
-                conselho = txtConselho.Text.Trim(),
-                uf = txtUf.Text.Trim()
+                conselho = cmbConselho.SelectedValue?.ToString() ?? "",
+                uf = cmbUf.SelectedValue?.ToString() ?? ""
             });
             if (response.IsSuccessStatusCode) await LoadData();
             else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -138,12 +142,16 @@ public class PrescritoresForm : Form
         tbl.Controls.Add(txtNumero, 1, 1);
 
         tbl.Controls.Add(new Label { Text = "Conselho:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtConselho = new TextBox { Text = item.Conselho.ToString(), Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtConselho, 1, 2);
+        var cmbConselho = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbConselho.DataSource = Enum.GetValues<Conselho>().Cast<object>().ToList();
+        cmbConselho.SelectedValue = item.Conselho;
+        tbl.Controls.Add(cmbConselho, 1, 2);
 
         tbl.Controls.Add(new Label { Text = "UF:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
-        var txtUf = new TextBox { Text = item.Uf.ToString(), Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtUf, 1, 3);
+        var cmbUf = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbUf.DataSource = Enum.GetValues<UF>().Cast<object>().ToList();
+        cmbUf.SelectedValue = item.Uf;
+        tbl.Controls.Add(cmbUf, 1, 3);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tbl.SetColumnSpan(btnPanel, 2);
@@ -162,8 +170,8 @@ public class PrescritoresForm : Form
                 id = item.Id,
                 nome = txtNome.Text.Trim(),
                 numero = txtNumero.Text.Trim(),
-                conselho = txtConselho.Text.Trim(),
-                uf = txtUf.Text.Trim()
+                conselho = cmbConselho.SelectedValue?.ToString() ?? "",
+                uf = cmbUf.SelectedValue?.ToString() ?? ""
             });
             if (response.IsSuccessStatusCode) await LoadData();
             else MessageBox.Show($"Erro: {await response.Content.ReadAsStringAsync()}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error);
