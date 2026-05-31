@@ -13,19 +13,15 @@ public class VendaValidator : AbstractValidator<Venda>
         RuleFor(v => v.ClienteId)
             .GreaterThan(0);
 
-        RuleFor(v => v.VendaProdutoEstoques)
+        RuleFor(v => v.VendaItens)
             .NotEmpty()
             .WithMessage("A venda deve conter pelo menos um produto");
 
-        RuleForEach(v => v.VendaProdutoEstoques)
+        RuleForEach(v => v.VendaItens)
             .ChildRules(item =>
             {
                 item.RuleFor(i => i.ProdutoId)
                     .GreaterThan(0);
-
-                item.RuleFor(i => i.Lote)
-                    .NotEmpty()
-                    .MaximumLength(50);
 
                 item.RuleFor(i => i.Quantidade)
                     .GreaterThan(0);

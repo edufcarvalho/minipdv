@@ -9,6 +9,5 @@ public record CreateVendaRequest(
 
 public record VendaProdutoItem(
     int ProdutoId,
-    string Lote,
     int Quantidade = 1
 );

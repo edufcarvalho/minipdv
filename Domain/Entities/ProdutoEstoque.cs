@@ -13,7 +13,6 @@ public class ProdutoEstoque
     public DateTime? Validade { get; set; }
     public required int Quantidade { get; set; }
     public virtual ICollection<ReceitaProdutoEstoque> ReceitaProdutoEstoques { get; set; } = [];
-    public virtual ICollection<VendaProdutoEstoque> VendaProdutoEstoques { get; set; } = [];
     public string? ProdutoDescricao => Produto?.Descricao;
     [NotMapped]
     public IEnumerable<Receita> Receitas =>

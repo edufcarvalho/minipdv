@@ -12,6 +12,6 @@ public class Venda : Entity
     [ForeignKey(nameof(VendedorId))]
     public required virtual Usuario Vendedor { get; set; }
     public DateTime? CanceladoEm { get; set; }
-    public virtual ICollection<VendaProdutoEstoque> VendaProdutoEstoques { get; set; } = [];
+    public virtual ICollection<VendaItem> VendaItens { get; set; } = [];
     public virtual ICollection<Receita> Receitas { get; set; } = [];
 }
