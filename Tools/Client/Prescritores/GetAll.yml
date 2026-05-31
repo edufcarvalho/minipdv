@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{baseUrl}/api/prescritores"
+  url: "{{baseUrl}}/api/prescritores"
   auth: inherit
 
 settings:

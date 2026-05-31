@@ -5,7 +5,7 @@ info:
 
 http:
   method: PUT
-  url: "{baseUrl}/api/farmaceuticos/{{id}}"
+  url: "{{baseUrl}}/api/farmaceuticos/{{id}}"
   auth: inherit
   body:
     type: json

@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: "{baseUrl}/api/fabricantes"
+  url: "{{baseUrl}}/api/fabricantes"
   auth: inherit
   body:
     type: json

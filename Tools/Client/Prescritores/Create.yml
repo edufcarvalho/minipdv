@@ -5,11 +5,17 @@ info:
 
 http:
   method: POST
-  url: "{baseUrl}/api/prescritores"
-  auth: inherit
+  url: "{{baseUrl}}/api/prescritores"
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nome": "Cassius Cley",
+        "conselho": "CRM",
+        "numero": "123456789",
+        "UF": "GO"
+      }
+  auth: inherit
 
 settings:
   encodeUrl: true
