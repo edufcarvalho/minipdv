@@ -180,7 +180,19 @@ public class SearchableComboBox : UserControl
         var screenLocation = PointToScreen(new Point(0, Height));
         dropForm.Location = screenLocation;
         dropForm.Width = Width;
+
+        // Show all items when opening dropdown, regardless of current text
+        var currentFilter = textBox.Text;
+        _suppressTextChange = true;
+        textBox.Clear();
+        _suppressTextChange = false;
+
         ApplyFilter();
+
+        _suppressTextChange = true;
+        textBox.Text = currentFilter;
+        textBox.Select(textBox.Text.Length, 0);
+        _suppressTextChange = false;
 
         var itemCount = listBox.Items.Count;
         if (itemCount > 0)
