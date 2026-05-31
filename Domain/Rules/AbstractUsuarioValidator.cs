@@ -15,7 +15,7 @@ public class AbstractUsuarioValidator : AbstractValidator<AbstractUsuario>
         RuleFor(u => u.Login)
             .NotEmpty()
             .MaximumLength(100)
-            .Matches(@"^[A-z0-9]+$")
+            .Matches(@"^[A-Za-z0-9]+$")
             .WithMessage("Login deve conter apenas letras e números");
 
         RuleFor(u => u.PasswordHash)

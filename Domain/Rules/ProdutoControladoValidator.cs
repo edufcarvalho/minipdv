@@ -10,7 +10,7 @@ public class ProdutoControladoValidator : AbstractValidator<ProdutoControlado>
         RuleFor(p => p.RegistroMS)
             .NotEmpty()
             .MaximumLength(20)
-            .Matches(@"^\d\.\d{4}\.\d{4}\.\d{3}-\d$$")
+            .Matches(@"^\d\.\d{4}\.\d{4}\.\d{3}-\d$")
             .WithMessage("Registro MS deve seguir o formato X.XXXX.XXXX.XXX-X");
 
         RuleFor(p => p.ClasseTerapeutica)

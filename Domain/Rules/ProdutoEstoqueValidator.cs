@@ -10,7 +10,7 @@ public class ProdutoEstoqueValidator : AbstractValidator<ProdutoEstoque>
         RuleFor(e => e.Lote)
             .NotEmpty()
             .MaximumLength(50)
-            .Matches(@"^[A-z0-9\-]+$")
+            .Matches(@"^[A-Za-z0-9\-]+$")
             .WithMessage("Lote deve conter apenas caracteres alfanuméricos e traços");
 
         RuleFor(e => e.ProdutoId)
