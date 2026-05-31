@@ -1,8 +1,13 @@
 namespace minipdv.Domain.Entities.Base;
 
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using minipdv.Domain.Entities;
 
+[JsonPolymorphic]
+[JsonDerivedType(typeof(Usuario), "Usuario")]
+[JsonDerivedType(typeof(Farmaceutico), "Farmaceutico")]
+[JsonDerivedType(typeof(Administrador), "Administrador")]
 public abstract class AbstractUsuario : Entity
 {
     public required string Nome { get; set; }

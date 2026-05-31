@@ -10,7 +10,7 @@ public class Venda : Entity
     public required virtual Cliente Cliente { get; set; }
     public required int VendedorId { get; set; }
     [ForeignKey(nameof(VendedorId))]
-    public required virtual Usuario Vendedor { get; set; }
+    public required virtual AbstractUsuario Vendedor { get; set; }
     public DateTime? CanceladoEm { get; set; }
     public virtual ICollection<VendaItem> VendaItens { get; set; } = [];
     public virtual ICollection<Receita> Receitas { get; set; } = [];

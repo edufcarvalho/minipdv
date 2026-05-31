@@ -1,8 +1,12 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using minipdv.Domain.Entities.Base;
 
 namespace minipdv.Domain.Entities;
 
+[JsonPolymorphic]
+[JsonDerivedType(typeof(Produto))]
+[JsonDerivedType(typeof(ProdutoControlado))]
 public class Produto : Entity
 {
     public required string Descricao { get; set; }
