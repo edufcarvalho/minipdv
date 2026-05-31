@@ -15,10 +15,33 @@ if ($Env -eq "Production") {
 }
 
 Write-Host "`n=== Starting services with Podman Compose ==="
-# Ignore errors from "down" — it's just cleanup, and podman's external compose provider warning
-# triggers a NativeCommandError under $ErrorActionPreference "Stop"
 try { podman compose down 2>&1 | Out-Null } catch { }
 podman compose up -d $service
+
+Write-Host "`n=== Waiting for API to be healthy ==="
+$healthUrl = "http://localhost:5000/api/health"
+$maxRetries = 60
+$retryInterval = 3
+$count = 0
+$healthy = $false
+
+while ($count -lt $maxRetries -and -not $healthy) {
+    $count++
+    try {
+        $response = Invoke-WebRequest -Uri $healthUrl -UseBasicParsing -TimeoutSec 5
+        if ($response.StatusCode -eq 200) {
+            $healthy = $true
+            Write-Host "API is healthy!"
+        }
+    } catch {
+        if ($count -ge $maxRetries) {
+            Write-Host "Error: API not healthy after $maxRetries attempts"
+            exit 1
+        }
+        Write-Host "Waiting for API... (attempt $count/$maxRetries)"
+        Start-Sleep -Seconds $retryInterval
+    }
+}
 
 Write-Host "`n=== Setup complete ($Env) ==="
 Write-Host "API available at: http://localhost:5000"
