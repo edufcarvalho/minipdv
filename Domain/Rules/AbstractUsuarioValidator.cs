@@ -21,5 +21,11 @@ public class AbstractUsuarioValidator : AbstractValidator<AbstractUsuario>
         RuleFor(u => u.PasswordHash)
             .NotEmpty()
             .MaximumLength(128);
+
+        RuleFor(u => u.TipoUsuario)
+            .NotEmpty()
+            .MaximumLength(21)
+            .Must(t => t is "Usuario" or "Farmaceutico" or "Administrador")
+            .WithMessage("TipoUsuario deve ser Usuario, Farmaceutico ou Administrador");
     }
 }

@@ -12,6 +12,7 @@ public class MiniPDVContext : DbContext
     public DbSet<AbstractUsuario> AbstractUsuarios { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
     public DbSet<Farmaceutico> Farmaceuticos { get; set; }
+    public DbSet<Administrador> Administradores { get; set; }
     public DbSet<Produto> Produtos { get; set; }
     public DbSet<ProdutoControlado> ProdutosControlados { get; set; }
     public DbSet<ProdutoGrupo> ProdutoGrupos { get; set; }

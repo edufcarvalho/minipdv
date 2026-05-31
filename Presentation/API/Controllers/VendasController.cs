@@ -37,13 +37,13 @@ public class VendasController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateVendaRequest request)
     {
         var entity = new Venda
-            {
-                VendedorId = request.VendedorId,
-                ClienteId = request.ClienteId,
-                ReceitaId = request.ReceitaId,
-                Vendedor = null!,
-                Cliente = null!,
-                VendaProdutoEstoques = request.Produtos
+        {
+            VendedorId = request.VendedorId,
+            ClienteId = request.ClienteId,
+            ReceitaId = request.ReceitaId,
+            Vendedor = null!,
+            Cliente = null!,
+            VendaProdutoEstoques = request.Produtos
                     .Select(p => new VendaProdutoEstoque
                     {
                         VendaId = 0,
@@ -54,7 +54,7 @@ public class VendasController : ControllerBase
                         ProdutoEstoque = null!
                     })
                     .ToList()
-            };
+        };
 
         try
         {

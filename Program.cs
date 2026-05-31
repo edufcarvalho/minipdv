@@ -1,6 +1,7 @@
 using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -14,8 +15,9 @@ using minipdv.Infrastructure.Configuration;
 using minipdv.Infrastructure.Data.Context;
 using minipdv.Infrastructure.Data.Repositories;
 using minipdv.Infrastructure.Data.Seed;
+
 #if WINDOWS
-using minipdv.Presentation.Desktop.Forms.Shared;
+using minipdv.Presentation.Desktop.Forms.Auth;
 #endif
 
 namespace minipdv;
@@ -25,9 +27,7 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
-        var runAsApi = args.Contains("--api")
-            || Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") is not null
-            || Environment.GetEnvironmentVariable("ASPNETCORE_IIS_PHYSICAL_PATH") is not null;
+        var runAsApi = args.Contains("--api");
 
         if (runAsApi)
         {
@@ -203,12 +203,9 @@ static class Program
         builder.Services.AddTransient<IValidator<Receita>, ReceitaValidator>();
         builder.Services.AddTransient<IValidator<Venda>, VendaValidator>();
         builder.Services.AddTransient<IValidator<Administrador>, AdministradorValidator>();
+        builder.Services.AddScoped<DatabaseInitializer>();
 
-        builder.Services.AddSingleton(sp =>
-        {
-            var context = sp.GetRequiredService<MiniPDVContext>();
-            return new DatabaseInitializer(context);
-        });
+        builder.Services.AddDataProtection().PersistKeysToFileSystem(new DirectoryInfo("/keys"));
 
         var app = builder.Build();
 
@@ -226,7 +223,9 @@ static class Program
         using (var scope = app.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<MiniPDVContext>();
-            await context.Database.EnsureCreatedAsync();
+
+            if (!await context.Database.CanConnectAsync())
+                await context.Database.EnsureCreatedAsync();
 
             var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
             try
@@ -249,31 +248,67 @@ static class Program
     {
         ApplicationConfiguration.Initialize();
 
-        try
+        var apiUrl = Environment.GetEnvironmentVariable("API_URL") ?? "http://localhost:5000";
+
+        using var splash = new Form
         {
-            var settings = new AppSettings();
-            var options = new DbContextOptionsBuilder<MiniPDVContext>()
-                .UseSqlServer(settings.ConnectionString,
-                    sql => sql.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null))
-                .Options;
-
-            using var context = new MiniPDVContext(options);
-
-            var initializer = new DatabaseInitializer(context);
-
-            if (!initializer.IsDatabaseSeeded())
-                initializer.Seed();
-        }
-        catch (Exception ex)
+            StartPosition = FormStartPosition.CenterScreen,
+            FormBorderStyle = FormBorderStyle.None,
+            ControlBox = false,
+            ShowInTaskbar = false,
+            ClientSize = new Size(350, 120),
+            BackColor = Color.White,
+            TopMost = true
+        };
+        var lbl = new Label
         {
-            MessageBox.Show(
-                $"Database seeding failed: {ex.Message}",
-                "MiniPDV",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
+            Text = "Conectando ao servidor...",
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleCenter,
+            Font = new Font("Segoe UI", 12, FontStyle.Bold),
+            ForeColor = Color.DarkBlue
+        };
+        splash.Controls.Add(lbl);
+
+        var connected = false;
+        splash.Shown += async (_, _) =>
+        {
+            using var http = new HttpClient { BaseAddress = new Uri(apiUrl.TrimEnd('/') + "/") };
+            http.Timeout = TimeSpan.FromSeconds(5);
+
+            for (int i = 0; i < 60; i++)
+            {
+                try
+                {
+                    var response = await http.GetAsync("api/health");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        connected = true;
+                        break;
+                    }
+                }
+                catch { }
+
+                lbl.Text = $"Conectando ao servidor... ({i + 1}/60)";
+                await Task.Delay(2000);
+            }
+
+            splash.Close();
+        };
+
+        System.Windows.Forms.Application.Run(splash);
+
+        if (!connected)
+        {
+            System.Windows.Forms.MessageBox.Show(
+                "Não foi possível conectar ao servidor API.\nVerifique se o servidor está em execução.",
+                "Erro de Conexão",
+                System.Windows.Forms.MessageBoxButtons.OK,
+                System.Windows.Forms.MessageBoxIcon.Error);
+            return;
         }
 
-        System.Windows.Forms.Application.Run(new Form1());
+        System.Windows.Forms.Application.Run(new LoginForm());
     }
 #endif
 }

@@ -108,7 +108,7 @@ namespace minipdv.Migrations
                         .IsUnique()
                         .HasFilter("[ContatoId] IS NOT NULL");
 
-                    b.ToTable("Clientes");
+                    b.ToTable("Clientes", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Contato", b =>
@@ -137,7 +137,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Contatos");
+                    b.ToTable("Contatos", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Fabricante", b =>
@@ -178,7 +178,7 @@ namespace minipdv.Migrations
                         .IsUnique()
                         .HasFilter("[ContatoId] IS NOT NULL");
 
-                    b.ToTable("Fabricantes");
+                    b.ToTable("Fabricantes", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Prescritor", b =>
@@ -244,7 +244,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PrincipiosAtivos");
+                    b.ToTable("PrincipiosAtivos", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Produto", b =>
@@ -301,7 +301,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoGrupoId");
 
-                    b.ToTable("Produtos");
+                    b.ToTable("Produtos", (string)null);
 
                     b.HasDiscriminator<bool>("Controlado").HasValue(false);
 
@@ -323,7 +323,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoId");
 
-                    b.ToTable("ProdutoCodBarras");
+                    b.ToTable("ProdutoCodBarras", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.ProdutoEstoque", b =>
@@ -349,7 +349,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("ProdutoId", "Lote");
 
-                    b.ToTable("ProdutoEstoques");
+                    b.ToTable("ProdutoEstoques", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.ProdutoGrupo", b =>
@@ -376,7 +376,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProdutoGrupos");
+                    b.ToTable("ProdutoGrupos", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.ProdutoTipo", b =>
@@ -400,7 +400,7 @@ namespace minipdv.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProdutoTipos");
+                    b.ToTable("ProdutoTipos", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Receita", b =>
@@ -457,7 +457,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoId", "Lote");
 
-                    b.ToTable("ReceitaProdutoEstoque");
+                    b.ToTable("ReceitaProdutoEstoque", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Session", b =>
@@ -557,7 +557,7 @@ namespace minipdv.Migrations
 
                     b.HasIndex("ProdutoId", "Lote");
 
-                    b.ToTable("VendaProdutoEstoque");
+                    b.ToTable("VendaProdutoEstoque", (string)null);
                 });
 
             modelBuilder.Entity("minipdv.Domain.Entities.Administrador", b =>

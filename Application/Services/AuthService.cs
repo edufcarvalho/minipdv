@@ -81,7 +81,8 @@ public class AuthService : IAuthService
                 {
                     Nome = request.Nome,
                     Login = request.Login,
-                    PasswordHash = PasswordHasher.Hash(request.Password)
+                    PasswordHash = PasswordHasher.Hash(request.Password),
+                    TipoUsuario = "Administrador"
                 };
                 await _administradorRepository.AddAsync(admin);
                 return new AuthResponse(admin.Id, admin.Nome, admin.Login, string.Empty, "Administrador registrado com sucesso");
@@ -92,6 +93,7 @@ public class AuthService : IAuthService
                     Nome = request.Nome,
                     Login = request.Login,
                     PasswordHash = PasswordHasher.Hash(request.Password),
+                    TipoUsuario = "Farmaceutico",
                     Crf = request.Crf ?? throw new ValidationException("CRF é obrigatório para Farmacêutico")
                 };
                 await _farmaceuticoRepository.AddAsync(farm);
@@ -102,7 +104,8 @@ public class AuthService : IAuthService
                 {
                     Nome = request.Nome,
                     Login = request.Login,
-                    PasswordHash = PasswordHasher.Hash(request.Password)
+                    PasswordHash = PasswordHasher.Hash(request.Password),
+                    TipoUsuario = "Usuario"
                 };
                 await _usuarioRepository.AddAsync(user);
                 return new AuthResponse(user.Id, user.Nome, user.Login, string.Empty, "Usuário registrado com sucesso");

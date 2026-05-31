@@ -141,8 +141,10 @@ public class DatabaseInitializer : IDatabaseInitializer
         {
             Nome = "Administrador",
             Login = "admin",
-            PasswordHash = PasswordHasher.Hash("db120588"),
-            Ativo = true
+            PasswordHash = PasswordHasher.Hash("admin123"),
+            Ativo = true,
+            TipoUsuario = "Administrador",
+            CriadoEm = DateTime.UtcNow
         };
         _context.Set<Administrador>().Add(admin);
         _context.SaveChanges();
@@ -157,7 +159,9 @@ public class DatabaseInitializer : IDatabaseInitializer
             Nome = "Administrador",
             Login = "admin",
             PasswordHash = PasswordHasher.Hash("admin123"),
-            Ativo = true
+            Ativo = true,
+            TipoUsuario = "Administrador",
+            CriadoEm = DateTime.UtcNow
         };
         _context.Set<Administrador>().Add(admin);
         await _context.SaveChangesAsync();
