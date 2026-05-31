@@ -54,11 +54,11 @@ public class VendasForm : Form
             dgv.Columns.Add("Id", "Venda ID");
             dgv.Columns.Add("ClienteId", "Cliente ID");
             dgv.Columns.Add("VendedorId", "Vendedor ID");
-            dgv.Columns.Add("ReceitaId", "Receita ID");
             dgv.Columns.Add("Data", "Data");
+            dgv.Columns.Add("CanceladoEm", "Cancelado Em");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.ClienteId, item.VendedorId, item.ReceitaId?.ToString() ?? "-", item.CriadoEm.ToString("dd/MM/yyyy HH:mm"));
+                dgv.Rows.Add(item.Id, item.ClienteId, item.VendedorId, item.CriadoEm.ToString("dd/MM/yyyy HH:mm"), item.CanceladoEm?.ToString("dd/MM/yyyy HH:mm") ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
@@ -71,7 +71,7 @@ public class VendasForm : Form
         if (idx < 0 || idx >= _items.Count) return;
         var item = _items[idx];
 
-        if (MessageBox.Show($"Cancelar venda #{item.Id}?", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
+        if (MessageBox.Show($"Cancelar venda #{item.Id}? O estoque será restaurado.", "Confirmar", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes) return;
 
         try
         {

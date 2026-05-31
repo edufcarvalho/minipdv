@@ -24,6 +24,7 @@ public class PosForm : Form
         public string Descricao { get; set; } = "";
         public string Lote { get; set; } = "";
         public int Quantidade { get; set; } = 1;
+        public bool Controlado { get; set; }
     }
 
     public PosForm()
@@ -283,7 +284,8 @@ public class PosForm : Form
                 CodBarra = produto.CodBarra,
                 Descricao = produto.Descricao,
                 Lote = "",
-                Quantidade = 1
+                Quantidade = 1,
+                Controlado = produto.Controlado
             });
         }
 
@@ -350,6 +352,33 @@ public class PosForm : Form
             }
         }
 
+        var controlados = _cart.Where(c => c.Controlado).ToList();
+        var receitaIds = new List<int>();
+
+        if (controlados.Count > 0)
+        {
+            var clientes = await ApiClient.Instance.GetAsync<List<Cliente>>("api/clientes") ?? [];
+            var prescritores = await ApiClient.Instance.GetAsync<List<Prescritor>>("api/prescritores") ?? [];
+            var allProdutos = await ApiClient.Instance.GetAsync<List<Produto>>("api/produtos") ?? [];
+
+            var controlledItems = controlados.Select(c =>
+                new PrescriptionDialog.ControlledItem
+                {
+                    ProdutoId = c.ProdutoId,
+                    Descricao = c.Descricao,
+                    Lote = c.Lote,
+                    Quantidade = c.Quantidade
+                }).ToList();
+
+            using var prescriptionDialog = new PrescriptionDialog(controlledItems, clientes, prescritores, allProdutos);
+            if (prescriptionDialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            receitaIds = prescriptionDialog.CreatedReceitas.Select(r => r.Id).ToList();
+        }
+
         btnFinalizar.Enabled = false;
 
         try
@@ -358,13 +387,13 @@ public class PosForm : Form
             {
                 vendedorId = ApiClient.Instance.UserId,
                 clienteId = (int)cmbCliente.SelectedValue,
-                receitaId = (int?)null,
                 produtos = _cart.Select(c => new
                 {
                     produtoId = c.ProdutoId,
                     lote = c.Lote,
                     quantidade = c.Quantidade
-                }).ToList()
+                }).ToList(),
+                receitaIds = receitaIds.Count > 0 ? receitaIds : null
             };
 
             var response = await ApiClient.Instance.PostAsync("api/vendas", request);

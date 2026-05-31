@@ -20,6 +20,8 @@ public class VendaMapping : IEntityTypeConfiguration<Venda>
 
         builder.Property(v => v.AtualizadoEm);
 
+        builder.Property(v => v.CanceladoEm);
+
         builder.HasOne(v => v.Vendedor)
             .WithMany()
             .HasForeignKey(v => v.VendedorId)
@@ -30,9 +32,5 @@ public class VendaMapping : IEntityTypeConfiguration<Venda>
             .HasForeignKey(v => v.ClienteId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(v => v.Receita)
-            .WithMany()
-            .HasForeignKey(v => v.ReceitaId)
-            .OnDelete(DeleteBehavior.SetNull);
     }
 }

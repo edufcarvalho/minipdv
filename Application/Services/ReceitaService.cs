@@ -146,6 +146,10 @@ public class ReceitaService : IReceitaService
 
             if (entity is null) return;
 
+            if (entity.VendaId.HasValue)
+                throw new InvalidOperationException(
+                    "Não é possível excluir uma receita vinculada a uma venda. Cancele a venda primeiro.");
+
             foreach (var rpe in entity.ReceitaProdutoEstoques)
             {
                 var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote);

@@ -14,7 +14,6 @@ public class VendaRepository : Repository<Venda>, IVendaRepository
         return await _dbSet
             .Include(v => v.Vendedor)
             .Include(v => v.Cliente)
-            .Include(v => v.Receita)
             .Include(v => v.VendaProdutoEstoques)
                 .ThenInclude(vpe => vpe.ProdutoEstoque)
                     .ThenInclude(pe => pe.Produto)
@@ -26,7 +25,6 @@ public class VendaRepository : Repository<Venda>, IVendaRepository
         return await _dbSet
             .Include(v => v.Vendedor)
             .Include(v => v.Cliente)
-            .Include(v => v.Receita)
             .Include(v => v.VendaProdutoEstoques)
                 .ThenInclude(vpe => vpe.ProdutoEstoque)
                     .ThenInclude(pe => pe.Produto)

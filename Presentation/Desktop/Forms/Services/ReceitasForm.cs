@@ -60,9 +60,10 @@ public class ReceitasForm : Form
             dgv.Columns.Add("PrescritorId", "Prescritor");
             dgv.Columns.Add("PacienteId", "Paciente");
             dgv.Columns.Add("CompradorId", "Comprador");
+            dgv.Columns.Add("VendaId", "Venda ID");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.DataReceita.ToString("dd/MM/yyyy"), item.DataCadastro.ToString("dd/MM/yyyy"), item.PrescritorId, item.PacienteId, item.CompradorId);
+                dgv.Rows.Add(item.Id, item.DataReceita.ToString("dd/MM/yyyy"), item.DataCadastro.ToString("dd/MM/yyyy"), item.PrescritorId, item.PacienteId, item.CompradorId, item.VendaId?.ToString() ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }

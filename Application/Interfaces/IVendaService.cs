@@ -8,4 +8,5 @@ public interface IVendaService
     Task<Venda?> GetByIdAsync(int id);
     Task<Venda> AddAsync(Venda entity);
     Task DeleteAsync(int id);
+    Task LinkReceitasAsync(int vendaId, List<int> receitaIds);
 }

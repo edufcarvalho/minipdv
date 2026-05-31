@@ -16,6 +16,9 @@ public class Receita : Entity
     public required int CompradorId { get; set; }
     [ForeignKey(nameof(CompradorId))]
     public required virtual Cliente Comprador { get; set; }
+    public int? VendaId { get; set; }
+    [ForeignKey(nameof(VendaId))]
+    public virtual Venda? Venda { get; set; }
     public virtual ICollection<ReceitaProdutoEstoque> ReceitaProdutoEstoques { get; set; } = [];
     [NotMapped]
     public IEnumerable<Produto> Produtos =>

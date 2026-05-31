@@ -40,7 +40,6 @@ public class VendasController : ControllerBase
         {
             VendedorId = request.VendedorId,
             ClienteId = request.ClienteId,
-            ReceitaId = request.ReceitaId,
             Vendedor = null!,
             Cliente = null!,
             VendaProdutoEstoques = request.Produtos
@@ -59,6 +58,10 @@ public class VendasController : ControllerBase
         try
         {
             var created = await _service.AddAsync(entity);
+
+            if (request.ReceitaIds is { Count: > 0 })
+                await _service.LinkReceitasAsync(created.Id, request.ReceitaIds);
+
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (InvalidOperationException ex)

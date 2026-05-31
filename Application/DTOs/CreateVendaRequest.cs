@@ -3,8 +3,8 @@ namespace minipdv.Application.DTOs;
 public record CreateVendaRequest(
     int VendedorId,
     int ClienteId,
-    int? ReceitaId,
-    List<VendaProdutoItem> Produtos
+    List<VendaProdutoItem> Produtos,
+    List<int>? ReceitaIds = null
 );
 
 public record VendaProdutoItem(

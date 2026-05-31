@@ -43,8 +43,6 @@ public class VendaService : IVendaService
         using var transaction = await _context.Database.BeginTransactionAsync();
         try
         {
-            var hasControlado = false;
-
             foreach (var vpe in entity.VendaProdutoEstoques)
             {
                 var estoque = await _produtoEstoqueRepository.GetByIdAsync(vpe.ProdutoId, vpe.Lote)
@@ -61,8 +59,6 @@ public class VendaService : IVendaService
 
                 if (produto.Controlado)
                 {
-                    hasControlado = true;
-
                     if (string.IsNullOrWhiteSpace(estoque.Lote))
                         throw new InvalidOperationException(
                             $"Lote é obrigatório para o produto controlado {vpe.ProdutoId}");
@@ -76,10 +72,6 @@ public class VendaService : IVendaService
                 vpe.ProdutoEstoque = estoque;
             }
 
-            if (hasControlado && entity.ReceitaId is null or 0)
-                throw new InvalidOperationException(
-                    "Receita é obrigatória quando a venda contém produtos controlados");
-
             entity.CriadoEm = DateTime.UtcNow;
             _context.Vendas.Add(entity);
             await _context.SaveChangesAsync();
@@ -91,6 +83,21 @@ public class VendaService : IVendaService
             await transaction.RollbackAsync();
             throw;
         }
+    }
+
+    public async Task LinkReceitasAsync(int vendaId, List<int> receitaIds)
+    {
+        var receitas = await _context.Receitas
+            .Where(r => receitaIds.Contains(r.Id))
+            .ToListAsync();
+
+        foreach (var receita in receitas)
+        {
+            receita.VendaId = vendaId;
+            receita.AtualizadoEm = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
@@ -111,7 +118,8 @@ public class VendaService : IVendaService
                     estoque.Quantidade += vpe.Quantidade;
             }
 
-            _context.Vendas.Remove(entity);
+            entity.CanceladoEm = DateTime.UtcNow;
+            entity.AtualizadoEm = DateTime.UtcNow;
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
         }

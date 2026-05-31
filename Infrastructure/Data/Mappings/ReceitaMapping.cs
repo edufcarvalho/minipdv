@@ -26,6 +26,11 @@ public class ReceitaMapping : IEntityTypeConfiguration<Receita>
 
         builder.Property(r => r.AtualizadoEm);
 
+        builder.HasOne(r => r.Venda)
+            .WithMany("Receitas")
+            .HasForeignKey(r => r.VendaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasOne(r => r.Prescritor)
             .WithMany()
             .HasForeignKey(r => r.PrescritorId)
