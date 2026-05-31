@@ -40,128 +40,110 @@ public class ReceitaService : IReceitaService
     {
         await _validator.ValidateAndThrowAsync(entity);
 
-        var strategy = _context.Database.CreateExecutionStrategy();
-        return await strategy.ExecuteAsync(async () =>
+        foreach (var rpe in entity.ReceitaProdutoEstoques)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            foreach (var rpe in entity.ReceitaProdutoEstoques)
-            {
-                var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote)
-                    ?? throw new InvalidOperationException(
-                        $"Estoque não encontrado para o produto {rpe.ProdutoId} lote {rpe.Lote}");
+            var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote)
+                ?? throw new InvalidOperationException(
+                    $"Estoque não encontrado para o produto {rpe.ProdutoId} lote {rpe.Lote}");
 
-                if (estoque.Quantidade < rpe.Quantidade)
-                    throw new InvalidOperationException(
-                        $"Estoque insuficiente para o produto {rpe.ProdutoId} lote {rpe.Lote}. " +
-                        $"Disponível: {estoque.Quantidade}, solicitado: {rpe.Quantidade}");
+            if (estoque.Quantidade < rpe.Quantidade)
+                throw new InvalidOperationException(
+                    $"Estoque insuficiente para o produto {rpe.ProdutoId} lote {rpe.Lote}. " +
+                    $"Disponível: {estoque.Quantidade}, solicitado: {rpe.Quantidade}");
 
-                estoque.Quantidade -= rpe.Quantidade;
-                rpe.ProdutoEstoque = estoque;
-                await SyncProdutoEstoqueAsync(rpe.ProdutoId);
-            }
+            estoque.Quantidade -= rpe.Quantidade;
+            rpe.ProdutoEstoque = estoque;
+            await SyncProdutoEstoqueAsync(rpe.ProdutoId);
+        }
 
-            entity.CriadoEm = DateTime.UtcNow;
-            _context.Receitas.Add(entity);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-            return entity;
-        });
+        entity.CriadoEm = DateTime.UtcNow;
+        _context.Receitas.Add(entity);
+        await _context.SaveChangesAsync();
+        return entity;
     }
 
     public async Task UpdateAsync(Receita entity)
     {
         await _validator.ValidateAndThrowAsync(entity);
 
-        var strategy = _context.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () =>
+        var existing = await _context.Receitas
+            .Include(r => r.ReceitaProdutoEstoques)
+            .FirstAsync(r => r.Id == entity.Id);
+
+        var oldItems = existing.ReceitaProdutoEstoques.ToList();
+        var newItems = entity.ReceitaProdutoEstoques.ToList();
+        var affectedProdutos = new HashSet<int>();
+
+        foreach (var old in oldItems)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            var existing = await _context.Receitas
-                .Include(r => r.ReceitaProdutoEstoques)
-                .FirstAsync(r => r.Id == entity.Id);
-
-            var oldItems = existing.ReceitaProdutoEstoques.ToList();
-            var newItems = entity.ReceitaProdutoEstoques.ToList();
-            var affectedProdutos = new HashSet<int>();
-
-            foreach (var old in oldItems)
+            var stillInNew = newItems.Any(n => n.ProdutoId == old.ProdutoId && n.Lote == old.Lote);
+            if (!stillInNew)
             {
-                var stillInNew = newItems.Any(n => n.ProdutoId == old.ProdutoId && n.Lote == old.Lote);
-                if (!stillInNew)
-                {
-                    var estoque = await _produtoEstoqueRepository.GetByIdAsync(old.ProdutoId, old.Lote);
-                    if (estoque is not null)
-                        estoque.Quantidade += old.Quantidade;
-                    affectedProdutos.Add(old.ProdutoId);
-                }
+                var estoque = await _produtoEstoqueRepository.GetByIdAsync(old.ProdutoId, old.Lote);
+                if (estoque is not null)
+                    estoque.Quantidade += old.Quantidade;
+                affectedProdutos.Add(old.ProdutoId);
             }
+        }
 
-            foreach (var newItem in newItems)
+        foreach (var newItem in newItems)
+        {
+            var wasInOld = oldItems.Any(o => o.ProdutoId == newItem.ProdutoId && o.Lote == newItem.Lote);
+            if (!wasInOld)
             {
-                var wasInOld = oldItems.Any(o => o.ProdutoId == newItem.ProdutoId && o.Lote == newItem.Lote);
-                if (!wasInOld)
-                {
-                    var estoque = await _produtoEstoqueRepository.GetByIdAsync(newItem.ProdutoId, newItem.Lote)
-                        ?? throw new InvalidOperationException(
-                            $"Estoque não encontrado para o produto {newItem.ProdutoId} lote {newItem.Lote}");
+                var estoque = await _produtoEstoqueRepository.GetByIdAsync(newItem.ProdutoId, newItem.Lote)
+                    ?? throw new InvalidOperationException(
+                        $"Estoque não encontrado para o produto {newItem.ProdutoId} lote {newItem.Lote}");
 
-                    if (estoque.Quantidade < newItem.Quantidade)
-                        throw new InvalidOperationException(
-                            $"Estoque insuficiente para o produto {newItem.ProdutoId} lote {newItem.Lote}. " +
-                            $"Disponível: {estoque.Quantidade}, solicitado: {newItem.Quantidade}");
+                if (estoque.Quantidade < newItem.Quantidade)
+                    throw new InvalidOperationException(
+                        $"Estoque insuficiente para o produto {newItem.ProdutoId} lote {newItem.Lote}. " +
+                        $"Disponível: {estoque.Quantidade}, solicitado: {newItem.Quantidade}");
 
-                    estoque.Quantidade -= newItem.Quantidade;
-                    newItem.ProdutoEstoque = estoque;
-                    affectedProdutos.Add(newItem.ProdutoId);
-                }
+                estoque.Quantidade -= newItem.Quantidade;
+                newItem.ProdutoEstoque = estoque;
+                affectedProdutos.Add(newItem.ProdutoId);
             }
+        }
 
-            existing.DataReceita = entity.DataReceita;
-            existing.DataCadastro = entity.DataCadastro;
-            existing.PrescritorId = entity.PrescritorId;
-            existing.PacienteId = entity.PacienteId;
-            existing.CompradorId = entity.CompradorId;
+        existing.DataReceita = entity.DataReceita;
+        existing.DataCadastro = entity.DataCadastro;
+        existing.PrescritorId = entity.PrescritorId;
+        existing.PacienteId = entity.PacienteId;
+        existing.CompradorId = entity.CompradorId;
 
-            _context.Set<ReceitaProdutoEstoque>().RemoveRange(oldItems);
-            existing.ReceitaProdutoEstoques = newItems;
-            existing.AtualizadoEm = DateTime.UtcNow;
+        _context.Set<ReceitaProdutoEstoque>().RemoveRange(oldItems);
+        existing.ReceitaProdutoEstoques = newItems;
+        existing.AtualizadoEm = DateTime.UtcNow;
 
-            foreach (var prodId in affectedProdutos)
-                await SyncProdutoEstoqueAsync(prodId);
+        foreach (var prodId in affectedProdutos)
+            await SyncProdutoEstoqueAsync(prodId);
 
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-        });
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(int id)
     {
-        var strategy = _context.Database.CreateExecutionStrategy();
-        await strategy.ExecuteAsync(async () =>
+        var entity = await _context.Receitas
+            .Include(r => r.ReceitaProdutoEstoques)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (entity is null) return;
+
+        if (entity.VendaId.HasValue)
+            throw new InvalidOperationException(
+                "Não é possível excluir uma receita vinculada a uma venda. Cancele a venda primeiro.");
+
+        foreach (var rpe in entity.ReceitaProdutoEstoques)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            var entity = await _context.Receitas
-                .Include(r => r.ReceitaProdutoEstoques)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote);
+            if (estoque is not null)
+                estoque.Quantidade += rpe.Quantidade;
+            await SyncProdutoEstoqueAsync(rpe.ProdutoId);
+        }
 
-            if (entity is null) return;
-
-            if (entity.VendaId.HasValue)
-                throw new InvalidOperationException(
-                    "Não é possível excluir uma receita vinculada a uma venda. Cancele a venda primeiro.");
-
-            foreach (var rpe in entity.ReceitaProdutoEstoques)
-            {
-                var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote);
-                if (estoque is not null)
-                    estoque.Quantidade += rpe.Quantidade;
-                await SyncProdutoEstoqueAsync(rpe.ProdutoId);
-            }
-
-            _context.Receitas.Remove(entity);
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
-        });
+        _context.Receitas.Remove(entity);
+        await _context.SaveChangesAsync();
     }
 
     public async Task<bool> ExistsAsync(int id)
@@ -175,8 +157,8 @@ public class ReceitaService : IReceitaService
             .Where(e => e.ProdutoId == produtoId)
             .SumAsync(e => e.Quantidade);
 
-        await _context.Set<Produto>()
-            .Where(p => p.Id == produtoId)
-            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estoque, total));
+        var produto = await _context.Set<Produto>().FindAsync(produtoId);
+        if (produto is not null)
+            produto.Estoque = total;
     }
 }
