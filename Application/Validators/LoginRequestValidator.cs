@@ -1,7 +1,7 @@
 using FluentValidation;
 using minipdv.Application.DTOs.Auth;
 
-namespace minipdv.Domain.Rules;
+namespace minipdv.Application.Validators;
 
 public class LoginRequestValidator : AbstractValidator<LoginRequest>
 {

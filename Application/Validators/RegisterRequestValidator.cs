@@ -1,7 +1,7 @@
 using FluentValidation;
 using minipdv.Application.DTOs.Auth;
 
-namespace minipdv.Domain.Rules;
+namespace minipdv.Application.Validators;
 
 public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
 {
@@ -14,13 +14,19 @@ public class RegisterRequestValidator : AbstractValidator<RegisterRequest>
         RuleFor(r => r.Login)
             .NotEmpty()
             .MaximumLength(100)
-            .Matches(@"^[A-z0-9]+$")
+            .Matches(@"^[A-Za-z0-9]+$")
             .WithMessage("Login deve conter apenas letras e números");
 
         RuleFor(r => r.Password)
             .NotEmpty()
-            .MinimumLength(6)
-            .MaximumLength(128);
+            .MinimumLength(8)
+            .MaximumLength(128)
+            .Matches(@"[A-Z]")
+            .WithMessage("Senha deve conter pelo menos uma letra maiúscula")
+            .Matches(@"[a-z]")
+            .WithMessage("Senha deve conter pelo menos uma letra minúscula")
+            .Matches(@"[0-9]")
+            .WithMessage("Senha deve conter pelo menos um número");
 
         RuleFor(r => r.Tipo)
             .NotEmpty()
