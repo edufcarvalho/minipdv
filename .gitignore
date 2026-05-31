@@ -4,3 +4,5 @@ publish/
 *.user
 .vs/
 .env
+bin/
+obj/
