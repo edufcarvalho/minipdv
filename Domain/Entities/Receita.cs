@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using minipdv.Domain.Entities.Base;
 
 namespace minipdv.Domain.Entities;
+
 public class Receita : Entity
 {
     public required int PrescritorId { get; set; }
