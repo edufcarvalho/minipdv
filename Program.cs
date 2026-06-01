@@ -232,13 +232,21 @@ static class Program
             var context = scope.ServiceProvider.GetRequiredService<MiniPDVContext>();
 
             if (!await context.Database.CanConnectAsync())
+            {
                 await context.Database.EnsureCreatedAsync();
+            }
+            else
+            {
+                await context.Database.MigrateAsync();
+            }
 
             var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
             try
             {
-                if (!initializer.IsDatabaseSeeded())
-                    await initializer.SeedAsync();
+                await initializer.SeedAsync();
+
+                if (args.Contains("--seed"))
+                    await initializer.SeedDataAsync();
             }
             catch (Exception ex)
             {
