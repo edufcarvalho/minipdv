@@ -83,11 +83,11 @@ public class ProdutosForm : Form
             dgv.Columns.Add("Ativo", "Ativo");
             dgv.Columns.Add("Controlado", "Controlado");
             dgv.Columns.Add("RegistroMS", "Reg. MS");
-            dgv.Columns.Add("GrupoId", "Grupo ID");
+            dgv.Columns.Add("GrupoNome", "Grupo");
 
             dgv.Rows.Clear();
             foreach (var p in _produtos)
-                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Ativo ? "Sim" : "Não", p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.ProdutoGrupoId);
+                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Ativo ? "Sim" : "Não", p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.Grupo?.Nome ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex)

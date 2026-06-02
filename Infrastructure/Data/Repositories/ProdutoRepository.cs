@@ -20,6 +20,7 @@ public class ProdutoRepository : Repository<Produto>, IProdutoRepository
     {
         return await _dbSet
             .Include(p => p.Estoques)
+            .Include(p => p.Grupo)
             .ToListAsync();
     }
 

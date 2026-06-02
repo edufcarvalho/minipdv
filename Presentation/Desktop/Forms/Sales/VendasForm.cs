@@ -52,13 +52,13 @@ public class VendasForm : Form
             _items = await ApiClient.Instance.GetAsync<List<Venda>>("api/vendas") ?? [];
             dgv.Columns.Clear();
             dgv.Columns.Add("Id", "Venda ID");
-            dgv.Columns.Add("ClienteId", "Cliente ID");
-            dgv.Columns.Add("VendedorId", "Vendedor ID");
+            dgv.Columns.Add("ClienteNome", "Cliente");
+            dgv.Columns.Add("VendedorNome", "Vendedor");
             dgv.Columns.Add("Data", "Data");
             dgv.Columns.Add("CanceladoEm", "Cancelado Em");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.ClienteId, item.VendedorId, item.CriadoEm.ToString("dd/MM/yyyy HH:mm"), item.CanceladoEm?.ToString("dd/MM/yyyy HH:mm") ?? "");
+                dgv.Rows.Add(item.Id, item.Cliente?.Nome ?? "", item.Vendedor?.Nome ?? "", item.CriadoEm.ToString("dd/MM/yyyy HH:mm"), item.CanceladoEm?.ToString("dd/MM/yyyy HH:mm") ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
