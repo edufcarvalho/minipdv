@@ -1,4 +1,5 @@
 using FluentValidation;
+using minipdv.Application.Validators;
 using minipdv.Domain.Entities;
 
 namespace minipdv.Domain.Rules;

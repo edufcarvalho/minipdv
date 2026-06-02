@@ -1,4 +1,5 @@
 using FluentValidation;
+using minipdv.Application.Validators;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Entities.Base;
 
@@ -9,23 +10,16 @@ public class AbstractUsuarioValidator : AbstractValidator<AbstractUsuario>
     public AbstractUsuarioValidator()
     {
         RuleFor(u => u.Nome)
-            .NotEmpty()
-            .MaximumLength(200);
+            .MustBeRequiredName();
 
         RuleFor(u => u.Login)
-            .NotEmpty()
-            .MaximumLength(100)
-            .Matches(@"^[A-Za-z0-9]+$")
-            .WithMessage("Login deve conter apenas letras e números");
+            .MustBeValidLogin();
 
         RuleFor(u => u.PasswordHash)
             .NotEmpty()
             .MaximumLength(128);
 
         RuleFor(u => u.TipoUsuario)
-            .NotEmpty()
-            .MaximumLength(21)
-            .Must(t => t is "Usuario" or "Farmaceutico" or "Administrador")
-            .WithMessage("TipoUsuario deve ser Usuario, Farmaceutico ou Administrador");
+            .MustBeValidTipoUsuario();
     }
 }

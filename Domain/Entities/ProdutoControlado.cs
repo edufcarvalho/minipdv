@@ -7,6 +7,6 @@ public class ProdutoControlado : Produto
     public override int Estoque
     {
         get => Estoques.Sum(e => e.Quantidade);
-        set { }
+        set => throw new NotSupportedException("Estoque de ProdutoControlado é calculado automaticamente a partir dos lotes");
     }
 }

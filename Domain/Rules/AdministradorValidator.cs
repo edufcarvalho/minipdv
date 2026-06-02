@@ -1,4 +1,5 @@
 using FluentValidation;
+using minipdv.Application.Validators;
 using minipdv.Domain.Entities;
 
 namespace minipdv.Domain.Rules;
@@ -8,8 +9,7 @@ public class AdministradorValidator : AbstractValidator<Administrador>
     public AdministradorValidator()
     {
         RuleFor(a => a.Nome)
-            .NotEmpty()
-            .MaximumLength(200);
+            .MustBeRequiredName();
 
         RuleFor(a => a.Login)
             .NotEmpty()

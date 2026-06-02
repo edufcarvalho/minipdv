@@ -1,4 +1,5 @@
 using FluentValidation;
+using minipdv.Application.Validators;
 using minipdv.Application.DTOs.Auth;
 
 namespace minipdv.Application.Validators;
