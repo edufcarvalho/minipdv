@@ -88,13 +88,13 @@ public class PrescriptionDialog : Form
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();
 
-        btnFinalizar = new Button { Text = "Finalizar Venda", Width = 130, Height = 35, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0), Enabled = false };
+        btnFinalizar = new Button { Text = "Finalizar Venda", Width = 130, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0), Enabled = false };
         btnFinalizar.Click += (_, _) => { DialogResult = DialogResult.OK; Close(); };
 
-        var btnAddReceita = new Button { Text = "Nova Receita", Width = 120, Height = 35, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 10, 0) };
+        var btnAddReceita = new Button { Text = "Nova Receita", Width = 120, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnAddReceita.Click += async (_, _) => await AddReceita();
 
-        var btnVincular = new Button { Text = "Vincular Existente", Width = 150, Height = 35, BackColor = Color.Teal, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 10, 0) };
+        var btnVincular = new Button { Text = "Vincular Existente", Width = 150, Height = 32, BackColor = Color.Teal, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnVincular.Click += (_, _) => VincularReceitaExistente();
 
         btnPanel.Controls.Add(btnFinalizar); btnPanel.Controls.Add(btnVincular); btnPanel.Controls.Add(btnAddReceita);
@@ -204,10 +204,10 @@ public class PrescriptionDialog : Form
         var nudQtd = new NumericUpDown { Dock = DockStyle.Fill, Font = font, Minimum = 1, Maximum = 9999, Value = 1 };
         inputTbl.Controls.Add(nudQtd, 1, 0);
 
-        var btnAddProd = new Button { Text = "Adicionar", Height = 30, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
+        var btnAddProd = new Button { Text = "Adicionar", Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
         inputTbl.Controls.Add(btnAddProd, 2, 0);
 
-        var btnRemoveProd = new Button { Text = "Remover", Height = 30, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
+        var btnRemoveProd = new Button { Text = "Remover", Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
         inputTbl.Controls.Add(btnRemoveProd, 3, 0);
 
         outerLayout.Controls.Add(inputTbl, 0, 2);
@@ -299,8 +299,8 @@ public class PrescriptionDialog : Form
         };
 
         var btnPanel2 = FormComponents.CreateDialogButtonPanel();
-        var btnOk = new Button { Text = "Salvar Receita", Width = 120, Height = 35, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
-        var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 35, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0), Font = font };
+        var btnOk = new Button { Text = "Salvar Receita", Width = 120, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
+        var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel, Font = font };
         btnPanel2.Controls.Add(btnOk); btnPanel2.Controls.Add(btnCancel);
         outerLayout.Controls.Add(btnPanel2, 0, 4);
 
@@ -416,7 +416,7 @@ public class PrescriptionDialog : Form
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();
         var btnVincular = new Button { Text = "Vincular Selecionada", Width = 150, Height = 32, BackColor = Color.Teal, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel };
         btnPanel.Controls.Add(btnVincular); btnPanel.Controls.Add(btnCancel);
         mainTbl.Controls.Add(btnPanel, 0, 2);
 

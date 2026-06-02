@@ -107,10 +107,10 @@ public class PosForm : Form
 
         lblTotalItens = new Label { Text = "0 itens", TextAlign = ContentAlignment.MiddleRight, Width = 100, Height = 30, Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.DarkBlue };
 
-        btnRemover = new Button { Text = "Remover Item", Width = 120, Height = 30, BackColor = Color.Coral, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnRemover = new Button { Text = "Remover Item", Width = 120, Height = 32, BackColor = Color.Coral, ForeColor = Color.White, Font = new Font("Segoe UI", 10, FontStyle.Bold), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnRemover.Click += (_, _) => RemoveSelectedFromCart();
 
-        btnFinalizar = new Button { Text = "Finalizar Venda", Width = 140, Height = 30, BackColor = Color.Green, ForeColor = Color.White, Font = new Font("Segoe UI", 10, FontStyle.Bold), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnFinalizar = new Button { Text = "Finalizar Venda", Width = 140, Height = 32, BackColor = Color.Green, ForeColor = Color.White, Font = new Font("Segoe UI", 10, FontStyle.Bold), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnFinalizar.Click += async (_, _) => await FinalizarVenda();
 
         actionPanel.Controls.Add(btnFinalizar);
@@ -221,8 +221,8 @@ public class PosForm : Form
                 ltbl.Controls.Add(cmbLote, 0, 1);
 
                 var lbtnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
-                var btnOk = new Button { Text = "Salvar", Width = 80, Height = 30, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
-                var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 30, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+                var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+                var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel };
                 lbtnPanel.Controls.Add(btnOk); lbtnPanel.Controls.Add(btnCancel);
                 ltbl.Controls.Add(lbtnPanel, 0, 2);
 

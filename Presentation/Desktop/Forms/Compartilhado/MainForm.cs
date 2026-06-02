@@ -178,7 +178,7 @@ public class MainForm : Form
             BackColor = Color.FromArgb(45, 45, 48),
             ForeColor = Color.White,
             Font = new Font("Segoe UI", 10),
-            TextAlign = ContentAlignment.MiddleLeft,
+            TextAlign = ContentAlignment.MiddleCenter,
             Padding = new Padding(10, 0, 0, 0),
             Cursor = Cursors.Hand,
             TextImageRelation = TextImageRelation.ImageBeforeText,

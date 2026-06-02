@@ -106,8 +106,8 @@ public class VendasForm : Form
         tbl.Controls.Add(dgvItems, 0, 1);
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();
-        var btnCancelar = new Button { Text = "Cancelar Venda", Width = 120, Height = 35, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 10, 0) };
-        var btnClose = new Button { Text = "Fechar", Width = 90, Height = 35, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 10, 0) };
+        var btnCancelar = new Button { Text = "Cancelar Venda", Width = 120, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnClose = new Button { Text = "Fechar", Width = 90, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat };
         btnPanel.Controls.Add(btnClose); btnPanel.Controls.Add(btnCancelar);
         tbl.Controls.Add(btnPanel, 0, 2);
 

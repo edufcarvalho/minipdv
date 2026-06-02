@@ -121,8 +121,8 @@ public class ReceitasForm : Form
         tbl.Controls.Add(dgvProd, 0, 1);
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();
-        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 35, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 10, 0) };
-        var btnClose = new Button { Text = "Fechar", Width = 90, Height = 35, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 10, 0) };
+        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnClose = new Button { Text = "Fechar", Width = 90, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat };
         btnPanel.Controls.Add(btnClose); btnPanel.Controls.Add(btnDelete);
         tbl.Controls.Add(btnPanel, 0, 2);
 
@@ -204,14 +204,14 @@ public class ReceitasForm : Form
         var cmbLote = new ComboBox { Dock = DockStyle.Fill, Font = font, DropDownStyle = ComboBoxStyle.DropDownList };
         addTbl.Controls.Add(cmbLote, 3, 0);
 
-        var btnAddProd = new Button { Text = "Adicionar", Width = 90, Height = 30, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnAddProd = new Button { Text = "Adicionar", Width = 90, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         addTbl.Controls.Add(btnAddProd, 4, 0);
 
         addTbl.Controls.Add(new Label { Text = "Qtd:", TextAlign = ContentAlignment.MiddleLeft, Font = font }, 0, 1);
         var nudQtd = new NumericUpDown { Dock = DockStyle.Fill, Font = font, Minimum = 1, Maximum = 9999, Value = 1 };
         addTbl.Controls.Add(nudQtd, 1, 1);
 
-        var btnRemoveProd = new Button { Text = "Remover selecionado", Width = 140, Height = 30, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnRemoveProd = new Button { Text = "Remover selecionado", Width = 140, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         addTbl.Controls.Add(btnRemoveProd, 3, 1);
 
         outerLayout.Controls.Add(addTbl, 0, 1);
@@ -228,8 +228,8 @@ public class ReceitasForm : Form
         outerLayout.Controls.Add(dgvProdutos, 0, 2);
 
         var btnPanel2 = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
-        var btnOk = new Button { Text = "Salvar", Width = 90, Height = 35, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
-        var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 35, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0), Font = font };
+        var btnOk = new Button { Text = "Salvar", Width = 90, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
+        var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel, Font = font };
         btnPanel2.Controls.Add(btnOk);
         btnPanel2.Controls.Add(btnCancel);
         outerLayout.Controls.Add(btnPanel2, 0, 3);

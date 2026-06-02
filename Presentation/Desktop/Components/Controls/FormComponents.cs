@@ -6,37 +6,37 @@ public static class FormComponents
 
     public static Button CreateRefreshButton(int width = 90)
     {
-        return new Button { Text = "Atualizar", Width = width, Height = 32, Cursor = Cursors.Hand };
+        return new Button { Text = "Atualizar", Width = width, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, TextAlign = ContentAlignment.MiddleCenter };
     }
 
     public static Button CreateAddButton(int width = 90)
     {
-        return new Button { Text = "Adicionar", Width = width, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        return new Button { Text = "Adicionar", Width = width, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, TextAlign = ContentAlignment.MiddleCenter };
     }
 
     public static Button CreateEditButton(int width = 90)
     {
-        return new Button { Text = "Editar", Width = width, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        return new Button { Text = "Editar", Width = width, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, TextAlign = ContentAlignment.MiddleCenter };
     }
 
     public static Button CreateDeleteButton(int width = 90, string text = "Excluir")
     {
-        return new Button { Text = text, Width = width, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        return new Button { Text = text, Width = width, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, TextAlign = ContentAlignment.MiddleCenter };
     }
 
     public static Button CreateSaveButton(int width = 80)
     {
-        return new Button { Text = "Salvar", Width = width, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        return new Button { Text = "Salvar", Width = width, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, TextAlign = ContentAlignment.MiddleCenter };
     }
 
     public static Button CreateCancelButton(int width = 80)
     {
-        return new Button { Text = "Cancelar", Width = width, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        return new Button { Text = "Cancelar", Width = width, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, TextAlign = ContentAlignment.MiddleCenter, DialogResult = DialogResult.Cancel };
     }
 
     public static Button CreateCloseButton(int width = 80)
     {
-        return new Button { Text = "Fechar", Width = width, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        return new Button { Text = "Fechar", Width = width, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, BackColor = SystemColors.Control, TextAlign = ContentAlignment.MiddleCenter, DialogResult = DialogResult.Cancel };
     }
 
     public static DataGridView CreateDataGridView()

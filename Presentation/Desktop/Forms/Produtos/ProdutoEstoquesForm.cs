@@ -129,7 +129,7 @@ public class ProdutoEstoquesForm : Form
         tbl.SetColumnSpan(btnPanel, 2);
         var btnEdit = FormComponents.CreateEditButton(80);
         var btnDelete = FormComponents.CreateDeleteButton(80);
-        var btnClose = new Button { Text = "Fechar", Width = 80, Height = 32, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 10, 0) };
+        var btnClose = FormComponents.CreateCloseButton(80);
         btnPanel.Controls.Add(btnClose); btnPanel.Controls.Add(btnDelete); btnPanel.Controls.Add(btnEdit);
         tbl.Controls.Add(btnPanel, 0, 6);
         dialog.Controls.Add(tbl);
