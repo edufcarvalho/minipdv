@@ -82,8 +82,8 @@ public class ReceitasForm : Form
 
         var outerLayout = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, Padding = new Padding(10) };
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 210));
-        outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 180));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 100));
+        outerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
 
         // === Top section: Prescritor, Paciente, Comprador, dates ===
@@ -122,29 +122,7 @@ public class ReceitasForm : Form
 
         outerLayout.Controls.Add(topTbl, 0, 0);
 
-        // === Middle section: Products table ===
-        var prodLabel = new Label { Text = "Produtos na Receita:", Font = new Font("Segoe UI", 10, FontStyle.Bold), Dock = DockStyle.Fill };
-        outerLayout.Controls.Add(prodLabel, 0, 1);
-
-        var dgvProdutos = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            ReadOnly = true,
-            RowHeadersVisible = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.None,
-            Font = font
-        };
-        dgvProdutos.Columns.Add("Produto", "Produto");
-        dgvProdutos.Columns.Add("Lote", "Lote");
-        dgvProdutos.Columns.Add("Quantidade", "Qtd");
-        outerLayout.Controls.Add(dgvProdutos, 0, 1);
-
-        // === Bottom section: Add product controls ===
+        // === Product add controls (above the table) ===
         var addTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 5, RowCount = 2, Padding = new Padding(5) };
         addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
         addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
@@ -173,7 +151,31 @@ public class ReceitasForm : Form
         var btnRemoveProd = new Button { Text = "Remover selecionado", Width = 140, Height = 30, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         addTbl.Controls.Add(btnRemoveProd, 3, 1);
 
-        outerLayout.Controls.Add(addTbl, 0, 2);
+        outerLayout.Controls.Add(addTbl, 0, 1);
+
+        // === Products table ===
+        var prodLabel = new Label { Text = "Produtos na Receita:", Font = new Font("Segoe UI", 10, FontStyle.Bold), Dock = DockStyle.Fill };
+        outerLayout.Controls.Add(prodLabel, 0, 2);
+
+        var dgvProdutos = new DataGridView
+        {
+            Dock = DockStyle.Fill,
+            AllowUserToAddRows = false,
+            AllowUserToDeleteRows = false,
+            ReadOnly = true,
+            RowHeadersVisible = false,
+            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            BackgroundColor = Color.White,
+            BorderStyle = BorderStyle.None,
+            Font = font
+        };
+        dgvProdutos.Columns.Add("Produto", "Produto");
+        dgvProdutos.Columns.Add("Lote", "Lote");
+        dgvProdutos.Columns.Add("Quantidade", "Qtd");
+        dgvProdutos.Columns["Produto"]!.FillWeight = 40;
+        dgvProdutos.Columns["Produto"]!.MinimumWidth = 120;
+        outerLayout.Controls.Add(dgvProdutos, 0, 2);
 
         // === Save/Cancel buttons ===
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };

@@ -84,6 +84,8 @@ public class ProdutosForm : Form
             dgv.Columns.Add("Controlado", "Controlado");
             dgv.Columns.Add("RegistroMS", "Reg. MS");
             dgv.Columns.Add("GrupoNome", "Grupo");
+            dgv.Columns["Descricao"]!.FillWeight = 40;
+            dgv.Columns["Descricao"]!.MinimumWidth = 120;
 
             dgv.Rows.Clear();
             foreach (var p in _produtos)

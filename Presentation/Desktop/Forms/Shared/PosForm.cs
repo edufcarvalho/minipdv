@@ -104,6 +104,8 @@ public class PosForm : Form
         dgvCart.Columns.Add("Descricao", "Descrição");
         dgvCart.Columns.Add("Lote", "Lote");
         dgvCart.Columns.Add("Quantidade", "Qtd");
+        dgvCart.Columns["Descricao"]!.FillWeight = 40;
+        dgvCart.Columns["Descricao"]!.MinimumWidth = 120;
         dgvCart.ReadOnly = false;
         dgvCart.CellEndEdit += DgvCart_CellEndEdit;
         rightPanel.Controls.Add(dgvCart, 0, 0);
@@ -260,6 +262,8 @@ public class PosForm : Form
         dgvProducts.Columns.Add("Estoque", "Estoque");
         dgvProducts.Columns.Add("Dosagem", "Dosagem");
         dgvProducts.Columns.Add("Controlado", "Controlado");
+        dgvProducts.Columns["Descricao"]!.FillWeight = 40;
+        dgvProducts.Columns["Descricao"]!.MinimumWidth = 120;
 
         foreach (var p in _searchResults)
         {
@@ -310,7 +314,7 @@ public class PosForm : Form
 
                 ltbl.Controls.Add(new Label { Text = "Selecione o lote:", TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 10) }, 0, 0);
 
-                var cmbLote = new ComboBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), DropDownStyle = ComboBoxStyle.DropDownList };
+                var cmbLote = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione o lote..." };
                 cmbLote.DataSource = availableLotes;
                 cmbLote.DisplayMember = "Lote";
                 ltbl.Controls.Add(cmbLote, 0, 1);

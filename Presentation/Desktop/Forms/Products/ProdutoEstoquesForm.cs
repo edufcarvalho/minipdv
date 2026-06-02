@@ -71,6 +71,8 @@ public class ProdutoEstoquesForm : Form
             dgv.Columns.Add("RegistroMS", "Registro MS");
             dgv.Columns.Add("Fabricacao", "Fabricação");
             dgv.Columns.Add("Validade", "Validade");
+            dgv.Columns["Produto"]!.FillWeight = 40;
+            dgv.Columns["Produto"]!.MinimumWidth = 120;
             dgv.Rows.Clear();
             foreach (var item in _items)
                 dgv.Rows.Add(item.Produto?.Descricao ?? $"ID {item.ProdutoId}", item.Lote ?? "", item.Quantidade, item.RegistroMS ?? "", item.Fabricacao?.ToString("dd/MM/yyyy") ?? "", item.Validade?.ToString("dd/MM/yyyy") ?? "");

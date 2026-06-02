@@ -90,6 +90,8 @@ public class PrescriptionDialog : Form
         dgvPendentes.Columns.Add("Produto", "Produto");
         dgvPendentes.Columns.Add("Lote", "Lote");
         dgvPendentes.Columns.Add("Pendente", "Qtd Pendente");
+        dgvPendentes.Columns["Produto"]!.FillWeight = 40;
+        dgvPendentes.Columns["Produto"]!.MinimumWidth = 120;
         mainTbl.Controls.Add(dgvPendentes, 0, 1);
 
         var lblReceitas = new Label
@@ -125,6 +127,9 @@ public class PrescriptionDialog : Form
         };
         dgvReceitas.Columns.Add("ReceitaId", "Receita ID");
         dgvReceitas.Columns.Add("Produtos", "Produtos Cobertos");
+        dgvReceitas.Columns["ReceitaId"]!.FillWeight = 15;
+        dgvReceitas.Columns["Produtos"]!.FillWeight = 40;
+        dgvReceitas.Columns["Produtos"]!.MinimumWidth = 150;
         bottomTbl.Controls.Add(dgvReceitas, 0, 0);
 
         var btnPanel = new FlowLayoutPanel
@@ -276,26 +281,6 @@ public class PrescriptionDialog : Form
 
         outerLayout.Controls.Add(topTbl, 0, 0);
 
-        var dgvProdutos = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            ReadOnly = true,
-            RowHeadersVisible = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.None,
-            Font = font
-        };
-        dgvProdutos.Columns.Add("Produto", "Produto");
-        dgvProdutos.Columns.Add("Lote", "Lote");
-        dgvProdutos.Columns.Add("Quantidade", "Qtd");
-        outerLayout.Controls.Add(dgvProdutos, 0, 1);
-
-        var receitaItems = new List<(int ProdutoId, string Lote, int Quantidade, string Descricao)>();
-
         var addTbl = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
@@ -309,8 +294,10 @@ public class PrescriptionDialog : Form
         addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
 
         var cmbProd = new ComboBox { Dock = DockStyle.Fill, Font = font, DropDownStyle = ComboBoxStyle.DropDownList };
+        cmbProd.Items.Add("-- Selecione o produto --");
         foreach (var item in availableItems)
             cmbProd.Items.Add($"{item.Descricao} (Lote: {item.Lote}, Pendente: {item.Quantidade})");
+        cmbProd.SelectedIndex = 0;
         cmbProd.Tag = availableItems;
         addTbl.Controls.Add(cmbProd, 0, 0);
 
@@ -341,12 +328,34 @@ public class PrescriptionDialog : Form
         };
         addTbl.Controls.Add(btnRemoveProd, 3, 0);
 
-        outerLayout.Controls.Add(addTbl, 0, 2);
+        outerLayout.Controls.Add(addTbl, 0, 1);
+
+        var dgvProdutos = new DataGridView
+        {
+            Dock = DockStyle.Fill,
+            AllowUserToAddRows = false,
+            AllowUserToDeleteRows = false,
+            ReadOnly = true,
+            RowHeadersVisible = false,
+            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            BackgroundColor = Color.White,
+            BorderStyle = BorderStyle.None,
+            Font = font
+        };
+        dgvProdutos.Columns.Add("Produto", "Produto");
+        dgvProdutos.Columns.Add("Lote", "Lote");
+        dgvProdutos.Columns.Add("Quantidade", "Qtd");
+        dgvProdutos.Columns["Produto"]!.FillWeight = 40;
+        dgvProdutos.Columns["Produto"]!.MinimumWidth = 120;
+        outerLayout.Controls.Add(dgvProdutos, 0, 2);
+
+        var receitaItems = new List<(int ProdutoId, string Lote, int Quantidade, string Descricao)>();
 
         btnAddProd.Click += (_, _) =>
         {
-            if (cmbProd.SelectedIndex < 0) return;
-            var ai = availableItems[cmbProd.SelectedIndex];
+            if (cmbProd.SelectedIndex <= 0) return;
+            var ai = availableItems[cmbProd.SelectedIndex - 1];
             var qtd = (int)nudQtd.Value;
             if (qtd > ai.Quantidade)
             {
@@ -565,6 +574,12 @@ public class PrescriptionDialog : Form
         dgv.Columns.Add("Prescritor", "Prescritor");
         dgv.Columns.Add("Paciente", "Paciente");
         dgv.Columns.Add("Produtos", "Produtos");
+        dgv.Columns["Produtos"]!.FillWeight = 30;
+        dgv.Columns["Produtos"]!.MinimumWidth = 150;
+        dgv.Columns["Prescritor"]!.FillWeight = 20;
+        dgv.Columns["Prescritor"]!.MinimumWidth = 100;
+        dgv.Columns["Paciente"]!.FillWeight = 20;
+        dgv.Columns["Paciente"]!.MinimumWidth = 100;
 
         foreach (var rec in availableReceitasList)
         {
