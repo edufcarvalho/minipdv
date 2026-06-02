@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Infrastructure.Data.Context;
@@ -9,11 +10,13 @@ public class ProdutoCodBarraRepository : IProdutoCodBarraRepository
 {
     private readonly MiniPDVContext _context;
     private readonly DbSet<ProdutoCodBarra> _dbSet;
+    private readonly ILogger<ProdutoCodBarraRepository> _logger;
 
-    public ProdutoCodBarraRepository(MiniPDVContext context)
+    public ProdutoCodBarraRepository(MiniPDVContext context, ILogger<ProdutoCodBarraRepository> logger)
     {
         _context = context;
         _dbSet = context.Set<ProdutoCodBarra>();
+        _logger = logger;
     }
 
     public async Task<IEnumerable<ProdutoCodBarra>> GetAllAsync()
@@ -35,14 +38,32 @@ public class ProdutoCodBarraRepository : IProdutoCodBarraRepository
     {
         entity.CriadoEm = DateTime.UtcNow;
         await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
-        return entity;
+        try
+        {
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("ProdutoCodBarra criado. CodBarra={CodBarra}, ProdutoId={ProdutoId}", entity.CodBarra, entity.ProdutoId);
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha ao criar ProdutoCodBarra CodBarra={CodBarra}", entity.CodBarra);
+            throw;
+        }
     }
 
     public async Task UpdateAsync(ProdutoCodBarra entity)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("ProdutoCodBarra atualizado. CodBarra={CodBarra}", entity.CodBarra);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha ao atualizar ProdutoCodBarra CodBarra={CodBarra}", entity.CodBarra);
+            throw;
+        }
     }
 
     public async Task DeleteAsync(int codBarra)
@@ -52,6 +73,11 @@ public class ProdutoCodBarraRepository : IProdutoCodBarraRepository
         {
             _dbSet.Remove(entity);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("ProdutoCodBarra removido. CodBarra={CodBarra}", codBarra);
+        }
+        else
+        {
+            _logger.LogWarning("Tentativa de remover ProdutoCodBarra inexistente. CodBarra={CodBarra}", codBarra);
         }
     }
 

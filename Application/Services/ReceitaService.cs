@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
@@ -13,17 +14,20 @@ public class ReceitaService : IReceitaService
     private readonly IProdutoEstoqueRepository _produtoEstoqueRepository;
     private readonly MiniPDVContext _context;
     private readonly IValidator<Receita> _validator;
+    private readonly ILogger<ReceitaService> _logger;
 
     public ReceitaService(
         IReceitaRepository repository,
         IProdutoEstoqueRepository produtoEstoqueRepository,
         MiniPDVContext context,
-        IValidator<Receita> validator)
+        IValidator<Receita> validator,
+        ILogger<ReceitaService> logger)
     {
         _repository = repository;
         _produtoEstoqueRepository = produtoEstoqueRepository;
         _context = context;
         _validator = validator;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<Receita>> GetAllAsync()
@@ -47,9 +51,13 @@ public class ReceitaService : IReceitaService
                     $"Estoque não encontrado para o produto {rpe.ProdutoId} lote {rpe.Lote}");
 
             if (estoque.Quantidade < rpe.Quantidade)
+            {
+                _logger.LogWarning("Estoque insuficiente para receita: ProdutoId={ProdutoId}, Lote={Lote}, Disponivel={Disponivel}, Solicitado={Solicitado}",
+                    rpe.ProdutoId, rpe.Lote, estoque.Quantidade, rpe.Quantidade);
                 throw new InvalidOperationException(
                     $"Estoque insuficiente para o produto {rpe.ProdutoId} lote {rpe.Lote}. " +
                     $"Disponível: {estoque.Quantidade}, solicitado: {rpe.Quantidade}");
+            }
 
             estoque.Quantidade -= rpe.Quantidade;
             rpe.ProdutoEstoque = estoque;
@@ -59,6 +67,9 @@ public class ReceitaService : IReceitaService
         entity.CriadoEm = DateTime.UtcNow;
         _context.Receitas.Add(entity);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Receita criada: ReceitaId={ReceitaId}, PrescritorId={PrescritorId}, PacienteId={PacienteId}, Itens={Itens}",
+            entity.Id, entity.PrescritorId, entity.PacienteId, entity.ReceitaProdutoEstoques?.Count ?? 0);
         return entity;
     }
 
@@ -96,9 +107,13 @@ public class ReceitaService : IReceitaService
                         $"Estoque não encontrado para o produto {newItem.ProdutoId} lote {newItem.Lote}");
 
                 if (estoque.Quantidade < newItem.Quantidade)
+                {
+                    _logger.LogWarning("Estoque insuficiente ao atualizar receita: ProdutoId={ProdutoId}, Lote={Lote}, Disponivel={Disponivel}, Solicitado={Solicitado}",
+                        newItem.ProdutoId, newItem.Lote, estoque.Quantidade, newItem.Quantidade);
                     throw new InvalidOperationException(
                         $"Estoque insuficiente para o produto {newItem.ProdutoId} lote {newItem.Lote}. " +
                         $"Disponível: {estoque.Quantidade}, solicitado: {newItem.Quantidade}");
+                }
 
                 estoque.Quantidade -= newItem.Quantidade;
                 newItem.ProdutoEstoque = estoque;
@@ -120,6 +135,8 @@ public class ReceitaService : IReceitaService
             await SyncProdutoEstoqueAsync(prodId);
 
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Receita atualizada: ReceitaId={ReceitaId}, Itens={Itens}", entity.Id, newItems.Count);
     }
 
     public async Task DeleteAsync(int id)
@@ -128,11 +145,18 @@ public class ReceitaService : IReceitaService
             .Include(r => r.ReceitaProdutoEstoques)
             .FirstOrDefaultAsync(r => r.Id == id);
 
-        if (entity is null) return;
+        if (entity is null)
+        {
+            _logger.LogWarning("Tentativa de excluir receita inexistente: ReceitaId={Id}", id);
+            return;
+        }
 
         if (entity.VendaId.HasValue)
+        {
+            _logger.LogWarning("Tentativa de excluir receita vinculada a venda: ReceitaId={Id}, VendaId={VendaId}", id, entity.VendaId);
             throw new InvalidOperationException(
                 "Não é possível excluir uma receita vinculada a uma venda. Cancele a venda primeiro.");
+        }
 
         foreach (var rpe in entity.ReceitaProdutoEstoques)
         {
@@ -144,6 +168,8 @@ public class ReceitaService : IReceitaService
 
         _context.Receitas.Remove(entity);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Receita excluída: ReceitaId={Id}, PrescritorId={PrescritorId}", id, entity.PrescritorId);
     }
 
     public async Task<bool> ExistsAsync(int id)

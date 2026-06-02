@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
@@ -13,17 +14,20 @@ public class VendaService : IVendaService
     private readonly IProdutoEstoqueRepository _produtoEstoqueRepository;
     private readonly MiniPDVContext _context;
     private readonly IValidator<Venda> _validator;
+    private readonly ILogger<VendaService> _logger;
 
     public VendaService(
         IVendaRepository repository,
         IProdutoEstoqueRepository produtoEstoqueRepository,
         MiniPDVContext context,
-        IValidator<Venda> validator)
+        IValidator<Venda> validator,
+        ILogger<VendaService> logger)
     {
         _repository = repository;
         _produtoEstoqueRepository = produtoEstoqueRepository;
         _context = context;
         _validator = validator;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<Venda>> GetAllAsync()
@@ -45,6 +49,15 @@ public class VendaService : IVendaService
             var produto = await _context.Set<Produto>()
                 .FirstAsync(p => p.Id == item.ProdutoId);
 
+            if (produto.Estoque < item.Quantidade)
+            {
+                _logger.LogWarning("Estoque insuficiente para venda: ProdutoId={ProdutoId}, Produto={Descricao}, Estoque={Estoque}, Solicitado={Solicitado}",
+                    produto.Id, produto.Descricao, produto.Estoque, item.Quantidade);
+                throw new InvalidOperationException(
+                    $"Estoque insuficiente para o produto {produto.Descricao}. " +
+                    $"Disponível: {produto.Estoque}, solicitado: {item.Quantidade}");
+            }
+
             produto.Estoque -= item.Quantidade;
         }
 
@@ -65,6 +78,10 @@ public class VendaService : IVendaService
         }
 
         await _context.SaveChangesAsync();
+
+        var totalItens = entity.VendaItens?.Count ?? 0;
+        _logger.LogInformation("Venda criada: VendaId={VendaId}, VendedorId={VendedorId}, TotalItens={TotalItens}, ReceitasVinculadas={Receitas}",
+            entity.Id, entity.VendedorId, totalItens, receitaIds?.Count ?? 0);
         return entity;
     }
 
@@ -74,7 +91,11 @@ public class VendaService : IVendaService
             .Include(v => v.VendaItens)
             .FirstOrDefaultAsync(v => v.Id == id);
 
-        if (entity is null) return;
+        if (entity is null)
+        {
+            _logger.LogWarning("Tentativa de cancelar venda inexistente: VendaId={Id}", id);
+            return;
+        }
 
         foreach (var item in entity.VendaItens)
         {
@@ -87,5 +108,7 @@ public class VendaService : IVendaService
         entity.CanceladoEm = DateTime.UtcNow;
         entity.AtualizadoEm = DateTime.UtcNow;
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Venda cancelada: VendaId={VendaId}, VendedorId={VendedorId}", entity.Id, entity.VendedorId);
     }
 }

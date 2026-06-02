@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Infrastructure.Data.Context;
@@ -7,7 +8,7 @@ namespace minipdv.Infrastructure.Data.Repositories;
 
 public class VendaRepository : Repository<Venda>, IVendaRepository
 {
-    public VendaRepository(MiniPDVContext context) : base(context) { }
+    public VendaRepository(MiniPDVContext context, ILogger<VendaRepository> logger) : base(context, logger) { }
 
     public override async Task<Venda?> GetByIdAsync(int id)
     {

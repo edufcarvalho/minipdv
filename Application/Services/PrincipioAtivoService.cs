@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
@@ -9,11 +10,13 @@ public class PrincipioAtivoService : IPrincipioAtivoService
 {
     private readonly IPrincipioAtivoRepository _repository;
     private readonly IValidator<PrincipioAtivo> _validator;
+    private readonly ILogger<PrincipioAtivoService> _logger;
 
-    public PrincipioAtivoService(IPrincipioAtivoRepository repository, IValidator<PrincipioAtivo> validator)
+    public PrincipioAtivoService(IPrincipioAtivoRepository repository, IValidator<PrincipioAtivo> validator, ILogger<PrincipioAtivoService> logger)
     {
         _repository = repository;
         _validator = validator;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<PrincipioAtivo>> GetAllAsync()
@@ -34,17 +37,24 @@ public class PrincipioAtivoService : IPrincipioAtivoService
     public async Task<PrincipioAtivo> AddAsync(PrincipioAtivo entity)
     {
         await _validator.ValidateAndThrowAsync(entity);
-        return await _repository.AddAsync(entity);
+        var created = await _repository.AddAsync(entity);
+        _logger.LogInformation("PrincipioAtivo criado: Id={Id}, Nome={Nome}", created.Id, created.Nome);
+        return created;
     }
 
     public async Task UpdateAsync(PrincipioAtivo entity)
     {
         await _validator.ValidateAndThrowAsync(entity);
         await _repository.UpdateAsync(entity);
+        _logger.LogInformation("PrincipioAtivo atualizado: Id={Id}, Nome={Nome}", entity.Id, entity.Nome);
     }
 
     public async Task DeleteAsync(int id)
     {
+        if (!await _repository.ExistsAsync(id))
+        {
+            _logger.LogWarning("Tentativa de excluir PrincipioAtivo inexistente: Id={Id}", id);
+        }
         await _repository.DeleteAsync(id);
     }
 

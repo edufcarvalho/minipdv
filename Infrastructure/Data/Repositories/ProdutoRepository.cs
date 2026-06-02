@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Infrastructure.Data.Context;
@@ -7,7 +8,7 @@ namespace minipdv.Infrastructure.Data.Repositories;
 
 public class ProdutoRepository : Repository<Produto>, IProdutoRepository
 {
-    public ProdutoRepository(MiniPDVContext context) : base(context) { }
+    public ProdutoRepository(MiniPDVContext context, ILogger<ProdutoRepository> logger) : base(context, logger) { }
 
     public override async Task<Produto?> GetByIdAsync(int id)
     {

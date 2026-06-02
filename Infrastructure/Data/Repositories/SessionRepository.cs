@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Infrastructure.Data.Context;
@@ -7,7 +8,7 @@ namespace minipdv.Infrastructure.Data.Repositories;
 
 public class SessionRepository : Repository<Session>, ISessionRepository
 {
-    public SessionRepository(MiniPDVContext context) : base(context) { }
+    public SessionRepository(MiniPDVContext context, ILogger<SessionRepository> logger) : base(context, logger) { }
 
     public async Task<Session?> GetByTokenAsync(string token)
     {

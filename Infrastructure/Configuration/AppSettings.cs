@@ -11,6 +11,7 @@ public class AppSettings
     public string JwtAudience { get; }
     public int JwtExpirationDays { get; }
     public bool TrustServerCertificate { get; }
+    public string LogPath { get; }
 
     public string ConnectionString =>
         $"Server={DbServer};Database={DbName};User Id={DbUser};Password={DbPassword};TrustServerCertificate={TrustServerCertificate};";
@@ -26,5 +27,6 @@ public class AppSettings
         JwtAudience = EnvConfig.Get("JWT_AUDIENCE") ?? "MiniPDV";
         JwtExpirationDays = int.TryParse(EnvConfig.Get("JWT_EXPIRATION_DAYS"), out var days) && days > 0 ? days : 1;
         TrustServerCertificate = bool.TryParse(EnvConfig.Get("DB_TRUST_SERVER_CERTIFICATE"), out var trust) && trust;
+        LogPath = EnvConfig.Get("LOG_PATH") ?? "logs";
     }
 }

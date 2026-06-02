@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
@@ -9,11 +10,13 @@ public class ProdutoControladoService : IProdutoControladoService
 {
     private readonly IProdutoControladoRepository _repository;
     private readonly IValidator<ProdutoControlado> _validator;
+    private readonly ILogger<ProdutoControladoService> _logger;
 
-    public ProdutoControladoService(IProdutoControladoRepository repository, IValidator<ProdutoControlado> validator)
+    public ProdutoControladoService(IProdutoControladoRepository repository, IValidator<ProdutoControlado> validator, ILogger<ProdutoControladoService> logger)
     {
         _repository = repository;
         _validator = validator;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<ProdutoControlado>> GetAllAsync()
@@ -34,17 +37,24 @@ public class ProdutoControladoService : IProdutoControladoService
     public async Task<ProdutoControlado> AddAsync(ProdutoControlado entity)
     {
         await _validator.ValidateAndThrowAsync(entity);
-        return await _repository.AddAsync(entity);
+        var created = await _repository.AddAsync(entity);
+        _logger.LogInformation("ProdutoControlado criado: Id={Id}, RegistroMS={RegistroMS}", created.Id, created.RegistroMS);
+        return created;
     }
 
     public async Task UpdateAsync(ProdutoControlado entity)
     {
         await _validator.ValidateAndThrowAsync(entity);
         await _repository.UpdateAsync(entity);
+        _logger.LogInformation("ProdutoControlado atualizado: Id={Id}", entity.Id);
     }
 
     public async Task DeleteAsync(int id)
     {
+        if (!await _repository.ExistsAsync(id))
+        {
+            _logger.LogWarning("Tentativa de excluir ProdutoControlado inexistente: Id={Id}", id);
+        }
         await _repository.DeleteAsync(id);
     }
 

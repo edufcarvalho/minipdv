@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using minipdv.Domain.Entities;
 using minipdv.Domain.Interfaces;
 using minipdv.Infrastructure.Data.Context;
@@ -9,11 +10,13 @@ public class ProdutoEstoqueRepository : IProdutoEstoqueRepository
 {
     private readonly MiniPDVContext _context;
     private readonly DbSet<ProdutoEstoque> _dbSet;
+    private readonly ILogger<ProdutoEstoqueRepository> _logger;
 
-    public ProdutoEstoqueRepository(MiniPDVContext context)
+    public ProdutoEstoqueRepository(MiniPDVContext context, ILogger<ProdutoEstoqueRepository> logger)
     {
         _context = context;
         _dbSet = context.Set<ProdutoEstoque>();
+        _logger = logger;
     }
 
     public async Task<IEnumerable<ProdutoEstoque>> GetAllAsync()
@@ -34,14 +37,32 @@ public class ProdutoEstoqueRepository : IProdutoEstoqueRepository
     public async Task<ProdutoEstoque> AddAsync(ProdutoEstoque entity)
     {
         await _dbSet.AddAsync(entity);
-        await _context.SaveChangesAsync();
-        return entity;
+        try
+        {
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("ProdutoEstoque criado. ProdutoId={ProdutoId}, Lote={Lote}, Qtd={Quantidade}", entity.ProdutoId, entity.Lote, entity.Quantidade);
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha ao criar ProdutoEstoque ProdutoId={ProdutoId} Lote={Lote}", entity.ProdutoId, entity.Lote);
+            throw;
+        }
     }
 
     public async Task UpdateAsync(ProdutoEstoque entity)
     {
         _dbSet.Update(entity);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+            _logger.LogInformation("ProdutoEstoque atualizado. ProdutoId={ProdutoId}, Lote={Lote}, Qtd={Quantidade}", entity.ProdutoId, entity.Lote, entity.Quantidade);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha ao atualizar ProdutoEstoque ProdutoId={ProdutoId} Lote={Lote}", entity.ProdutoId, entity.Lote);
+            throw;
+        }
     }
 
     public async Task DeleteAsync(int produtoId, string lote)
@@ -51,6 +72,11 @@ public class ProdutoEstoqueRepository : IProdutoEstoqueRepository
         {
             _dbSet.Remove(entity);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("ProdutoEstoque removido. ProdutoId={ProdutoId}, Lote={Lote}", produtoId, lote);
+        }
+        else
+        {
+            _logger.LogWarning("Tentativa de remover ProdutoEstoque inexistente. ProdutoId={ProdutoId}, Lote={Lote}", produtoId, lote);
         }
     }
 

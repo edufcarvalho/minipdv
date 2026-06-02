@@ -17,9 +17,11 @@ using minipdv.Infrastructure.Data.Context;
 using minipdv.Infrastructure.Data.Repositories;
 using minipdv.Infrastructure.Data.Seed;
 using minipdv.Presentation.API.Middleware;
+using Serilog;
+using Serilog.Events;
 
 #if WINDOWS
-using minipdv.Presentation.Desktop.Forms.Auth;
+using minipdv.Presentation.Desktop.Forms.Autenticacao;
 #endif
 
 namespace minipdv;
@@ -50,9 +52,32 @@ static class Program
 
     static async Task RunApiAsync(string[] args)
     {
+        var settings = new AppSettings();
+
+        var logPath = Path.Combine(AppContext.BaseDirectory, settings.LogPath);
+        Directory.CreateDirectory(logPath);
+
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+            .MinimumLevel.Override("System", LogEventLevel.Warning)
+            .Enrich.FromLogContext()
+            .WriteTo.Console(outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+            .WriteTo.File(
+                path: Path.Combine(logPath, "minipdv-.log"),
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 30,
+                outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss.fff} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+                encoding: System.Text.Encoding.UTF8)
+            .CreateLogger();
+
+        Log.Information("Iniciando MiniPDV API. LogPath: {LogPath}", logPath);
+
         var builder = WebApplication.CreateBuilder(args);
 
-        var settings = new AppSettings();
+        builder.Host.UseSerilog();
 
         builder.Services.AddDbContext<MiniPDVContext>(options =>
             options.UseSqlServer(settings.ConnectionString,
@@ -246,7 +271,15 @@ static class Program
         }
 
         app.MapControllers();
-        await app.RunAsync();
+
+        try
+        {
+            await app.RunAsync();
+        }
+        finally
+        {
+            Log.CloseAndFlush();
+        }
     }
 
 #if WINDOWS
