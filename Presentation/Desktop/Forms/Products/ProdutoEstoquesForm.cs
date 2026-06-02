@@ -115,11 +115,11 @@ public class ProdutoEstoquesForm : Form
         tbl.Controls.Add(mtxtRegMs, 1, 3);
 
         tbl.Controls.Add(new Label { Text = "Fabricação:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
-        var dtpFab = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short, ShowCheckBox = true, Checked = false };
+        var dtpFab = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short };
         tbl.Controls.Add(dtpFab, 1, 4);
 
         tbl.Controls.Add(new Label { Text = "Validade:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
-        var dtpVal = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short, ShowCheckBox = true, Checked = false };
+        var dtpVal = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short };
         tbl.Controls.Add(dtpVal, 1, 5);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
@@ -147,12 +147,12 @@ public class ProdutoEstoquesForm : Form
                     lote = txtLote.Text.Trim(),
                     quantidade = (int)nudQtd.Value,
                     registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
-                    fabricacao = dtpFab.Checked ? dtpFab.Value.ToString("yyyy-MM-dd") : null,
-                    validade = dtpVal.Checked ? dtpVal.Value.ToString("yyyy-MM-dd") : null
+                    fabricacao = dtpFab.Value.ToString("yyyy-MM-dd"),
+                    validade = dtpVal.Value.ToString("yyyy-MM-dd")
                 });
                 if (response.IsSuccessStatusCode)
                 {
-                    txtLote.Clear(); mtxtRegMs.Clear(); nudQtd.Value = 1; dtpFab.Checked = false; dtpVal.Checked = false;
+                    txtLote.Clear(); mtxtRegMs.Clear(); nudQtd.Value = 1;
                     cmbProd.ClearSelection();
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
@@ -202,15 +202,13 @@ public class ProdutoEstoquesForm : Form
         tbl.Controls.Add(mtxtRegMs, 1, 3);
 
         tbl.Controls.Add(new Label { Text = "Fabricação:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
-        var dtpFab = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short, ShowCheckBox = true };
-        if (item.Fabricacao.HasValue) { dtpFab.Checked = true; dtpFab.Value = item.Fabricacao.Value; }
-        else dtpFab.Checked = false;
+        var dtpFab = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short };
+        if (item.Fabricacao.HasValue) dtpFab.Value = item.Fabricacao.Value;
         tbl.Controls.Add(dtpFab, 1, 4);
 
         tbl.Controls.Add(new Label { Text = "Validade:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
-        var dtpVal = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short, ShowCheckBox = true };
-        if (item.Validade.HasValue) { dtpVal.Checked = true; dtpVal.Value = item.Validade.Value; }
-        else dtpVal.Checked = false;
+        var dtpVal = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short };
+        if (item.Validade.HasValue) dtpVal.Value = item.Validade.Value;
         tbl.Controls.Add(dtpVal, 1, 5);
 
         var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
@@ -234,12 +232,12 @@ public class ProdutoEstoquesForm : Form
                     lote = item.Lote,
                     quantidade = (int)nudQtd.Value,
                     registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
-                    fabricacao = dtpFab.Checked ? dtpFab.Value.ToString("yyyy-MM-dd") : null,
-                    validade = dtpVal.Checked ? dtpVal.Value.ToString("yyyy-MM-dd") : null
+                    fabricacao = dtpFab.Value.ToString("yyyy-MM-dd"),
+                    validade = dtpVal.Value.ToString("yyyy-MM-dd")
                 });
                 if (response.IsSuccessStatusCode)
                 {
-                    mtxtRegMs.Clear(); nudQtd.Value = 1; dtpFab.Checked = false; dtpVal.Checked = false;
+                    mtxtRegMs.Clear(); nudQtd.Value = 1;
                     dialog.DialogResult = DialogResult.OK;
                     dialog.Close();
                     await LoadData();
