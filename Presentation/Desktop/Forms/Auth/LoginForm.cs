@@ -18,7 +18,7 @@ public class LoginForm : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(380, 340);
+        ClientSize = new Size(300, 270);
 
         lblTitle = new Label
         {
@@ -35,20 +35,20 @@ public class LoginForm : Form
             Dock = DockStyle.Fill,
             ColumnCount = 1,
             RowCount = 6,
-            Padding = new Padding(30, 10, 30, 15)
+            Padding = new Padding(25, 8, 25, 12)
         };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 25));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 26));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 22));
 
-        tbl.Controls.Add(new Label { Text = "Usuário:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
+        tbl.Controls.Add(new Label { Text = "Usuário:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 10) }, 0, 0);
         txtLogin = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 11) };
         tbl.Controls.Add(txtLogin, 0, 1);
 
-        tbl.Controls.Add(new Label { Text = "Senha:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
+        tbl.Controls.Add(new Label { Text = "Senha:", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 10) }, 0, 2);
         txtPassword = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 11), UseSystemPasswordChar = true };
         tbl.Controls.Add(txtPassword, 0, 3);
 
@@ -76,6 +76,7 @@ public class LoginForm : Form
 
         Controls.Add(lblTitle);
         Controls.Add(tbl);
+        tbl.BringToFront();
 
         AcceptButton = btnEntrar;
         txtPassword.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) BtnEntrar_Click(s, e); };
