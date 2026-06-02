@@ -57,13 +57,13 @@ public class ReceitasForm : Form
             dgv.Columns.Add("Id", "ID");
             dgv.Columns.Add("DataReceita", "Data Receita");
             dgv.Columns.Add("DataCadastro", "Data Cadastro");
-            dgv.Columns.Add("PrescritorId", "Prescritor");
-            dgv.Columns.Add("PacienteId", "Paciente");
-            dgv.Columns.Add("CompradorId", "Comprador");
+            dgv.Columns.Add("PrescritorNome", "Prescritor");
+            dgv.Columns.Add("PacienteNome", "Paciente");
+            dgv.Columns.Add("CompradorNome", "Comprador");
             dgv.Columns.Add("VendaId", "Venda ID");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.DataReceita.ToString("dd/MM/yyyy"), item.DataCadastro.ToString("dd/MM/yyyy"), item.PrescritorId, item.PacienteId, item.CompradorId, item.VendaId?.ToString() ?? "");
+                dgv.Rows.Add(item.Id, item.DataReceita.ToString("dd/MM/yyyy"), item.DataCadastro.ToString("dd/MM/yyyy"), item.Prescritor?.Nome ?? "", item.Paciente?.Nome ?? "", item.Comprador?.Nome ?? "", item.VendaId?.ToString() ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
