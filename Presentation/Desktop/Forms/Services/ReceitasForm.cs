@@ -35,6 +35,7 @@ public class ReceitasForm : Form
         tbl.Controls.Add(topPanel, 0, 0);
 
         dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
+        dgv.CellDoubleClick += (_, _) => ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
         _searchFilter = new SearchFilter(topPanel, dgv);
 
@@ -67,6 +68,78 @@ public class ReceitasForm : Form
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+    }
+
+    private async Task ViewItem()
+    {
+        if (dgv.SelectedRows.Count == 0) { MessageBox.Show("Selecione uma receita.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        var idx = dgv.SelectedRows[0].Index;
+        if (idx < 0 || idx >= _items.Count) return;
+        var item = _items[idx];
+
+        Receita? fullReceita = null;
+        try { fullReceita = await ApiClient.Instance.GetAsync<Receita>($"api/receitas/{item.Id}"); }
+        catch (Exception ex) { MessageBox.Show($"Erro ao carregar receita: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+        if (fullReceita == null) { MessageBox.Show("Receita não encontrada.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
+
+        using var dialog = new Form { Text = "Visualizar Receita", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(550, 400) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 200));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
+
+        var infoTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(5) };
+        infoTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
+        infoTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+        infoTbl.Controls.Add(new Label { Text = "Data Receita:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
+        var dtpDataReceita = new DateTimePicker { Dock = DockStyle.Fill, Format = DateTimePickerFormat.Short, Enabled = false, Value = fullReceita.DataReceita };
+        infoTbl.Controls.Add(dtpDataReceita, 1, 0);
+
+        infoTbl.Controls.Add(new Label { Text = "Data Cadastro:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
+        var dtpDataCadastro = new DateTimePicker { Dock = DockStyle.Fill, Format = DateTimePickerFormat.Short, Enabled = false, Value = fullReceita.DataCadastro };
+        infoTbl.Controls.Add(dtpDataCadastro, 1, 1);
+
+        infoTbl.Controls.Add(new Label { Text = "Prescritor:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
+        var txtPresc = new TextBox { Dock = DockStyle.Fill, ReadOnly = true, BackColor = SystemColors.Control, Text = fullReceita.Prescritor?.Nome ?? "" };
+        infoTbl.Controls.Add(txtPresc, 1, 2);
+
+        infoTbl.Controls.Add(new Label { Text = "Paciente:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var txtPac = new TextBox { Dock = DockStyle.Fill, ReadOnly = true, BackColor = SystemColors.Control, Text = fullReceita.Paciente?.Nome ?? "" };
+        infoTbl.Controls.Add(txtPac, 1, 3);
+
+        infoTbl.Controls.Add(new Label { Text = "Comprador:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var txtComp = new TextBox { Dock = DockStyle.Fill, ReadOnly = true, BackColor = SystemColors.Control, Text = fullReceita.Comprador?.Nome ?? "" };
+        infoTbl.Controls.Add(txtComp, 1, 4);
+
+        tbl.Controls.Add(infoTbl, 0, 0);
+
+        var dgvProd = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None };
+        dgvProd.Columns.Add("Produto", "Produto");
+        dgvProd.Columns.Add("Lote", "Lote");
+        dgvProd.Columns.Add("Quantidade", "Qtd");
+        dgvProd.Columns["Produto"]!.FillWeight = 40;
+        dgvProd.Columns["Produto"]!.MinimumWidth = 120;
+        foreach (var rpe in fullReceita.ReceitaProdutoEstoques)
+            dgvProd.Rows.Add(rpe.ProdutoEstoque?.Produto?.Descricao ?? $"ID {rpe.ProdutoId}", rpe.Lote, rpe.Quantidade);
+        tbl.Controls.Add(dgvProd, 0, 1);
+
+        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 35, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnClose = new Button { Text = "Fechar", Width = 90, Height = 35, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 10, 0) };
+        btnPanel.Controls.Add(btnClose); btnPanel.Controls.Add(btnDelete);
+        tbl.Controls.Add(btnPanel, 0, 2);
+
+        dialog.Controls.Add(tbl);
+
+        btnDelete.Click += (_, _) =>
+        {
+            dialog.Close();
+            _ = DeleteItem();
+        };
+        btnClose.Click += (_, _) => dialog.Close();
+
+        dialog.ShowDialog(this);
     }
 
     private async Task AddItem()

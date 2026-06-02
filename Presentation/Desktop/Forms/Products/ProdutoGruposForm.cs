@@ -35,6 +35,7 @@ public class ProdutoGruposForm : Form
         tbl.Controls.Add(topPanel, 0, 0);
 
         dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
+        dgv.CellDoubleClick += async (_, _) => await ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
 
         var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
@@ -68,6 +69,34 @@ public class ProdutoGruposForm : Form
         if (dgv.SelectedRows.Count > 0 && dgv.SelectedRows[0].Index < _items.Count)
             return _items[dgv.SelectedRows[0].Index];
         return null;
+    }
+
+    private async Task ViewItem()
+    {
+        var item = GetSelected();
+        if (item == null) { MessageBox.Show("Selecione um grupo.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+        using var dialog = new Form { Text = "Visualizar Grupo", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(350, 160) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3, Padding = new Padding(15) };
+        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
+        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        tbl.Controls.Add(new Label { Text = "Nome:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
+        var txt = new TextBox { Text = item.Nome, ReadOnly = true, BackColor = SystemColors.Control, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(txt, 1, 0);
+        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
+        var chkAtivo = new CheckBox { Text = "Ativo", Checked = item.Ativo, Enabled = false, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(chkAtivo, 1, 1);
+        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        tbl.SetColumnSpan(btnPanel, 2);
+        var btnEdit = new Button { Text = "Editar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnEdit.Click += async (_, _) => { dialog.Close(); await EditItem(); };
+        var btnDelete = new Button { Text = "Excluir", Width = 80, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        btnDelete.Click += async (_, _) => { dialog.Close(); await DeleteItem(); };
+        var btnFechar = new Button { Text = "Fechar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        btnPanel.Controls.Add(btnEdit); btnPanel.Controls.Add(btnDelete); btnPanel.Controls.Add(btnFechar);
+        tbl.Controls.Add(btnPanel, 0, 2);
+        dialog.Controls.Add(tbl);
+        dialog.CancelButton = btnFechar;
+        dialog.ShowDialog(this);
     }
 
     private async Task AddItem()

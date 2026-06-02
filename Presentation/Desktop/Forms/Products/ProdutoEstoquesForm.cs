@@ -39,7 +39,7 @@ public class ProdutoEstoquesForm : Form
         tbl.Controls.Add(topPanel, 0, 0);
 
         dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
-        dgv.CellDoubleClick += async (_, _) => await EditItem();
+        dgv.CellDoubleClick += (_, _) => ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
         _searchFilter = new SearchFilter(topPanel, dgv);
 
@@ -86,6 +86,75 @@ public class ProdutoEstoquesForm : Form
         if (dgv.SelectedRows.Count > 0 && dgv.SelectedRows[0].Index < _items.Count)
             return _items[dgv.SelectedRows[0].Index];
         return null;
+    }
+
+    private void ViewItem()
+    {
+        var item = GetSelected();
+        if (item == null) { MessageBox.Show("Selecione um estoque.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
+
+        using var dialog = new Form { Text = "Visualizar Estoque", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(450, 290) };
+        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 7, Padding = new Padding(15) };
+        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
+        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+
+        tbl.Controls.Add(new Label { Text = "Produto:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
+        var cmbProd = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
+        cmbProd.DataSource = _produtos;
+        cmbProd.DisplayMember = "Descricao";
+        cmbProd.ValueMember = "Id";
+        cmbProd.SelectedValue = item.ProdutoId;
+        cmbProd.Enabled = false;
+        tbl.Controls.Add(cmbProd, 1, 0);
+
+        tbl.Controls.Add(new Label { Text = "Lote:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
+        var txtLote = new TextBox { Text = item.Lote ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), ReadOnly = true, BackColor = SystemColors.Control };
+        tbl.Controls.Add(txtLote, 1, 1);
+
+        tbl.Controls.Add(new Label { Text = "Quantidade:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
+        var nudQtd = new NumericUpDown { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Minimum = 1, Maximum = 999999, Value = item.Quantidade, Enabled = false };
+        tbl.Controls.Add(nudQtd, 1, 2);
+
+        tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Enabled = false };
+        if (!string.IsNullOrEmpty(item.RegistroMS))
+        {
+            mtxtRegMs.Text = item.RegistroMS;
+        }
+        tbl.Controls.Add(mtxtRegMs, 1, 3);
+
+        tbl.Controls.Add(new Label { Text = "Fabricação:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        var dtpFab = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short, Enabled = false };
+        if (item.Fabricacao.HasValue) dtpFab.Value = item.Fabricacao.Value;
+        tbl.Controls.Add(dtpFab, 1, 4);
+
+        tbl.Controls.Add(new Label { Text = "Validade:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        var dtpVal = new DateTimePicker { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), Format = DateTimePickerFormat.Short, Enabled = false };
+        if (item.Validade.HasValue) dtpVal.Value = item.Validade.Value;
+        tbl.Controls.Add(dtpVal, 1, 5);
+
+        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        tbl.SetColumnSpan(btnPanel, 2);
+        var btnEdit = new Button { Text = "Editar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnDelete = new Button { Text = "Excluir", Width = 80, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnClose = new Button { Text = "Fechar", Width = 80, Height = 32, Cursor = Cursors.Hand };
+        btnPanel.Controls.Add(btnClose); btnPanel.Controls.Add(btnDelete); btnPanel.Controls.Add(btnEdit);
+        tbl.Controls.Add(btnPanel, 0, 6);
+        dialog.Controls.Add(tbl);
+
+        btnEdit.Click += (_, _) =>
+        {
+            dialog.Close();
+            _ = EditItem();
+        };
+        btnDelete.Click += (_, _) =>
+        {
+            dialog.Close();
+            _ = DeleteItem();
+        };
+        btnClose.Click += (_, _) => dialog.Close();
+
+        dialog.ShowDialog(this);
     }
 
     private async Task AddItem()

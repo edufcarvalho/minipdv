@@ -145,9 +145,9 @@ public class PrescriptionDialog : Form
             Height = 35,
             BackColor = Color.Green,
             ForeColor = Color.White,
-            Font = new Font("Segoe UI", 10, FontStyle.Bold),
             FlatStyle = FlatStyle.Flat,
             Cursor = Cursors.Hand,
+            Margin = new Padding(0),
             Enabled = false
         };
         btnFinalizar.Click += (_, _) =>
@@ -240,12 +240,13 @@ public class PrescriptionDialog : Form
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = 4,
+            RowCount = 5,
             Padding = new Padding(10)
         };
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 110));
-        outerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
+        outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
+        outerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
 
         var topTbl = new TableLayoutPanel
@@ -281,28 +282,37 @@ public class PrescriptionDialog : Form
 
         outerLayout.Controls.Add(topTbl, 0, 0);
 
-        var addTbl = new TableLayoutPanel
+        var uniqueProducts = availableItems
+            .GroupBy(i => i.ProdutoId)
+            .Select(g => g.First())
+            .ToList();
+
+        var cmbProd = new ComboBox { Dock = DockStyle.Fill, Font = font, DropDownStyle = ComboBoxStyle.DropDownList };
+        cmbProd.Items.Add("-- Selecione o produto --");
+        foreach (var item in uniqueProducts)
+            cmbProd.Items.Add(item.Descricao);
+        cmbProd.SelectedIndex = 0;
+        outerLayout.Controls.Add(cmbProd, 0, 1);
+
+        var inputTbl = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 4,
             RowCount = 1,
             Padding = new Padding(5)
         };
-        addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
-        addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
-        addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 60));
-        addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+        inputTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
+        inputTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+        inputTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 60));
+        inputTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
 
-        var cmbProd = new ComboBox { Dock = DockStyle.Fill, Font = font, DropDownStyle = ComboBoxStyle.DropDownList };
-        cmbProd.Items.Add("-- Selecione o produto --");
-        foreach (var item in availableItems)
-            cmbProd.Items.Add($"{item.Descricao} (Lote: {item.Lote}, Pendente: {item.Quantidade})");
-        cmbProd.SelectedIndex = 0;
-        cmbProd.Tag = availableItems;
-        addTbl.Controls.Add(cmbProd, 0, 0);
+        var cmbLote = new ComboBox { Dock = DockStyle.Fill, Font = font, DropDownStyle = ComboBoxStyle.DropDownList };
+        cmbLote.Items.Add("-- Selecione o lote --");
+        cmbLote.SelectedIndex = 0;
+        inputTbl.Controls.Add(cmbLote, 0, 0);
 
         var nudQtd = new NumericUpDown { Dock = DockStyle.Fill, Font = font, Minimum = 1, Maximum = 9999, Value = 1 };
-        addTbl.Controls.Add(nudQtd, 1, 0);
+        inputTbl.Controls.Add(nudQtd, 1, 0);
 
         var btnAddProd = new Button
         {
@@ -314,7 +324,7 @@ public class PrescriptionDialog : Form
             Cursor = Cursors.Hand,
             Font = font
         };
-        addTbl.Controls.Add(btnAddProd, 2, 0);
+        inputTbl.Controls.Add(btnAddProd, 2, 0);
 
         var btnRemoveProd = new Button
         {
@@ -326,9 +336,9 @@ public class PrescriptionDialog : Form
             Cursor = Cursors.Hand,
             Font = font
         };
-        addTbl.Controls.Add(btnRemoveProd, 3, 0);
+        inputTbl.Controls.Add(btnRemoveProd, 3, 0);
 
-        outerLayout.Controls.Add(addTbl, 0, 1);
+        outerLayout.Controls.Add(inputTbl, 0, 2);
 
         var dgvProdutos = new DataGridView
         {
@@ -348,26 +358,79 @@ public class PrescriptionDialog : Form
         dgvProdutos.Columns.Add("Quantidade", "Qtd");
         dgvProdutos.Columns["Produto"]!.FillWeight = 40;
         dgvProdutos.Columns["Produto"]!.MinimumWidth = 120;
-        outerLayout.Controls.Add(dgvProdutos, 0, 2);
+        outerLayout.Controls.Add(dgvProdutos, 0, 3);
 
         var receitaItems = new List<(int ProdutoId, string Lote, int Quantidade, string Descricao)>();
 
-        btnAddProd.Click += (_, _) =>
+        cmbProd.SelectedIndexChanged += (_, _) =>
+        {
+            cmbLote.Items.Clear();
+            cmbLote.Items.Add("-- Selecione o lote --");
+            cmbLote.SelectedIndex = 0;
+            cmbLote.Tag = null;
+            nudQtd.Maximum = 9999;
+            nudQtd.Value = 1;
+
+            if (cmbProd.SelectedIndex <= 0) return;
+
+            var selectedIdx = cmbProd.SelectedIndex - 1;
+            if (selectedIdx >= uniqueProducts.Count) return;
+
+            var selectedProduct = uniqueProducts[selectedIdx];
+            var availableNow = _pendingItems.Where(p => p.Quantidade > 0).ToList();
+            var lotsForProduct = availableNow
+                .Where(p => p.ProdutoId == selectedProduct.ProdutoId)
+                .ToList();
+
+            foreach (var lot in lotsForProduct)
+                cmbLote.Items.Add($"{lot.Lote} (Pendente: {lot.Quantidade})");
+            cmbLote.Tag = lotsForProduct;
+        };
+
+        void RefreshLoteCombo()
         {
             if (cmbProd.SelectedIndex <= 0) return;
-            var ai = availableItems[cmbProd.SelectedIndex - 1];
+
+            var selectedIdx = cmbProd.SelectedIndex - 1;
+            if (selectedIdx >= uniqueProducts.Count) return;
+
+            var selectedProduct = uniqueProducts[selectedIdx];
+            var availableNow = _pendingItems.Where(p => p.Quantidade > 0).ToList();
+            var lotsForProduct = availableNow
+                .Where(p => p.ProdutoId == selectedProduct.ProdutoId)
+                .ToList();
+
+            cmbLote.Items.Clear();
+            cmbLote.Items.Add("-- Selecione o lote --");
+            foreach (var lot in lotsForProduct)
+                cmbLote.Items.Add($"{lot.Lote} (Pendente: {lot.Quantidade})");
+            cmbLote.Tag = lotsForProduct;
+            cmbLote.SelectedIndex = 0;
+            nudQtd.Value = 1;
+        }
+
+        btnAddProd.Click += (_, _) =>
+        {
+            if (cmbLote.SelectedIndex <= 0 || cmbLote.Tag is not List<ControlledItem> lotItems) return;
+            var lotIdx = cmbLote.SelectedIndex - 1;
+            if (lotIdx < 0 || lotIdx >= lotItems.Count) return;
+
+            var selectedLot = lotItems[lotIdx];
             var qtd = (int)nudQtd.Value;
-            if (qtd > ai.Quantidade)
+            if (qtd > selectedLot.Quantidade)
             {
-                MessageBox.Show($"Quantidade máxima pendente: {ai.Quantidade}", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Quantidade máxima pendente: {selectedLot.Quantidade}", "Validação", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            receitaItems.Add((ai.ProdutoId, ai.Lote, qtd, ai.Descricao));
-            dgvProdutos.Rows.Add(ai.Descricao, ai.Lote, qtd);
-            ai.Quantidade -= qtd;
+            var pending = _pendingItems.First(p => p.ProdutoId == selectedLot.ProdutoId && p.Lote == selectedLot.Lote);
+
+            receitaItems.Add((pending.ProdutoId, pending.Lote, qtd, pending.Descricao));
+            dgvProdutos.Rows.Add(pending.Descricao, pending.Lote, qtd);
+            pending.Quantidade -= qtd;
             nudQtd.Value = 1;
             RefreshPendentes();
+            RefreshLoteCombo();
         };
 
         btnRemoveProd.Click += (_, _) =>
@@ -381,6 +444,7 @@ public class PrescriptionDialog : Form
             receitaItems.RemoveAt(idx);
             dgvProdutos.Rows.RemoveAt(idx);
             RefreshPendentes();
+            RefreshLoteCombo();
         };
 
         var btnPanel2 = new FlowLayoutPanel
@@ -411,7 +475,7 @@ public class PrescriptionDialog : Form
         };
         btnPanel2.Controls.Add(btnOk);
         btnPanel2.Controls.Add(btnCancel);
-        outerLayout.Controls.Add(btnPanel2, 0, 3);
+        outerLayout.Controls.Add(btnPanel2, 0, 4);
 
         dialog.Controls.Add(outerLayout);
         dialog.AcceptButton = btnOk;
