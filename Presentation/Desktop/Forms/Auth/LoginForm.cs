@@ -107,10 +107,9 @@ public class LoginForm : Form
             return;
         }
 
-        Hide();
-
         var mainForm = new MainForm();
         mainForm.FormClosed += (_, _) => System.Windows.Forms.Application.Exit();
         mainForm.Show();
+        Hide();
     }
 }

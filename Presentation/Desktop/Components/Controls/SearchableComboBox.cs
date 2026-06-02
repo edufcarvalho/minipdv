@@ -55,15 +55,23 @@ public class SearchableComboBox : UserControl
         textBox.MouseClick += (_, _) => ShowDropdown();
         textBox.LostFocus += (_, _) =>
         {
-            if (!dropForm.Focused && !listBox.Focused)
-                HideDropdown();
+            BeginInvoke(new Action(() =>
+            {
+                if (!dropForm.Focused && !listBox.Focused)
+                    HideDropdown();
+            }));
         };
 
         listBox.Click += ListBox_Click;
         listBox.MouseDoubleClick += ListBox_DoubleClick;
         listBox.KeyDown += ListBox_KeyDown;
 
-        dropForm.Deactivate += (_, _) => HideDropdown();
+        dropForm.Deactivate += (_, _) =>
+        {
+            var active = Form.ActiveForm;
+            if (active != FindForm() && active != dropForm)
+                HideDropdown();
+        };
 
         _filterTimer = new System.Windows.Forms.Timer { Interval = 300 };
         _filterTimer.Tick += (_, _) =>

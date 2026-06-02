@@ -96,9 +96,9 @@ public class InputDialog : Form
         return Fields.TryGetValue(label, out var ctrl) ? ctrl.Text.Trim() : "";
     }
 
-    public static string? Show(string title, params (string Label, string? DefaultValue)[] fields)
+    public static string? Show(IWin32Window owner, string title, params (string Label, string? DefaultValue)[] fields)
     {
         using var dialog = new InputDialog(title, fields);
-        return dialog.ShowDialog() == DialogResult.OK ? "ok" : null;
+        return dialog.ShowDialog(owner) == DialogResult.OK ? dialog.GetValue(fields[0].Label) : null;
     }
 }
