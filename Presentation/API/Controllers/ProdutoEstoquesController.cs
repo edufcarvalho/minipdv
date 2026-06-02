@@ -1,24 +1,26 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
+using minipdv.Infrastructure.Data.Context;
 
 namespace minipdv.Presentation.API.Controllers;
 
 [ApiController]
 [Route("api/produtos/{produtoId}/estoques")]
-[Authorize(Policy = "RequireFarmaceutico")]
+[Authorize(Policy = Policies.RequireFarmaceutico)]
 public class ProdutoEstoquesController : ControllerBase
 {
     private readonly IProdutoEstoqueService _service;
     private readonly IProdutoService _produtoService;
+    private readonly MiniPDVContext _context;
 
-    public ProdutoEstoquesController(IProdutoEstoqueService service, IProdutoService produtoService)
+    public ProdutoEstoquesController(IProdutoEstoqueService service, IProdutoService produtoService, MiniPDVContext context)
     {
         _service = service;
         _produtoService = produtoService;
+        _context = context;
     }
 
     [HttpGet("~/api/estoques")]
@@ -64,15 +66,9 @@ public class ProdutoEstoquesController : ControllerBase
             Produto = produto
         };
 
-        try
-        {
-            var created = await _service.AddAsync(entity);
-            return CreatedAtAction(nameof(GetById), new { produtoId, lote = created.Lote }, created);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        var created = await _service.AddAsync(entity);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetById), new { produtoId, lote = created.Lote }, created);
     }
 
     [HttpPut("{lote}")]
@@ -96,21 +92,16 @@ public class ProdutoEstoquesController : ControllerBase
             Produto = produto
         };
 
-        try
-        {
-            await _service.UpdateAsync(entity);
-            return NoContent();
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        await _service.UpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
     [HttpDelete("{lote}")]
     public async Task<IActionResult> Delete(int produtoId, string lote)
     {
         await _service.DeleteAsync(produtoId, lote);
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 }

@@ -1,8 +1,8 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs.Auth;
 using minipdv.Application.Interfaces;
+using minipdv.Infrastructure.Data.Context;
 
 namespace minipdv.Presentation.API.Controllers;
 
@@ -11,58 +11,37 @@ namespace minipdv.Presentation.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly IValidator<LoginRequest> _loginValidator;
-    private readonly IValidator<RegisterRequest> _registerValidator;
+    private readonly MiniPDVContext _context;
 
-    public AuthController(
-        IAuthService authService,
-        IValidator<LoginRequest> loginValidator,
-        IValidator<RegisterRequest> registerValidator)
+    public AuthController(IAuthService authService, MiniPDVContext context)
     {
         _authService = authService;
-        _loginValidator = loginValidator;
-        _registerValidator = registerValidator;
+        _context = context;
     }
 
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        try
-        {
-            await _loginValidator.ValidateAndThrowAsync(request);
+        var result = await _authService.LoginAsync(request);
 
-            var result = await _authService.LoginAsync(request);
+        if (result.Id == 0)
+            return Unauthorized(new { message = result.Message });
 
-            if (result.Id == 0)
-                return Unauthorized(new { message = result.Message });
-
-            return Ok(result);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        await _context.SaveChangesAsync();
+        return Ok(result);
     }
 
-    [Authorize(Policy = "RequireAdministrador")]
+    [Authorize(Policy = Policies.RequireAdministrador)]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        try
-        {
-            await _registerValidator.ValidateAndThrowAsync(request);
+        var result = await _authService.RegisterAsync(request);
 
-            var result = await _authService.RegisterAsync(request);
+        if (result.Id == 0)
+            return Conflict(new { message = result.Message });
 
-            if (result.Id == 0)
-                return Conflict(new { message = result.Message });
-
-            return CreatedAtAction(null, result);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(null, result);
     }
 
     [Authorize]
@@ -76,6 +55,7 @@ public class AuthController : ControllerBase
             return Unauthorized(new { message = "Token inválido" });
 
         await _authService.LogoutAsync(jti);
+        await _context.SaveChangesAsync();
         return Ok(new { message = "Logout realizado com sucesso" });
     }
 

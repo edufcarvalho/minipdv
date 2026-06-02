@@ -1,22 +1,24 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
+using minipdv.Infrastructure.Data.Context;
 
 namespace minipdv.Presentation.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "RequireFarmaceutico")]
+[Authorize(Policy = Policies.RequireFarmaceutico)]
 public class ReceitasController : ControllerBase
 {
     private readonly IReceitaService _service;
+    private readonly MiniPDVContext _context;
 
-    public ReceitasController(IReceitaService service)
+    public ReceitasController(IReceitaService service, MiniPDVContext context)
     {
         _service = service;
+        _context = context;
     }
 
     [HttpGet]
@@ -60,19 +62,9 @@ public class ReceitasController : ControllerBase
                 .ToList() ?? []
         };
 
-        try
-        {
-            var created = await _service.AddAsync(entity);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        var created = await _service.AddAsync(entity);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
@@ -104,32 +96,16 @@ public class ReceitasController : ControllerBase
                 .ToList() ?? []
         };
 
-        try
-        {
-            await _service.UpdateAsync(entity);
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        await _service.UpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        try
-        {
-            await _service.DeleteAsync(id);
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
+        await _service.DeleteAsync(id);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 }

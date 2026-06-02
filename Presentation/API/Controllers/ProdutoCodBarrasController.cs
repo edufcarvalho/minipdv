@@ -1,22 +1,24 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
+using minipdv.Infrastructure.Data.Context;
 
 namespace minipdv.Presentation.API.Controllers;
 
 [ApiController]
 [Route("api/produtos/{produtoId}/codbarras")]
-[Authorize(Policy = "RequireFarmaceutico")]
+[Authorize(Policy = Policies.RequireFarmaceutico)]
 public class ProdutoCodBarrasController : ControllerBase
 {
     private readonly IProdutoCodBarraService _service;
+    private readonly MiniPDVContext _context;
 
-    public ProdutoCodBarrasController(IProdutoCodBarraService service)
+    public ProdutoCodBarrasController(IProdutoCodBarraService service, MiniPDVContext context)
     {
         _service = service;
+        _context = context;
     }
 
     [HttpGet]
@@ -46,15 +48,9 @@ public class ProdutoCodBarrasController : ControllerBase
             Produto = null!
         };
 
-        try
-        {
-            var created = await _service.AddAsync(entity);
-            return CreatedAtAction(nameof(GetById), new { produtoId, codBarra = created.CodBarra }, created);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        var created = await _service.AddAsync(entity);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetById), new { produtoId, codBarra = created.CodBarra }, created);
     }
 
     [HttpPut("{codBarra}")]
@@ -69,21 +65,16 @@ public class ProdutoCodBarrasController : ControllerBase
             Produto = null!
         };
 
-        try
-        {
-            await _service.UpdateAsync(entity);
-            return NoContent();
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        await _service.UpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
     [HttpDelete("{codBarra}")]
     public async Task<IActionResult> Delete(int codBarra)
     {
         await _service.DeleteAsync(codBarra);
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 }

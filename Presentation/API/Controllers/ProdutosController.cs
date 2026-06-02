@@ -1,24 +1,26 @@
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
+using minipdv.Infrastructure.Data.Context;
 
 namespace minipdv.Presentation.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "RequireFarmaceutico")]
+[Authorize(Policy = Policies.RequireFarmaceutico)]
 public class ProdutosController : ControllerBase
 {
     private readonly IProdutoService _service;
     private readonly IProdutoControladoService _controladoService;
+    private readonly MiniPDVContext _context;
 
-    public ProdutosController(IProdutoService service, IProdutoControladoService controladoService)
+    public ProdutosController(IProdutoService service, IProdutoControladoService controladoService, MiniPDVContext context)
     {
         _service = service;
         _controladoService = controladoService;
+        _context = context;
     }
 
     [HttpGet]
@@ -56,15 +58,9 @@ public class ProdutosController : ControllerBase
             Estoques = []
         };
 
-        try
-        {
-            var created = await _service.AddAsync(entity);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        var created = await _service.AddAsync(entity);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
@@ -90,21 +86,16 @@ public class ProdutosController : ControllerBase
             Estoques = []
         };
 
-        try
-        {
-            await _service.UpdateAsync(entity);
-            return NoContent();
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        await _service.UpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _service.DeleteAsync(id);
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 
@@ -130,15 +121,9 @@ public class ProdutosController : ControllerBase
             Lista = request.Lista
         };
 
-        try
-        {
-            var created = await _controladoService.AddAsync(entity);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        var created = await _controladoService.AddAsync(entity);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("controlado/{id}")]
@@ -166,14 +151,8 @@ public class ProdutosController : ControllerBase
             Lista = request.Lista
         };
 
-        try
-        {
-            await _controladoService.UpdateAsync(entity);
-            return NoContent();
-        }
-        catch (ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        await _controladoService.UpdateAsync(entity);
+        await _context.SaveChangesAsync();
+        return NoContent();
     }
 }

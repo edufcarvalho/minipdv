@@ -3,19 +3,22 @@ using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
+using minipdv.Infrastructure.Data.Context;
 
 namespace minipdv.Presentation.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "RequireAutenticado")]
+[Authorize(Policy = Policies.RequireAutenticado)]
 public class VendasController : ControllerBase
 {
     private readonly IVendaService _service;
+    private readonly MiniPDVContext _context;
 
-    public VendasController(IVendaService service)
+    public VendasController(IVendaService service, MiniPDVContext context)
     {
         _service = service;
+        _context = context;
     }
 
     [HttpGet]
@@ -55,25 +58,16 @@ public class VendasController : ControllerBase
                 .ToList()
         };
 
-        try
-        {
-            var created = await _service.AddAsync(entity, request.ReceitaIds);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { error = ex.Message });
-        }
-        catch (FluentValidation.ValidationException ex)
-        {
-            return BadRequest(new { errors = ex.Errors });
-        }
+        var created = await _service.AddAsync(entity, request.ReceitaIds);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
         await _service.DeleteAsync(id);
+        await _context.SaveChangesAsync();
         return NoContent();
     }
 }
