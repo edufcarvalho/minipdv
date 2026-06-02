@@ -1,7 +1,8 @@
 using minipdv.Domain.Entities;
 using minipdv.Presentation.Desktop.Components.Controls;
+using minipdv.Presentation.Desktop.Components.Helpers;
 
-namespace minipdv.Presentation.Desktop.Forms.Products;
+namespace minipdv.Presentation.Desktop.Forms.Produtos;
 
 public class PrincipiosAtivosForm : Form
 {
@@ -14,38 +15,34 @@ public class PrincipiosAtivosForm : Form
         Text = "Princípios Ativos";
         Dock = DockStyle.Fill;
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
+        var tbl = FormComponents.CreateStandardLayout();
+        var topPanel = FormComponents.CreateToolbar();
 
-        var topPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        var btnRefresh = new Button { Text = "Atualizar", Width = 90, Height = 32, Cursor = Cursors.Hand };
+        var btnRefresh = FormComponents.CreateRefreshButton();
         btnRefresh.Click += async (_, _) => await LoadData();
         topPanel.Controls.Add(btnRefresh);
         topPanel.Controls.Add(new Label { Width = 10 });
-        var btnAdd = new Button { Text = "Adicionar", Width = 90, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnAdd = FormComponents.CreateAddButton();
         btnAdd.Click += async (_, _) => await AddItem();
         topPanel.Controls.Add(btnAdd);
-        var btnEdit = new Button { Text = "Editar", Width = 90, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnEdit = FormComponents.CreateEditButton();
         btnEdit.Click += async (_, _) => await EditItem();
         topPanel.Controls.Add(btnEdit);
-        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnDelete = FormComponents.CreateDeleteButton();
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
         topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
 
-        dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
+        dgv = FormComponents.CreateDataGridView();
         dgv.CellDoubleClick += async (_, _) => await ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
         _searchFilter = new SearchFilter(topPanel, dgv);
 
-        var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
-        dgv.DataSourceChanged += (_, _) => lblCount.Text = $"Registros: {dgv.Rows.Count}";
-        statusPanel.Controls.Add(lblCount);
-        tbl.Controls.Add(statusPanel, 0, 2);
+        tbl.Controls.Add(FormComponents.CreateStatusBar(dgv), 0, 2);
 
         Controls.Add(tbl);
         Load += async (_, _) => await LoadData();
@@ -78,20 +75,20 @@ public class PrincipiosAtivosForm : Form
     {
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um princípio ativo.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-        using var dialog = new Form { Text = "Visualizar Princípio Ativo", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(350, 130) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        tbl.Controls.Add(new Label { Text = "Nome:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txt = new TextBox { Text = item.Nome, ReadOnly = true, BackColor = SystemColors.Control, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txt, 1, 0);
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+
+        using var dialog = FormComponents.CreateDialog("Visualizar Princípio Ativo", 350, 130);
+        var tbl = FormComponents.CreateDialogLayout(2, 2, 80);
+
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Nome:"), 0, 0);
+        tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Nome), 1, 0);
+
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnEdit = new Button { Text = "Editar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnEdit = FormComponents.CreateEditButton(80);
         btnEdit.Click += async (_, _) => { dialog.Close(); await EditItem(); };
-        var btnDelete = new Button { Text = "Excluir", Width = 80, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnDelete = FormComponents.CreateDeleteButton(80);
         btnDelete.Click += async (_, _) => { dialog.Close(); await DeleteItem(); };
-        var btnFechar = new Button { Text = "Fechar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        var btnFechar = FormComponents.CreateCloseButton(80);
         btnPanel.Controls.Add(btnEdit); btnPanel.Controls.Add(btnDelete); btnPanel.Controls.Add(btnFechar);
         tbl.Controls.Add(btnPanel, 0, 1);
         dialog.Controls.Add(tbl);
@@ -101,16 +98,16 @@ public class PrincipiosAtivosForm : Form
 
     private async Task AddItem()
     {
-        using var dialog = new Form { Text = "Novo Princípio Ativo", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(350, 130) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        tbl.Controls.Add(new Label { Text = "Nome:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txt = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        using var dialog = FormComponents.CreateDialog("Novo Princípio Ativo", 350, 130);
+        var tbl = FormComponents.CreateDialogLayout(2, 2, 80);
+
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Nome:"), 0, 0);
+        var txt = FormComponents.CreateTextBox();
         tbl.Controls.Add(txt, 1, 0);
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnOk = FormComponents.CreateSaveButton();
         btnOk.Click += async (_, _) =>
         {
             try
@@ -130,7 +127,7 @@ public class PrincipiosAtivosForm : Form
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally { dialog.Enabled = true; }
         };
-        var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        var btnCancel = FormComponents.CreateCancelButton();
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 1);
         dialog.Controls.Add(tbl);
@@ -142,16 +139,17 @@ public class PrincipiosAtivosForm : Form
     {
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um princípio ativo.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-        using var dialog = new Form { Text = "Editar Princípio Ativo", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(350, 130) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        tbl.Controls.Add(new Label { Text = "Nome:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txt = new TextBox { Text = item.Nome, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+
+        using var dialog = FormComponents.CreateDialog("Editar Princípio Ativo", 350, 130);
+        var tbl = FormComponents.CreateDialogLayout(2, 2, 80);
+
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Nome:"), 0, 0);
+        var txt = FormComponents.CreateTextBox(item.Nome);
         tbl.Controls.Add(txt, 1, 0);
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnOk = FormComponents.CreateSaveButton();
         btnOk.Click += async (_, _) =>
         {
             try
@@ -171,7 +169,7 @@ public class PrincipiosAtivosForm : Form
             catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally { dialog.Enabled = true; }
         };
-        var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        var btnCancel = FormComponents.CreateCancelButton();
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 1);
         dialog.Controls.Add(tbl);

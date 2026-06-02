@@ -1,8 +1,9 @@
 using minipdv.Application.DTOs;
 using minipdv.Domain.Entities;
 using minipdv.Presentation.Desktop.Components.Controls;
+using minipdv.Presentation.Desktop.Components.Helpers;
 
-namespace minipdv.Presentation.Desktop.Forms.Services;
+namespace minipdv.Presentation.Desktop.Forms.Prescricoes;
 
 public class ReceitasForm : Form
 {
@@ -15,35 +16,30 @@ public class ReceitasForm : Form
         Text = "Receitas";
         Dock = DockStyle.Fill;
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
+        var tbl = FormComponents.CreateStandardLayout();
+        var topPanel = FormComponents.CreateToolbar();
 
-        var topPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        var btnRefresh = new Button { Text = "Atualizar", Width = 90, Height = 32, Cursor = Cursors.Hand };
+        var btnRefresh = FormComponents.CreateRefreshButton();
         btnRefresh.Click += async (_, _) => await LoadData();
         topPanel.Controls.Add(btnRefresh);
         topPanel.Controls.Add(new Label { Width = 10 });
-        var btnAdd = new Button { Text = "Adicionar", Width = 90, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnAdd = FormComponents.CreateAddButton();
         btnAdd.Click += async (_, _) => await AddItem();
         topPanel.Controls.Add(btnAdd);
-        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnDelete = FormComponents.CreateDeleteButton();
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
         topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
 
-        dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
+        dgv = FormComponents.CreateDataGridView();
         dgv.CellDoubleClick += (_, _) => ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
         _searchFilter = new SearchFilter(topPanel, dgv);
 
-        var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
-        dgv.DataSourceChanged += (_, _) => lblCount.Text = $"Registros: {dgv.Rows.Count}";
-        statusPanel.Controls.Add(lblCount);
-        tbl.Controls.Add(statusPanel, 0, 2);
+        tbl.Controls.Add(FormComponents.CreateStatusBar(dgv), 0, 2);
 
         Controls.Add(tbl);
         Load += async (_, _) => await LoadData();
@@ -82,7 +78,7 @@ public class ReceitasForm : Form
         catch (Exception ex) { MessageBox.Show($"Erro ao carregar receita: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
         if (fullReceita == null) { MessageBox.Show("Receita não encontrada.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
 
-        using var dialog = new Form { Text = "Visualizar Receita", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(550, 400) };
+        using var dialog = FormComponents.CreateDialog("Visualizar Receita", 550, 400);
         var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
         tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 200));
         tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -114,7 +110,7 @@ public class ReceitasForm : Form
 
         tbl.Controls.Add(infoTbl, 0, 0);
 
-        var dgvProd = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None };
+        var dgvProd = FormComponents.CreateDataGridView();
         dgvProd.Columns.Add("Produto", "Produto");
         dgvProd.Columns.Add("Lote", "Lote");
         dgvProd.Columns.Add("Quantidade", "Qtd");
@@ -124,19 +120,15 @@ public class ReceitasForm : Form
             dgvProd.Rows.Add(rpe.ProdutoEstoque?.Produto?.Descricao ?? $"ID {rpe.ProdutoId}", rpe.Lote, rpe.Quantidade);
         tbl.Controls.Add(dgvProd, 0, 1);
 
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
-        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 35, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnClose = new Button { Text = "Fechar", Width = 90, Height = 35, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 10, 0) };
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
+        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 35, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 10, 0) };
+        var btnClose = new Button { Text = "Fechar", Width = 90, Height = 35, Cursor = Cursors.Hand, FlatStyle = FlatStyle.Flat, Margin = new Padding(0, 0, 10, 0) };
         btnPanel.Controls.Add(btnClose); btnPanel.Controls.Add(btnDelete);
         tbl.Controls.Add(btnPanel, 0, 2);
 
         dialog.Controls.Add(tbl);
 
-        btnDelete.Click += (_, _) =>
-        {
-            dialog.Close();
-            _ = DeleteItem();
-        };
+        btnDelete.Click += (_, _) => { dialog.Close(); _ = DeleteItem(); };
         btnClose.Click += (_, _) => dialog.Close();
 
         dialog.ShowDialog(this);
@@ -159,7 +151,6 @@ public class ReceitasForm : Form
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         outerLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
 
-        // === Top section: Prescritor, Paciente, Comprador, dates ===
         var topTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(5) };
         topTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 110));
         topTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -195,7 +186,6 @@ public class ReceitasForm : Form
 
         outerLayout.Controls.Add(topTbl, 0, 0);
 
-        // === Product add controls (above the table) ===
         var addTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 5, RowCount = 2, Padding = new Padding(5) };
         addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
         addTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40));
@@ -226,23 +216,10 @@ public class ReceitasForm : Form
 
         outerLayout.Controls.Add(addTbl, 0, 1);
 
-        // === Products table ===
         var prodLabel = new Label { Text = "Produtos na Receita:", Font = new Font("Segoe UI", 10, FontStyle.Bold), Dock = DockStyle.Fill };
         outerLayout.Controls.Add(prodLabel, 0, 2);
 
-        var dgvProdutos = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            ReadOnly = true,
-            RowHeadersVisible = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.None,
-            Font = font
-        };
+        var dgvProdutos = FormComponents.CreateDataGridView();
         dgvProdutos.Columns.Add("Produto", "Produto");
         dgvProdutos.Columns.Add("Lote", "Lote");
         dgvProdutos.Columns.Add("Quantidade", "Qtd");
@@ -250,19 +227,16 @@ public class ReceitasForm : Form
         dgvProdutos.Columns["Produto"]!.MinimumWidth = 120;
         outerLayout.Controls.Add(dgvProdutos, 0, 2);
 
-        // === Save/Cancel buttons ===
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnPanel2 = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         var btnOk = new Button { Text = "Salvar", Width = 90, Height = 35, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Font = font };
         var btnCancel = new Button { Text = "Cancelar", Width = 90, Height = 35, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0), Font = font };
-        btnPanel.Controls.Add(btnOk);
-        btnPanel.Controls.Add(btnCancel);
-        outerLayout.Controls.Add(btnPanel, 0, 3);
+        btnPanel2.Controls.Add(btnOk);
+        btnPanel2.Controls.Add(btnCancel);
+        outerLayout.Controls.Add(btnPanel2, 0, 3);
 
         dialog.Controls.Add(outerLayout);
         dialog.AcceptButton = btnOk;
         dialog.CancelButton = btnCancel;
-
-        // --- Event handlers ---
 
         cmbProd.SelectedValueChanged += async (_, _) =>
         {
@@ -284,10 +258,10 @@ public class ReceitasForm : Form
         void RefreshProdGrid()
         {
             dgvProdutos.Rows.Clear();
-            foreach (var item in receitaProdutos)
+            foreach (var ri in receitaProdutos)
             {
-                var prodDesc = produtos.FirstOrDefault(p => p.Id == item.ProdutoId)?.Descricao ?? $"ID {item.ProdutoId}";
-                dgvProdutos.Rows.Add(prodDesc, item.Lote, item.Quantidade);
+                var prodDesc = produtos.FirstOrDefault(p => p.Id == ri.ProdutoId)?.Descricao ?? $"ID {ri.ProdutoId}";
+                dgvProdutos.Rows.Add(prodDesc, ri.Lote, ri.Quantidade);
             }
         }
 
@@ -313,10 +287,10 @@ public class ReceitasForm : Form
         btnRemoveProd.Click += (_, _) =>
         {
             if (dgvProdutos.SelectedRows.Count == 0) return;
-            var idx = dgvProdutos.SelectedRows[0].Index;
-            if (idx >= 0 && idx < receitaProdutos.Count)
+            var rowIdx = dgvProdutos.SelectedRows[0].Index;
+            if (rowIdx >= 0 && rowIdx < receitaProdutos.Count)
             {
-                receitaProdutos.RemoveAt(idx);
+                receitaProdutos.RemoveAt(rowIdx);
                 RefreshProdGrid();
             }
         };

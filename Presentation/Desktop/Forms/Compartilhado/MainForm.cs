@@ -1,10 +1,10 @@
-using minipdv.Presentation.Desktop.Forms.Auth;
-using minipdv.Presentation.Desktop.Forms.Customers;
-using minipdv.Presentation.Desktop.Forms.Products;
-using minipdv.Presentation.Desktop.Forms.Sales;
-using minipdv.Presentation.Desktop.Forms.Services;
+using minipdv.Presentation.Desktop.Forms.Autenticacao;
+using minipdv.Presentation.Desktop.Forms.Clientes;
+using minipdv.Presentation.Desktop.Forms.Produtos;
+using minipdv.Presentation.Desktop.Forms.Vendas;
+using minipdv.Presentation.Desktop.Forms.Prescricoes;
 
-namespace minipdv.Presentation.Desktop.Forms.Shared;
+namespace minipdv.Presentation.Desktop.Forms.Compartilhado;
 
 public class MainForm : Form
 {

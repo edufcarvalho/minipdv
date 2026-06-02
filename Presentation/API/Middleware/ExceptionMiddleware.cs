@@ -24,27 +24,33 @@ public class ExceptionMiddleware
         }
         catch (ValidationException ex)
         {
-            _logger.LogWarning(ex, "Validation error");
-            await WriteProblemDetails(context, HttpStatusCode.BadRequest, "Validation Error", ex.Errors.Select(e => e.ErrorMessage).ToArray());
+            var errors = ex.Errors.Select(e => e.ErrorMessage).ToArray();
+            _logger.LogWarning("Erro de validação na requisição {Method} {Path}. Erros: {Errors}",
+                context.Request.Method, context.Request.Path, string.Join("; ", errors));
+            await WriteProblemDetails(context, HttpStatusCode.BadRequest, "Validation Error", errors);
         }
         catch (UnauthorizedAccessException ex)
         {
-            _logger.LogWarning(ex, "Unauthorized access");
+            _logger.LogWarning("Acesso não autorizado à rota {Method} {Path} pelo IP {Ip}. Motivo: {Message}",
+                context.Request.Method, context.Request.Path, context.Connection.RemoteIpAddress, ex.Message);
             await WriteProblemDetails(context, HttpStatusCode.Forbidden, "Forbidden", [ex.Message]);
         }
         catch (KeyNotFoundException ex)
         {
-            _logger.LogWarning(ex, "Resource not found");
+            _logger.LogWarning("Recurso não encontrado na rota {Method} {Path}. Detalhe: {Message}",
+                context.Request.Method, context.Request.Path, ex.Message);
             await WriteProblemDetails(context, HttpStatusCode.NotFound, "Not Found", [ex.Message]);
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Invalid operation");
+            _logger.LogWarning("Operação inválida na rota {Method} {Path}. Detalhe: {Message}",
+                context.Request.Method, context.Request.Path, ex.Message);
             await WriteProblemDetails(context, HttpStatusCode.BadRequest, "Bad Request", [ex.Message]);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception");
+            _logger.LogError(ex, "Erro não tratado na requisição {Method} {Path} pelo IP {Ip}. Tipo: {ExceptionType}",
+                context.Request.Method, context.Request.Path, context.Connection.RemoteIpAddress, ex.GetType().Name);
             await WriteProblemDetails(context, HttpStatusCode.InternalServerError, "Internal Server Error", ["An unexpected error occurred."]);
         }
     }

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace minipdv.Presentation.Desktop.Components.Controls;
+namespace minipdv.Presentation.Desktop.Components.Helpers;
 
 public static class ErrorHelper
 {

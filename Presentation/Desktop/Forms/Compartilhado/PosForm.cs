@@ -1,8 +1,9 @@
 using System.Text.Json;
 using minipdv.Domain.Entities;
 using minipdv.Presentation.Desktop.Components.Controls;
+using minipdv.Presentation.Desktop.Components.Helpers;
 
-namespace minipdv.Presentation.Desktop.Forms.Shared;
+namespace minipdv.Presentation.Desktop.Forms.Compartilhado;
 
 public class PosForm : Form
 {
@@ -45,36 +46,17 @@ public class PosForm : Form
         mainTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         mainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
 
-        var searchPanel = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 2,
-            RowCount = 1
-        };
+        var searchPanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1 };
         searchPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         searchPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
 
         _debounceTimer = new System.Windows.Forms.Timer { Interval = 300 };
         _debounceTimer.Tick += async (_, _) => { _debounceTimer.Stop(); await SearchProducts(); };
 
-        txtSearch = new TextBox
-        {
-            Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI", 12),
-            PlaceholderText = "Buscar produto por código de barras ou descrição..."
-        };
+        txtSearch = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 12), PlaceholderText = "Buscar produto por código de barras ou descrição..." };
         txtSearch.TextChanged += (_, _) => { _debounceTimer.Stop(); _debounceTimer.Start(); };
 
-        var btnSearch = new Button
-        {
-            Text = "Buscar",
-            Dock = DockStyle.Fill,
-            Font = new Font("Segoe UI", 10),
-            BackColor = Color.DarkBlue,
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
-        };
+        var btnSearch = new Button { Text = "Buscar", Width = 100, Height = 32, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnSearch.Click += async (_, _) => await SearchProducts();
 
         searchPanel.Controls.Add(txtSearch, 0, 0);
@@ -83,22 +65,17 @@ public class PosForm : Form
         mainTable.Controls.Add(searchPanel, 0, 0);
         mainTable.SetColumnSpan(searchPanel, 2);
 
-        dgvProducts = CreateDataGrid();
+        dgvProducts = FormComponents.CreateDataGridView();
         dgvProducts.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
         dgvProducts.CellDoubleClick += DgvProducts_CellDoubleClick;
         mainTable.Controls.Add(dgvProducts, 0, 1);
 
-        var rightPanel = new TableLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            ColumnCount = 1,
-            RowCount = 3
-        };
+        var rightPanel = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3 };
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
 
-        dgvCart = CreateDataGrid();
+        dgvCart = FormComponents.CreateDataGridView();
         dgvCart.Columns.Add("Posicao", "#");
         dgvCart.Columns.Add("CodBarra", "Cód. Barras");
         dgvCart.Columns.Add("Descricao", "Descrição");
@@ -117,67 +94,23 @@ public class PosForm : Form
         dgvCart.CellEndEdit += DgvCart_CellEndEdit;
         rightPanel.Controls.Add(dgvCart, 0, 0);
 
-        var bottomPanel = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.LeftToRight,
-            Padding = new Padding(0, 5, 0, 0)
-        };
+        var bottomPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight, Padding = new Padding(0, 5, 0, 0) };
 
-        bottomPanel.Controls.Add(new Label
-        {
-            Text = "Cliente:",
-            TextAlign = ContentAlignment.MiddleLeft,
-            Width = 55,
-            Height = 30,
-            Font = new Font("Segoe UI", 10)
-        });
+        bottomPanel.Controls.Add(new Label { Text = "Cliente:", TextAlign = ContentAlignment.MiddleLeft, Width = 55, Height = 30, Font = FormComponents.DefaultFont });
 
         cmbCliente = new SearchableComboBox { Width = 260, Height = 30, PlaceholderText = "Buscar cliente..." };
         bottomPanel.Controls.Add(cmbCliente);
 
         rightPanel.Controls.Add(bottomPanel, 0, 1);
 
-        var actionPanel = new FlowLayoutPanel
-        {
-            Dock = DockStyle.Fill,
-            FlowDirection = FlowDirection.RightToLeft,
-            Padding = new Padding(0, 5, 0, 0)
-        };
+        var actionPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 5, 0, 0) };
 
-        lblTotalItens = new Label
-        {
-            Text = "0 itens",
-            TextAlign = ContentAlignment.MiddleRight,
-            Width = 100,
-            Height = 30,
-            Font = new Font("Segoe UI", 10, FontStyle.Bold),
-            ForeColor = Color.DarkBlue
-        };
+        lblTotalItens = new Label { Text = "0 itens", TextAlign = ContentAlignment.MiddleRight, Width = 100, Height = 30, Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.DarkBlue };
 
-        btnRemover = new Button
-        {
-            Text = "Remover Item",
-            Width = 120,
-            Height = 30,
-            BackColor = Color.Coral,
-            ForeColor = Color.White,
-            FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
-        };
+        btnRemover = new Button { Text = "Remover Item", Width = 120, Height = 30, BackColor = Color.Coral, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnRemover.Click += (_, _) => RemoveSelectedFromCart();
 
-        btnFinalizar = new Button
-        {
-            Text = "Finalizar Venda",
-            Width = 140,
-            Height = 30,
-            BackColor = Color.Green,
-            ForeColor = Color.White,
-            Font = new Font("Segoe UI", 10, FontStyle.Bold),
-            FlatStyle = FlatStyle.Flat,
-            Cursor = Cursors.Hand
-        };
+        btnFinalizar = new Button { Text = "Finalizar Venda", Width = 140, Height = 30, BackColor = Color.Green, ForeColor = Color.White, Font = new Font("Segoe UI", 10, FontStyle.Bold), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnFinalizar.Click += async (_, _) => await FinalizarVenda();
 
         actionPanel.Controls.Add(btnFinalizar);
@@ -188,14 +121,7 @@ public class PosForm : Form
 
         mainTable.Controls.Add(rightPanel, 1, 1);
 
-        var statusBar = new Label
-        {
-            Text = $"Vendedor: {ApiClient.Instance.UserName}",
-            Dock = DockStyle.Fill,
-            TextAlign = ContentAlignment.MiddleLeft,
-            ForeColor = Color.Gray,
-            Font = new Font("Segoe UI", 9)
-        };
+        var statusBar = new Label { Text = $"Vendedor: {ApiClient.Instance.UserName}", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, ForeColor = Color.Gray, Font = new Font("Segoe UI", 9) };
         mainTable.Controls.Add(statusBar, 0, 2);
         mainTable.SetColumnSpan(statusBar, 2);
 
@@ -211,51 +137,22 @@ public class PosForm : Form
         };
     }
 
-    private static DataGridView CreateDataGrid()
-    {
-        var dgv = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            ReadOnly = true,
-            RowHeadersVisible = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.None,
-            Font = new Font("Segoe UI", 10)
-        };
-        return dgv;
-    }
-
     private async Task SearchProducts()
     {
         var query = txtSearch.Text.Trim();
         if (string.IsNullOrEmpty(query))
         {
-            try
-            {
-                _searchResults = await ApiClient.Instance.GetAsync<List<Produto>>("api/produtos") ?? [];
-            }
-            catch
-            {
-                _searchResults = [];
-            }
+            try { _searchResults = await ApiClient.Instance.GetAsync<List<Produto>>("api/produtos") ?? []; }
+            catch { _searchResults = []; }
         }
         else
         {
             try
             {
                 var all = await ApiClient.Instance.GetAsync<List<Produto>>("api/produtos") ?? [];
-                _searchResults = all.Where(p =>
-                    p.Descricao.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                    p.CodBarra.ToString().Contains(query)).ToList();
+                _searchResults = all.Where(p => p.Descricao.Contains(query, StringComparison.OrdinalIgnoreCase) || p.CodBarra.ToString().Contains(query)).ToList();
             }
-            catch
-            {
-                _searchResults = [];
-            }
+            catch { _searchResults = []; }
         }
 
         BindProductGrid();
@@ -291,7 +188,6 @@ public class PosForm : Form
         if (e.RowIndex < 0 || e.RowIndex >= _searchResults.Count) return;
 
         var produto = _searchResults[e.RowIndex];
-
         var lote = "";
 
         if (produto.Controlado)
@@ -311,34 +207,24 @@ public class PosForm : Form
             }
             else
             {
-                using var lotDialog = new Form
-                {
-                    Text = $"Selecionar Lote - {produto.Descricao}",
-                    StartPosition = FormStartPosition.CenterParent,
-                    FormBorderStyle = FormBorderStyle.FixedDialog,
-                    MaximizeBox = false,
-                    MinimizeBox = false,
-                    ClientSize = new Size(350, 120)
-                };
-
+                using var lotDialog = FormComponents.CreateDialog($"Selecionar Lote - {produto.Descricao}", 350, 120);
                 var ltbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
                 ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
                 ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
                 ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
 
-                ltbl.Controls.Add(new Label { Text = "Selecione o lote:", TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 10) }, 0, 0);
+                ltbl.Controls.Add(new Label { Text = "Selecione o lote:", TextAlign = ContentAlignment.MiddleLeft, Font = FormComponents.DefaultFont }, 0, 0);
 
                 var cmbLote = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione o lote..." };
                 cmbLote.DataSource = availableLotes;
                 cmbLote.DisplayMember = "Lote";
                 ltbl.Controls.Add(cmbLote, 0, 1);
 
-                var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
-                var btnOk = new Button { Text = "OK", Width = 80, Height = 30, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+                var lbtnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+                var btnOk = new Button { Text = "Salvar", Width = 80, Height = 30, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
                 var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 30, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
-                btnPanel.Controls.Add(btnOk);
-                btnPanel.Controls.Add(btnCancel);
-                ltbl.Controls.Add(btnPanel, 0, 2);
+                lbtnPanel.Controls.Add(btnOk); lbtnPanel.Controls.Add(btnCancel);
+                ltbl.Controls.Add(lbtnPanel, 0, 2);
 
                 lotDialog.Controls.Add(ltbl);
                 lotDialog.AcceptButton = btnOk;
@@ -353,21 +239,9 @@ public class PosForm : Form
 
         var existing = _cart.FirstOrDefault(c => c.ProdutoId == produto.Id && c.Lote == lote);
         if (existing != null)
-        {
             existing.Quantidade++;
-        }
         else
-        {
-            _cart.Add(new CartItem
-            {
-                ProdutoId = produto.Id,
-                CodBarra = produto.CodBarra,
-                Descricao = produto.Descricao,
-                Lote = lote,
-                Quantidade = 1,
-                Controlado = produto.Controlado
-            });
-        }
+            _cart.Add(new CartItem { ProdutoId = produto.Id, CodBarra = produto.CodBarra, Descricao = produto.Descricao, Lote = lote, Quantidade = 1, Controlado = produto.Controlado });
 
         BindCartGrid();
         BindProductGrid();
@@ -411,20 +285,10 @@ public class PosForm : Form
 
     private async Task FinalizarVenda()
     {
-        if (_cart.Count == 0)
-        {
-            MessageBox.Show("Adicione pelo menos um produto ao carrinho.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
-
-        if (cmbCliente.SelectedValue == null)
-        {
-            MessageBox.Show("Selecione um cliente para a venda.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            return;
-        }
+        if (_cart.Count == 0) { MessageBox.Show("Adicione pelo menos um produto ao carrinho.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
+        if (cmbCliente.SelectedValue == null) { MessageBox.Show("Selecione um cliente para a venda.", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
 
         var controlados = _cart.Where(c => c.Controlado).ToList();
-
         var receitaIds = new List<int>();
 
         if (controlados.Count > 0)
@@ -435,20 +299,13 @@ public class PosForm : Form
             var todasReceitas = await ApiClient.Instance.GetAsync<List<Receita>>("api/receitas") ?? [];
             var availableReceitas = todasReceitas.Where(r => r.VendaId == null).ToList();
 
-            var controlledItems = controlados.Select(c =>
-                new PrescriptionDialog.ControlledItem
-                {
-                    ProdutoId = c.ProdutoId,
-                    Descricao = c.Descricao,
-                    Lote = c.Lote,
-                    Quantidade = c.Quantidade
-                }).ToList();
+            var controlledItems = controlados.Select(c => new PrescriptionDialog.ControlledItem
+            {
+                ProdutoId = c.ProdutoId, Descricao = c.Descricao, Lote = c.Lote, Quantidade = c.Quantidade
+            }).ToList();
 
             using var prescriptionDialog = new PrescriptionDialog(controlledItems, clientes, prescritores, allProdutos, availableReceitas);
-            if (prescriptionDialog.ShowDialog(this) != DialogResult.OK)
-            {
-                return;
-            }
+            if (prescriptionDialog.ShowDialog(this) != DialogResult.OK) return;
 
             receitaIds = prescriptionDialog.CreatedReceitas.Select(r => r.Id).ToList();
         }
@@ -461,11 +318,7 @@ public class PosForm : Form
             {
                 vendedorId = ApiClient.Instance.UserId,
                 clienteId = (int)cmbCliente.SelectedValue,
-                produtos = _cart.Select(c => new
-                {
-                    produtoId = c.ProdutoId,
-                    quantidade = c.Quantidade
-                }).ToList(),
+                produtos = _cart.Select(c => new { produtoId = c.ProdutoId, quantidade = c.Quantidade }).ToList(),
                 receitaIds = receitaIds.Count > 0 ? receitaIds : null
             };
 

@@ -1,7 +1,7 @@
 using System.Windows.Forms;
-using minipdv.Presentation.Desktop.Forms.Shared;
+using minipdv.Presentation.Desktop.Forms.Compartilhado;
 
-namespace minipdv.Presentation.Desktop.Forms.Auth;
+namespace minipdv.Presentation.Desktop.Forms.Autenticacao;
 
 public class LoginForm : Form
 {

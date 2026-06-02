@@ -1,8 +1,9 @@
 using System.Globalization;
 using minipdv.Domain.Entities;
 using minipdv.Presentation.Desktop.Components.Controls;
+using minipdv.Presentation.Desktop.Components.Helpers;
 
-namespace minipdv.Presentation.Desktop.Forms.Products;
+namespace minipdv.Presentation.Desktop.Forms.Produtos;
 
 public class ProdutosForm : Form
 {
@@ -15,55 +16,34 @@ public class ProdutosForm : Form
         Text = "Produtos";
         Dock = DockStyle.Fill;
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
+        var tbl = FormComponents.CreateStandardLayout();
+        var topPanel = FormComponents.CreateToolbar();
 
-        var topPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-
-        var btnRefresh = new Button { Text = "Atualizar", Width = 90, Height = 32, Cursor = Cursors.Hand };
+        var btnRefresh = FormComponents.CreateRefreshButton();
         btnRefresh.Click += async (_, _) => await LoadData();
         topPanel.Controls.Add(btnRefresh);
         topPanel.Controls.Add(new Label { Width = 10 });
 
-        var btnAdd = new Button { Text = "Adicionar", Width = 90, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnAdd = FormComponents.CreateAddButton();
         btnAdd.Click += async (_, _) => await AddItem();
         topPanel.Controls.Add(btnAdd);
 
-        var btnEdit = new Button { Text = "Editar", Width = 90, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnEdit = FormComponents.CreateEditButton();
         btnEdit.Click += async (_, _) => await EditItem();
         topPanel.Controls.Add(btnEdit);
 
-        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnDelete = FormComponents.CreateDeleteButton();
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
-
         topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
 
-        dgv = new DataGridView
-        {
-            Dock = DockStyle.Fill,
-            AllowUserToAddRows = false,
-            AllowUserToDeleteRows = false,
-            ReadOnly = true,
-            RowHeadersVisible = false,
-            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.None,
-            Font = new Font("Segoe UI", 10)
-        };
+        dgv = FormComponents.CreateDataGridView();
         dgv.CellDoubleClick += (_, _) => ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
         _searchFilter = new SearchFilter(topPanel, dgv);
 
-        var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
-        dgv.DataSourceChanged += (_, _) => lblCount.Text = $"Registros: {dgv.Rows.Count}";
-        statusPanel.Controls.Add(lblCount);
-        tbl.Controls.Add(statusPanel, 0, 2);
+        tbl.Controls.Add(FormComponents.CreateStatusBar(dgv), 0, 2);
 
         Controls.Add(tbl);
         Load += async (_, _) => await LoadData();
@@ -115,33 +95,19 @@ public class ProdutosForm : Form
         var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
         var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
 
-        using var dialog = new Form
-        {
-            Text = "Visualizar Produto",
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MaximizeBox = false,
-            MinimizeBox = false,
-            ClientSize = new Size(450, 420)
-        };
+        using var dialog = FormComponents.CreateDialog("Visualizar Produto", 450, 420);
+        var tbl = FormComponents.CreateDialogLayout(2, 10, 120);
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 10, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Descrição:"), 0, 0);
+        tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Descricao), 1, 0);
 
-        tbl.Controls.Add(new Label { Text = "Descrição:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txtDesc = new TextBox { Text = item.Descricao, ReadOnly = true, BackColor = SystemColors.Control, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtDesc, 1, 0);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Cód. Barras:"), 0, 1);
+        tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.CodBarra.ToString()), 1, 1);
 
-        tbl.Controls.Add(new Label { Text = "Cód. Barras:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtCod = new TextBox { Text = item.CodBarra.ToString(), ReadOnly = true, BackColor = SystemColors.Control, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtCod, 1, 1);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Dosagem:"), 0, 2);
+        tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Dosagem), 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "Dosagem:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtDosagem = new TextBox { Text = item.Dosagem, ReadOnly = true, BackColor = SystemColors.Control, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtDosagem, 1, 2);
-
-        tbl.Controls.Add(new Label { Text = "Grupo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 3);
         var cmbGrupo = new SearchableComboBox { Enabled = false, Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbGrupo.DataSource = grupos;
         cmbGrupo.DisplayMember = "Nome";
@@ -149,7 +115,7 @@ public class ProdutosForm : Form
         cmbGrupo.SelectedValue = item.ProdutoGrupoId;
         tbl.Controls.Add(cmbGrupo, 1, 3);
 
-        tbl.Controls.Add(new Label { Text = "Princ. Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 4);
         var cmbPrinc = new SearchableComboBox { Enabled = false, Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbPrinc.DataSource = principios;
         cmbPrinc.DisplayMember = "Nome";
@@ -157,7 +123,7 @@ public class ProdutosForm : Form
         cmbPrinc.SelectedValue = item.PrincipioAtivoId;
         tbl.Controls.Add(cmbPrinc, 1, 4);
 
-        tbl.Controls.Add(new Label { Text = "Fabricante:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 5);
         var cmbFab = new SearchableComboBox { Enabled = false, Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
         cmbFab.DataSource = fabricantes;
         cmbFab.DisplayMember = "NomeFantasia";
@@ -166,41 +132,29 @@ public class ProdutosForm : Form
             cmbFab.SelectedValue = item.FabricanteId.Value;
         tbl.Controls.Add(cmbFab, 1, 5);
 
-        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 6);
-        var chkAtivo = new CheckBox { Text = "Ativo", Checked = item.Ativo, Enabled = false, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(chkAtivo, 1, 6);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 6);
+        tbl.Controls.Add(FormComponents.CreateCheckBox("Ativo", item.Ativo, enabled: false), 1, 6);
 
-        tbl.Controls.Add(new Label { Text = "Controlado:", TextAlign = ContentAlignment.MiddleLeft }, 0, 7);
-        var chkControlado = new CheckBox { Text = "Controlado", Checked = item.Controlado, Enabled = false, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(chkControlado, 1, 7);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 7);
+        tbl.Controls.Add(FormComponents.CreateCheckBox("Controlado", item.Controlado, enabled: false), 1, 7);
 
-        tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 8);
-        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Text = item.RegistroMS ?? "", Enabled = false, ReadOnly = true, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), HidePromptOnLeave = true };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 8);
+        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Text = item.RegistroMS ?? "", Enabled = false, ReadOnly = true, Dock = DockStyle.Fill, Font = FormComponents.DefaultFont, HidePromptOnLeave = true };
         tbl.Controls.Add(mtxtRegMs, 1, 8);
 
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnEdit = new Button { Text = "Editar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnDelete = new Button { Text = "Excluir", Width = 80, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnClose = new Button { Text = "Fechar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
-        btnPanel.Controls.Add(btnEdit);
-        btnPanel.Controls.Add(btnDelete);
-        btnPanel.Controls.Add(btnClose);
+        var btnEdit = FormComponents.CreateEditButton(80);
+        var btnDelete = FormComponents.CreateDeleteButton(80);
+        var btnClose = FormComponents.CreateCloseButton(80);
+        btnPanel.Controls.Add(btnEdit); btnPanel.Controls.Add(btnDelete); btnPanel.Controls.Add(btnClose);
         tbl.Controls.Add(btnPanel, 0, 9);
 
         dialog.Controls.Add(tbl);
         dialog.CancelButton = btnClose;
 
-        btnEdit.Click += async (_, _) =>
-        {
-            dialog.Close();
-            await EditItem();
-        };
-        btnDelete.Click += async (_, _) =>
-        {
-            dialog.Close();
-            await DeleteItem();
-        };
+        btnEdit.Click += async (_, _) => { dialog.Close(); await EditItem(); };
+        btnDelete.Click += async (_, _) => { dialog.Close(); await DeleteItem(); };
 
         dialog.ShowDialog(this);
     }
@@ -211,71 +165,59 @@ public class ProdutosForm : Form
         var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
         var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
 
-        using var dialog = new Form
-        {
-            Text = "Novo Produto",
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MaximizeBox = false,
-            MinimizeBox = false,
-            ClientSize = new Size(450, 420)
-        };
+        using var dialog = FormComponents.CreateDialog("Novo Produto", 450, 420);
+        var tbl = FormComponents.CreateDialogLayout(2, 10, 120);
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 10, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-        tbl.Controls.Add(new Label { Text = "Descrição:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txtDesc = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Descrição:"), 0, 0);
+        var txtDesc = FormComponents.CreateTextBox();
         tbl.Controls.Add(txtDesc, 1, 0);
 
-        tbl.Controls.Add(new Label { Text = "Cód. Barras:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtCod = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Cód. Barras:"), 0, 1);
+        var txtCod = FormComponents.CreateTextBox();
         tbl.Controls.Add(txtCod, 1, 1);
 
-        tbl.Controls.Add(new Label { Text = "Dosagem:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtDosagem = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Dosagem:"), 0, 2);
+        var txtDosagem = FormComponents.CreateTextBox();
         tbl.Controls.Add(txtDosagem, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "Grupo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 3);
         var cmbGrupo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbGrupo.DataSource = grupos;
         cmbGrupo.DisplayMember = "Nome";
         cmbGrupo.ValueMember = "Id";
         tbl.Controls.Add(cmbGrupo, 1, 3);
 
-        tbl.Controls.Add(new Label { Text = "Princ. Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 4);
         var cmbPrinc = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbPrinc.DataSource = principios;
         cmbPrinc.DisplayMember = "Nome";
         cmbPrinc.ValueMember = "Id";
         tbl.Controls.Add(cmbPrinc, 1, 4);
 
-        tbl.Controls.Add(new Label { Text = "Fabricante:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 5);
         var cmbFab = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
         cmbFab.DataSource = fabricantes;
         cmbFab.DisplayMember = "NomeFantasia";
         cmbFab.ValueMember = "Id";
         tbl.Controls.Add(cmbFab, 1, 5);
 
-        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 6);
-        var chkAtivo = new CheckBox { Text = "Ativo", Checked = true, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 6);
+        var chkAtivo = FormComponents.CreateCheckBox("Ativo", true);
         tbl.Controls.Add(chkAtivo, 1, 6);
 
-        tbl.Controls.Add(new Label { Text = "Controlado:", TextAlign = ContentAlignment.MiddleLeft }, 0, 7);
-        var chkControlado = new CheckBox { Text = "Controlado", Checked = false, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 7);
+        var chkControlado = FormComponents.CreateCheckBox("Controlado");
         tbl.Controls.Add(chkControlado, 1, 7);
 
-        tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 8);
-        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), HidePromptOnLeave = true };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 8);
+        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Dock = DockStyle.Fill, Font = FormComponents.DefaultFont, HidePromptOnLeave = true };
         tbl.Controls.Add(mtxtRegMs, 1, 8);
 
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
-        btnPanel.Controls.Add(btnOk);
-        btnPanel.Controls.Add(btnCancel);
+        var btnOk = FormComponents.CreateSaveButton();
+        var btnCancel = FormComponents.CreateCancelButton();
+        btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 9);
 
         dialog.Controls.Add(tbl);
@@ -341,33 +283,22 @@ public class ProdutosForm : Form
         var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
         var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
 
-        using var dialog = new Form
-        {
-            Text = "Editar Produto",
-            StartPosition = FormStartPosition.CenterParent,
-            FormBorderStyle = FormBorderStyle.FixedDialog,
-            MaximizeBox = false,
-            MinimizeBox = false,
-            ClientSize = new Size(450, 420)
-        };
+        using var dialog = FormComponents.CreateDialog("Editar Produto", 450, 420);
+        var tbl = FormComponents.CreateDialogLayout(2, 10, 120);
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 10, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-
-        tbl.Controls.Add(new Label { Text = "Descrição:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txtDesc = new TextBox { Text = item.Descricao, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Descrição:"), 0, 0);
+        var txtDesc = FormComponents.CreateTextBox(item.Descricao);
         tbl.Controls.Add(txtDesc, 1, 0);
 
-        tbl.Controls.Add(new Label { Text = "Cód. Barras:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtCod = new TextBox { Text = item.CodBarra.ToString(), Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Cód. Barras:"), 0, 1);
+        var txtCod = FormComponents.CreateTextBox(item.CodBarra.ToString());
         tbl.Controls.Add(txtCod, 1, 1);
 
-        tbl.Controls.Add(new Label { Text = "Dosagem:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
-        var txtDosagem = new TextBox { Text = item.Dosagem, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Dosagem:"), 0, 2);
+        var txtDosagem = FormComponents.CreateTextBox(item.Dosagem);
         tbl.Controls.Add(txtDosagem, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "Grupo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 3);
         var cmbGrupo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbGrupo.DataSource = grupos;
         cmbGrupo.DisplayMember = "Nome";
@@ -375,7 +306,7 @@ public class ProdutosForm : Form
         cmbGrupo.SelectedValue = item.ProdutoGrupoId;
         tbl.Controls.Add(cmbGrupo, 1, 3);
 
-        tbl.Controls.Add(new Label { Text = "Princ. Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 4);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 4);
         var cmbPrinc = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbPrinc.DataSource = principios;
         cmbPrinc.DisplayMember = "Nome";
@@ -383,7 +314,7 @@ public class ProdutosForm : Form
         cmbPrinc.SelectedValue = item.PrincipioAtivoId;
         tbl.Controls.Add(cmbPrinc, 1, 4);
 
-        tbl.Controls.Add(new Label { Text = "Fabricante:", TextAlign = ContentAlignment.MiddleLeft }, 0, 5);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 5);
         var cmbFab = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
         cmbFab.DataSource = fabricantes;
         cmbFab.DisplayMember = "NomeFantasia";
@@ -392,24 +323,23 @@ public class ProdutosForm : Form
             cmbFab.SelectedValue = item.FabricanteId.Value;
         tbl.Controls.Add(cmbFab, 1, 5);
 
-        tbl.Controls.Add(new Label { Text = "Ativo:", TextAlign = ContentAlignment.MiddleLeft }, 0, 6);
-        var chkAtivo = new CheckBox { Text = "Ativo", Checked = item.Ativo, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 6);
+        var chkAtivo = FormComponents.CreateCheckBox("Ativo", item.Ativo);
         tbl.Controls.Add(chkAtivo, 1, 6);
 
-        tbl.Controls.Add(new Label { Text = "Controlado:", TextAlign = ContentAlignment.MiddleLeft }, 0, 7);
-        var chkControlado = new CheckBox { Text = "Controlado", Checked = item.Controlado, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 7);
+        var chkControlado = FormComponents.CreateCheckBox("Controlado", item.Controlado);
         tbl.Controls.Add(chkControlado, 1, 7);
 
-        tbl.Controls.Add(new Label { Text = "Registro MS:", TextAlign = ContentAlignment.MiddleLeft }, 0, 8);
-        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Text = item.RegistroMS ?? "", Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), HidePromptOnLeave = true };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 8);
+        var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Text = item.RegistroMS ?? "", Dock = DockStyle.Fill, Font = FormComponents.DefaultFont, HidePromptOnLeave = true };
         tbl.Controls.Add(mtxtRegMs, 1, 8);
 
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
-        btnPanel.Controls.Add(btnOk);
-        btnPanel.Controls.Add(btnCancel);
+        var btnOk = FormComponents.CreateSaveButton();
+        var btnCancel = FormComponents.CreateCancelButton();
+        btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 9);
 
         dialog.Controls.Add(tbl);
@@ -462,7 +392,6 @@ public class ProdutosForm : Form
             {
                 dialog.Enabled = true;
             }
-
         };
 
         dialog.ShowDialog(this);

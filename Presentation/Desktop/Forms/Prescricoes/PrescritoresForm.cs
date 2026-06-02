@@ -1,8 +1,9 @@
 using minipdv.Domain.Entities;
 using minipdv.Domain.Enums;
 using minipdv.Presentation.Desktop.Components.Controls;
+using minipdv.Presentation.Desktop.Components.Helpers;
 
-namespace minipdv.Presentation.Desktop.Forms.Services;
+namespace minipdv.Presentation.Desktop.Forms.Prescricoes;
 
 public class PrescritoresForm : Form
 {
@@ -15,38 +16,34 @@ public class PrescritoresForm : Form
         Text = "Prescritores";
         Dock = DockStyle.Fill;
 
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 45));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
+        var tbl = FormComponents.CreateStandardLayout();
+        var topPanel = FormComponents.CreateToolbar();
 
-        var topPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        var btnRefresh = new Button { Text = "Atualizar", Width = 90, Height = 32, Cursor = Cursors.Hand };
+        var btnRefresh = FormComponents.CreateRefreshButton();
         btnRefresh.Click += async (_, _) => await LoadData();
         topPanel.Controls.Add(btnRefresh);
         topPanel.Controls.Add(new Label { Width = 10 });
-        var btnAdd = new Button { Text = "Adicionar", Width = 90, Height = 32, BackColor = Color.Green, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnAdd = FormComponents.CreateAddButton();
         btnAdd.Click += async (_, _) => await AddItem();
         topPanel.Controls.Add(btnAdd);
-        var btnEdit = new Button { Text = "Editar", Width = 90, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnEdit = FormComponents.CreateEditButton();
         btnEdit.Click += async (_, _) => await EditItem();
         topPanel.Controls.Add(btnEdit);
-        var btnDelete = new Button { Text = "Excluir", Width = 90, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+
+        var btnDelete = FormComponents.CreateDeleteButton();
         btnDelete.Click += async (_, _) => await DeleteItem();
         topPanel.Controls.Add(btnDelete);
         topPanel.Controls.Add(new Label { Width = 10 });
         tbl.Controls.Add(topPanel, 0, 0);
 
-        dgv = new DataGridView { Dock = DockStyle.Fill, AllowUserToAddRows = false, AllowUserToDeleteRows = false, ReadOnly = true, RowHeadersVisible = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Color.White, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 10) };
+        dgv = FormComponents.CreateDataGridView();
         dgv.CellDoubleClick += async (_, _) => await ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
         _searchFilter = new SearchFilter(topPanel, dgv);
 
-        var statusPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.LeftToRight };
-        var lblCount = new Label { TextAlign = ContentAlignment.MiddleLeft, Width = 200, Height = 32, ForeColor = Color.Gray };
-        dgv.DataSourceChanged += (_, _) => lblCount.Text = $"Registros: {dgv.Rows.Count}";
-        statusPanel.Controls.Add(lblCount);
-        tbl.Controls.Add(statusPanel, 0, 2);
+        tbl.Controls.Add(FormComponents.CreateStatusBar(dgv), 0, 2);
 
         Controls.Add(tbl);
         Load += async (_, _) => await LoadData();
@@ -83,38 +80,34 @@ public class PrescritoresForm : Form
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um prescritor.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
-        using var dialog = new Form { Text = "Visualizar Prescritor", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 200) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        using var dialog = FormComponents.CreateDialog("Visualizar Prescritor", 400, 200);
+        var tbl = FormComponents.CreateDialogLayout(2, 5, 80);
 
-        tbl.Controls.Add(new Label { Text = "Nome:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txtNome = new TextBox { Text = item.Nome, ReadOnly = true, BackColor = SystemColors.Control, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtNome, 1, 0);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Nome:"), 0, 0);
+        tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Nome), 1, 0);
 
-        tbl.Controls.Add(new Label { Text = "Número:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtNumero = new TextBox { Text = item.Numero, ReadOnly = true, BackColor = SystemColors.Control, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
-        tbl.Controls.Add(txtNumero, 1, 1);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Número:"), 0, 1);
+        tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Numero), 1, 1);
 
-        tbl.Controls.Add(new Label { Text = "Conselho:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Conselho:"), 0, 2);
         var cmbConselho = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione...", Enabled = false };
         cmbConselho.DataSource = Enum.GetValues<Conselho>().Cast<object>().ToList();
         cmbConselho.SelectedValue = item.Conselho;
         tbl.Controls.Add(cmbConselho, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "UF:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("UF:"), 0, 3);
         var cmbUf = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione...", Enabled = false };
         cmbUf.DataSource = Enum.GetValues<UF>().Cast<object>().ToList();
         cmbUf.SelectedValue = item.Uf;
         tbl.Controls.Add(cmbUf, 1, 3);
 
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnEdit = new Button { Text = "Editar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnEdit = FormComponents.CreateEditButton(80);
         btnEdit.Click += async (_, _) => { dialog.Close(); await EditItem(); };
-        var btnDelete = new Button { Text = "Excluir", Width = 80, Height = 32, BackColor = Color.Crimson, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
+        var btnDelete = FormComponents.CreateDeleteButton(80);
         btnDelete.Click += async (_, _) => { dialog.Close(); await DeleteItem(); };
-        var btnFechar = new Button { Text = "Fechar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        var btnFechar = FormComponents.CreateCloseButton(80);
         btnPanel.Controls.Add(btnEdit); btnPanel.Controls.Add(btnDelete); btnPanel.Controls.Add(btnFechar);
         tbl.Controls.Add(btnPanel, 0, 4);
         dialog.Controls.Add(tbl);
@@ -124,33 +117,31 @@ public class PrescritoresForm : Form
 
     private async Task AddItem()
     {
-        using var dialog = new Form { Text = "Novo Prescritor", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 200) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        using var dialog = FormComponents.CreateDialog("Novo Prescritor", 400, 200);
+        var tbl = FormComponents.CreateDialogLayout(2, 5, 80);
 
-        tbl.Controls.Add(new Label { Text = "Nome:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txtNome = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Nome:"), 0, 0);
+        var txtNome = FormComponents.CreateTextBox();
         tbl.Controls.Add(txtNome, 1, 0);
 
-        tbl.Controls.Add(new Label { Text = "Número:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtNumero = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Número:"), 0, 1);
+        var txtNumero = FormComponents.CreateTextBox();
         tbl.Controls.Add(txtNumero, 1, 1);
 
-        tbl.Controls.Add(new Label { Text = "Conselho:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Conselho:"), 0, 2);
         var cmbConselho = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbConselho.DataSource = Enum.GetValues<Conselho>().Cast<object>().ToList();
         tbl.Controls.Add(cmbConselho, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "UF:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("UF:"), 0, 3);
         var cmbUf = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbUf.DataSource = Enum.GetValues<UF>().Cast<object>().ToList();
         tbl.Controls.Add(cmbUf, 1, 3);
 
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        var btnOk = FormComponents.CreateSaveButton();
+        var btnCancel = FormComponents.CreateCancelButton();
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 4);
         dialog.Controls.Add(tbl);
@@ -191,35 +182,33 @@ public class PrescritoresForm : Form
         var item = GetSelected();
         if (item == null) { MessageBox.Show("Selecione um prescritor.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
 
-        using var dialog = new Form { Text = "Editar Prescritor", StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MaximizeBox = false, MinimizeBox = false, ClientSize = new Size(400, 200) };
-        var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(15) };
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
-        tbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        using var dialog = FormComponents.CreateDialog("Editar Prescritor", 400, 200);
+        var tbl = FormComponents.CreateDialogLayout(2, 5, 80);
 
-        tbl.Controls.Add(new Label { Text = "Nome:", TextAlign = ContentAlignment.MiddleLeft }, 0, 0);
-        var txtNome = new TextBox { Text = item.Nome, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Nome:"), 0, 0);
+        var txtNome = FormComponents.CreateTextBox(item.Nome);
         tbl.Controls.Add(txtNome, 1, 0);
 
-        tbl.Controls.Add(new Label { Text = "Número:", TextAlign = ContentAlignment.MiddleLeft }, 0, 1);
-        var txtNumero = new TextBox { Text = item.Numero, Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10) };
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Número:"), 0, 1);
+        var txtNumero = FormComponents.CreateTextBox(item.Numero);
         tbl.Controls.Add(txtNumero, 1, 1);
 
-        tbl.Controls.Add(new Label { Text = "Conselho:", TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Conselho:"), 0, 2);
         var cmbConselho = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbConselho.DataSource = Enum.GetValues<Conselho>().Cast<object>().ToList();
         cmbConselho.SelectedValue = item.Conselho;
         tbl.Controls.Add(cmbConselho, 1, 2);
 
-        tbl.Controls.Add(new Label { Text = "UF:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("UF:"), 0, 3);
         var cmbUf = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbUf.DataSource = Enum.GetValues<UF>().Cast<object>().ToList();
         cmbUf.SelectedValue = item.Uf;
         tbl.Controls.Add(cmbUf, 1, 3);
 
-        var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+        var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
-        var btnOk = new Button { Text = "Salvar", Width = 80, Height = 32, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
-        var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 32, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+        var btnOk = FormComponents.CreateSaveButton();
+        var btnCancel = FormComponents.CreateCancelButton();
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
         tbl.Controls.Add(btnPanel, 0, 4);
         dialog.Controls.Add(tbl);
