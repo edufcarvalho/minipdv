@@ -27,15 +27,8 @@ public class SessionRepository : Repository<Session>, ISessionRepository
 
     public async Task RevokeAllFromUserAsync(int usuarioId)
     {
-        var sessions = await _dbSet
+        await _dbSet
             .Where(s => s.UsuarioId == usuarioId && !s.IsRevoked)
-            .ToListAsync();
-
-        foreach (var session in sessions)
-        {
-            session.IsRevoked = true;
-        }
-
-        await _context.SaveChangesAsync();
+            .ExecuteUpdateAsync(s => s.SetProperty(x => x.IsRevoked, true));
     }
 }

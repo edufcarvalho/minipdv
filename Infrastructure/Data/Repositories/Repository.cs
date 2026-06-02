@@ -35,33 +35,15 @@ public abstract class Repository<T> : IRepository<T> where T : Entity
     {
         entity.CriadoEm = DateTime.UtcNow;
         await _dbSet.AddAsync(entity);
-        try
-        {
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("{EntityType} criado com sucesso. Id={Id}", typeof(T).Name, entity.Id);
-            return entity;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Falha ao criar {EntityType} no banco de dados", typeof(T).Name);
-            throw;
-        }
+        _logger.LogDebug("{EntityType} adicionado ao change tracker. Id={Id}", typeof(T).Name, entity.Id);
+        return entity;
     }
 
     public virtual async Task UpdateAsync(T entity)
     {
         entity.AtualizadoEm = DateTime.UtcNow;
         _dbSet.Update(entity);
-        try
-        {
-            await _context.SaveChangesAsync();
-            _logger.LogInformation("{EntityType} atualizado com sucesso. Id={Id}", typeof(T).Name, entity.Id);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Falha ao atualizar {EntityType} Id={Id} no banco de dados", typeof(T).Name, entity.Id);
-            throw;
-        }
+        _logger.LogDebug("{EntityType} marcado para atualização. Id={Id}", typeof(T).Name, entity.Id);
     }
 
     public virtual async Task DeleteAsync(int id)
@@ -70,16 +52,7 @@ public abstract class Repository<T> : IRepository<T> where T : Entity
         if (entity != null)
         {
             _dbSet.Remove(entity);
-            try
-            {
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("{EntityType} removido com sucesso. Id={Id}", typeof(T).Name, id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Falha ao remover {EntityType} Id={Id} do banco de dados", typeof(T).Name, id);
-                throw;
-            }
+            _logger.LogDebug("{EntityType} marcado para remoção. Id={Id}", typeof(T).Name, id);
         }
         else
         {
