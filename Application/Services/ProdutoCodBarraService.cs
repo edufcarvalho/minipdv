@@ -54,8 +54,10 @@ public class ProdutoCodBarraService : IProdutoCodBarraService
         if (!await _repository.ExistsAsync(codBarra))
         {
             _logger.LogWarning("Tentativa de excluir ProdutoCodBarra inexistente: CodBarra={CodBarra}", codBarra);
+            return;
         }
         await _repository.DeleteAsync(codBarra);
+        _logger.LogInformation("ProdutoCodBarra removido: CodBarra={CodBarra}", codBarra);
     }
 
     public async Task<bool> ExistsAsync(int codBarra)

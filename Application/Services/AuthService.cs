@@ -10,6 +10,7 @@ using minipdv.Domain.Entities;
 using minipdv.Domain.Entities.Base;
 using minipdv.Domain.Interfaces;
 using minipdv.Infrastructure.Configuration;
+using minipdv.Infrastructure.Data.Context;
 using minipdv.Infrastructure.Security;
 
 namespace minipdv.Application.Services;
@@ -21,6 +22,7 @@ public class AuthService : IAuthService
     private readonly IFarmaceuticoRepository _farmaceuticoRepository;
     private readonly IAdministradorRepository _administradorRepository;
     private readonly ISessionRepository _sessionRepository;
+    private readonly MiniPDVContext _context;
     private readonly AppSettings _settings;
     private readonly ILogger<AuthService> _logger;
 
@@ -30,6 +32,7 @@ public class AuthService : IAuthService
         IFarmaceuticoRepository farmaceuticoRepository,
         IAdministradorRepository administradorRepository,
         ISessionRepository sessionRepository,
+        MiniPDVContext context,
         AppSettings settings,
         ILogger<AuthService> logger)
     {
@@ -38,6 +41,7 @@ public class AuthService : IAuthService
         _farmaceuticoRepository = farmaceuticoRepository;
         _administradorRepository = administradorRepository;
         _sessionRepository = sessionRepository;
+        _context = context;
         _settings = settings;
         _logger = logger;
     }
@@ -71,6 +75,7 @@ public class AuthService : IAuthService
         };
 
         await _sessionRepository.AddAsync(session);
+        await _context.SaveChangesAsync();
 
         var jwt = GenerateJwt(usuario.Id, usuario.Nome, sessionToken, expiresAt, usuario.TipoUsuario);
 
@@ -100,6 +105,7 @@ public class AuthService : IAuthService
                     TipoUsuario = "Administrador"
                 };
                 await _administradorRepository.AddAsync(admin);
+                await _context.SaveChangesAsync();
                 _logger.LogInformation("Administrador registrado: Id={Id}, Login={Login}", admin.Id, admin.Login);
                 return new AuthResponse(admin.Id, admin.Nome, admin.Login, string.Empty, "Administrador registrado com sucesso");
 
@@ -113,6 +119,7 @@ public class AuthService : IAuthService
                     Crf = request.Crf ?? throw new ValidationException("CRF é obrigatório para Farmacêutico")
                 };
                 await _farmaceuticoRepository.AddAsync(farm);
+                await _context.SaveChangesAsync();
                 _logger.LogInformation("Farmacêutico registrado: Id={Id}, Login={Login}, CRF={Crf}", farm.Id, farm.Login, farm.Crf);
                 return new AuthResponse(farm.Id, farm.Nome, farm.Login, string.Empty, "Farmacêutico registrado com sucesso");
 
@@ -125,6 +132,7 @@ public class AuthService : IAuthService
                     TipoUsuario = "Usuario"
                 };
                 await _usuarioRepository.AddAsync(user);
+                await _context.SaveChangesAsync();
                 _logger.LogInformation("Usuário registrado: Id={Id}, Login={Login}", user.Id, user.Login);
                 return new AuthResponse(user.Id, user.Nome, user.Login, string.Empty, "Usuário registrado com sucesso");
         }
@@ -176,7 +184,8 @@ public class AuthService : IAuthService
             {
                 if (session is not null && !session.IsRevoked)
                 {
-                    await _sessionRepository.RevokeAsync(session.Id);
+            await _sessionRepository.RevokeAsync(session.Id);
+            await _context.SaveChangesAsync();
                     _logger.LogWarning("Sessão expirada e revogada: SessionId={SessionId}, UsuarioId={UsuarioId}", session.Id, session.UsuarioId);
                 }
                 else

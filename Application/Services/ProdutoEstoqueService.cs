@@ -79,9 +79,9 @@ public class ProdutoEstoqueService : IProdutoEstoqueService
             .Where(e => e.ProdutoId == produtoId)
             .SumAsync(e => e.Quantidade);
 
-        await _context.Set<Produto>()
-            .Where(p => p.Id == produtoId)
-            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Estoque, total));
+        var produto = await _context.Set<Produto>().FindAsync(produtoId);
+        if (produto is not null)
+            produto.Estoque = total;
 
         _logger.LogDebug("Estoque do produto ProdutoId={ProdutoId} recalculado: Total={Total}", produtoId, total);
     }

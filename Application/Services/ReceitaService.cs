@@ -66,10 +66,9 @@ public class ReceitaService : IReceitaService
 
         entity.CriadoEm = DateTime.UtcNow;
         _context.Receitas.Add(entity);
-        await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Receita criada: ReceitaId={ReceitaId}, PrescritorId={PrescritorId}, PacienteId={PacienteId}, Itens={Itens}",
-            entity.Id, entity.PrescritorId, entity.PacienteId, entity.ReceitaProdutoEstoques?.Count ?? 0);
+        _logger.LogInformation("Receita adicionada ao change tracker: PrescritorId={PrescritorId}, PacienteId={PacienteId}, Itens={Itens}",
+            entity.PrescritorId, entity.PacienteId, entity.ReceitaProdutoEstoques?.Count ?? 0);
         return entity;
     }
 
@@ -134,9 +133,7 @@ public class ReceitaService : IReceitaService
         foreach (var prodId in affectedProdutos)
             await SyncProdutoEstoqueAsync(prodId);
 
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Receita atualizada: ReceitaId={ReceitaId}, Itens={Itens}", entity.Id, newItems.Count);
+        _logger.LogInformation("Receita marcada para atualização: ReceitaId={ReceitaId}, Itens={Itens}", entity.Id, newItems.Count);
     }
 
     public async Task DeleteAsync(int id)
@@ -167,9 +164,8 @@ public class ReceitaService : IReceitaService
         }
 
         _context.Receitas.Remove(entity);
-        await _context.SaveChangesAsync();
 
-        _logger.LogInformation("Receita excluída: ReceitaId={Id}, PrescritorId={PrescritorId}", id, entity.PrescritorId);
+        _logger.LogInformation("Receita marcada para exclusão: ReceitaId={Id}, PrescritorId={PrescritorId}", id, entity.PrescritorId);
     }
 
     public async Task<bool> ExistsAsync(int id)
