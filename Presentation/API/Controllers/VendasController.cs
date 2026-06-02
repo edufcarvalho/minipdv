@@ -43,15 +43,16 @@ public class VendasController : ControllerBase
             Vendedor = null!,
             Cliente = null!,
             VendaItens = request.Produtos
-                    .Select(p => new VendaItem
-                    {
-                        VendaId = 0,
-                        ProdutoId = p.ProdutoId,
-                        Quantidade = p.Quantidade,
-                        Venda = null!,
-                        Produto = null!
-                    })
-                    .ToList()
+                .Select((p, index) => new VendaItem
+                {
+                    VendaId = 0,
+                    ProdutoId = p.ProdutoId,
+                    Posicao = index + 1,
+                    Quantidade = p.Quantidade,
+                    Venda = null!,
+                    Produto = null!
+                })
+                .ToList()
         };
 
         try

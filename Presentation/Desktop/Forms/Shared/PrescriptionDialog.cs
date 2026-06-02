@@ -12,6 +12,7 @@ public class PrescriptionDialog : Form
     private readonly List<Cliente> _clientes;
     private readonly List<Prescritor> _prescritores;
     private readonly List<Produto> _produtos;
+    private readonly List<Receita> _availableReceitas;
     private readonly List<ControlledItem> _pendingItems;
     private readonly List<ReceitaInfo> _createdReceitas = [];
 
@@ -30,7 +31,8 @@ public class PrescriptionDialog : Form
         List<ControlledItem> controlledItems,
         List<Cliente> clientes,
         List<Prescritor> prescritores,
-        List<Produto> produtos)
+        List<Produto> produtos,
+        List<Receita> availableReceitas)
     {
         _pendingItems = controlledItems.Select(ci => new ControlledItem
         {
@@ -42,6 +44,7 @@ public class PrescriptionDialog : Form
         _clientes = clientes;
         _prescritores = prescritores;
         _produtos = produtos;
+        _availableReceitas = availableReceitas;
 
         Text = "Receitas para Produtos Controlados";
         StartPosition = FormStartPosition.CenterParent;
@@ -161,7 +164,21 @@ public class PrescriptionDialog : Form
         };
         btnAddReceita.Click += async (_, _) => await AddReceita();
 
+        var btnVincular = new Button
+        {
+            Text = "Vincular Existente",
+            Width = 150,
+            Height = 35,
+            BackColor = Color.Teal,
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Cursor = Cursors.Hand,
+            Margin = new Padding(0, 0, 10, 0)
+        };
+        btnVincular.Click += (_, _) => VincularReceitaExistente();
+
         btnPanel.Controls.Add(btnFinalizar);
+        btnPanel.Controls.Add(btnVincular);
         btnPanel.Controls.Add(btnAddReceita);
 
         bottomTbl.Controls.Add(btnPanel, 0, 1);
@@ -481,6 +498,162 @@ public class PrescriptionDialog : Form
             {
                 dialog.Enabled = true;
             }
+        };
+
+        dialog.ShowDialog(this);
+    }
+
+    private void VincularReceitaExistente()
+    {
+        var availableItems = _pendingItems.Where(p => p.Quantidade > 0).ToList();
+        if (availableItems.Count == 0) return;
+
+        var availableReceitasList = _availableReceitas
+            .Where(r => r.ReceitaProdutoEstoques is { Count: > 0 })
+            .ToList();
+
+        if (availableReceitasList.Count == 0)
+        {
+            MessageBox.Show("Não há receitas sem venda disponíveis para vincular.", "Informação", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        using var dialog = new Form
+        {
+            Text = "Vincular Receita Existente",
+            StartPosition = FormStartPosition.CenterParent,
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            MaximizeBox = false,
+            MinimizeBox = false,
+            ClientSize = new Size(700, 450)
+        };
+
+        var mainTbl = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 3,
+            Padding = new Padding(10)
+        };
+        mainTbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 25));
+        mainTbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        mainTbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
+
+        mainTbl.Controls.Add(new Label
+        {
+            Text = "Selecione uma receita sem venda vinculada:",
+            Dock = DockStyle.Fill,
+            Font = new Font("Segoe UI", 10),
+            TextAlign = ContentAlignment.MiddleLeft
+        }, 0, 0);
+
+        var dgv = new DataGridView
+        {
+            Dock = DockStyle.Fill,
+            AllowUserToAddRows = false,
+            AllowUserToDeleteRows = false,
+            ReadOnly = true,
+            RowHeadersVisible = false,
+            SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            BackgroundColor = Color.White,
+            BorderStyle = BorderStyle.None,
+            Font = new Font("Segoe UI", 10)
+        };
+        dgv.Columns.Add("Id", "ID");
+        dgv.Columns.Add("DataReceita", "Data Receita");
+        dgv.Columns.Add("Prescritor", "Prescritor");
+        dgv.Columns.Add("Paciente", "Paciente");
+        dgv.Columns.Add("Produtos", "Produtos");
+
+        foreach (var rec in availableReceitasList)
+        {
+            var produtosStr = string.Join(", ", rec.ReceitaProdutoEstoques
+                .Select(rpe => $"{rpe.ProdutoEstoque?.Produto?.Descricao ?? $"ID {rpe.ProdutoId}"} ({rpe.Lote}, Qtd: {rpe.Quantidade})"));
+            dgv.Rows.Add(rec.Id, rec.DataReceita.ToString("dd/MM/yyyy"), rec.Prescritor?.Nome ?? "", rec.Paciente?.Nome ?? "", produtosStr);
+        }
+        mainTbl.Controls.Add(dgv, 0, 1);
+
+        var btnPanel = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            FlowDirection = FlowDirection.RightToLeft
+        };
+        var btnVincular = new Button
+        {
+            Text = "Vincular Selecionada",
+            Width = 150,
+            Height = 32,
+            BackColor = Color.Teal,
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Cursor = Cursors.Hand
+        };
+        var btnCancel = new Button
+        {
+            Text = "Cancelar",
+            Width = 90,
+            Height = 32,
+            Cursor = Cursors.Hand,
+            DialogResult = DialogResult.Cancel,
+            Margin = new Padding(0, 0, 10, 0)
+        };
+        btnPanel.Controls.Add(btnVincular);
+        btnPanel.Controls.Add(btnCancel);
+        mainTbl.Controls.Add(btnPanel, 0, 2);
+
+        dialog.Controls.Add(mainTbl);
+        dialog.CancelButton = btnCancel;
+
+        btnVincular.Click += (_, _) =>
+        {
+            if (dgv.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Selecione uma receita.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var idx = dgv.SelectedRows[0].Index;
+            if (idx < 0 || idx >= availableReceitasList.Count) return;
+
+            var receita = availableReceitasList[idx];
+
+            if (_createdReceitas.Any(r => r.Id == receita.Id))
+            {
+                MessageBox.Show("Esta receita já foi vinculada.", "Aviso", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var matchedItems = new List<ControlledItem>();
+
+            foreach (var rpe in receita.ReceitaProdutoEstoques)
+            {
+                var pending = _pendingItems.FirstOrDefault(p =>
+                    p.ProdutoId == rpe.ProdutoId &&
+                    p.Lote == rpe.Lote &&
+                    p.Quantidade > 0);
+
+                if (pending != null)
+                {
+                    var matchedQty = Math.Min(pending.Quantidade, rpe.Quantidade);
+                    matchedItems.Add(new ControlledItem
+                    {
+                        ProdutoId = rpe.ProdutoId,
+                        Descricao = rpe.ProdutoEstoque?.Produto?.Descricao ?? $"ID {rpe.ProdutoId}",
+                        Lote = rpe.Lote ?? "",
+                        Quantidade = matchedQty
+                    });
+                    pending.Quantidade -= matchedQty;
+                }
+            }
+
+            _createdReceitas.Add(new ReceitaInfo(receita.Id, matchedItems));
+            _availableReceitas.Remove(receita);
+
+            RefreshReceitas();
+            RefreshPendentes();
+            dialog.DialogResult = DialogResult.OK;
+            dialog.Close();
         };
 
         dialog.ShowDialog(this);

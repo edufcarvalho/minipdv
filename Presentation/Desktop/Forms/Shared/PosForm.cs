@@ -99,8 +99,10 @@ public class PosForm : Form
         rightPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 40));
 
         dgvCart = CreateDataGrid();
+        dgvCart.Columns.Add("Posicao", "#");
         dgvCart.Columns.Add("CodBarra", "Cód. Barras");
         dgvCart.Columns.Add("Descricao", "Descrição");
+        dgvCart.Columns.Add("Lote", "Lote");
         dgvCart.Columns.Add("Quantidade", "Qtd");
         dgvCart.ReadOnly = false;
         dgvCart.CellEndEdit += DgvCart_CellEndEdit;
@@ -266,13 +268,72 @@ public class PosForm : Form
         }
     }
 
-    private void DgvProducts_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
+    private async void DgvProducts_CellDoubleClick(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.RowIndex >= _searchResults.Count) return;
 
         var produto = _searchResults[e.RowIndex];
 
-        var existing = _cart.FirstOrDefault(c => c.ProdutoId == produto.Id);
+        var lote = "";
+
+        if (produto.Controlado)
+        {
+            var estoques = await ApiClient.Instance.GetAsync<List<ProdutoEstoque>>($"api/produtos/{produto.Id}/estoques") ?? [];
+            var availableLotes = estoques.Where(es => es.Quantidade > 0 && !string.IsNullOrEmpty(es.Lote)).ToList();
+
+            if (availableLotes.Count == 0)
+            {
+                MessageBox.Show($"Não há lotes em estoque para o produto controlado: {produto.Descricao}", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (availableLotes.Count == 1)
+            {
+                lote = availableLotes[0].Lote!;
+            }
+            else
+            {
+                using var lotDialog = new Form
+                {
+                    Text = $"Selecionar Lote - {produto.Descricao}",
+                    StartPosition = FormStartPosition.CenterParent,
+                    FormBorderStyle = FormBorderStyle.FixedDialog,
+                    MaximizeBox = false,
+                    MinimizeBox = false,
+                    ClientSize = new Size(350, 130)
+                };
+
+                var ltbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
+                ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 25));
+                ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
+                ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
+
+                ltbl.Controls.Add(new Label { Text = "Selecione o lote:", TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 10) }, 0, 0);
+
+                var cmbLote = new ComboBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 10), DropDownStyle = ComboBoxStyle.DropDownList };
+                cmbLote.DataSource = availableLotes;
+                cmbLote.DisplayMember = "Lote";
+                ltbl.Controls.Add(cmbLote, 0, 1);
+
+                var btnPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
+                var btnOk = new Button { Text = "OK", Width = 80, Height = 30, BackColor = Color.DarkBlue, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, DialogResult = DialogResult.OK };
+                var btnCancel = new Button { Text = "Cancelar", Width = 80, Height = 30, Cursor = Cursors.Hand, DialogResult = DialogResult.Cancel, Margin = new Padding(0, 0, 10, 0) };
+                btnPanel.Controls.Add(btnOk);
+                btnPanel.Controls.Add(btnCancel);
+                ltbl.Controls.Add(btnPanel, 0, 2);
+
+                lotDialog.Controls.Add(ltbl);
+                lotDialog.AcceptButton = btnOk;
+                lotDialog.CancelButton = btnCancel;
+
+                if (lotDialog.ShowDialog(this) != DialogResult.OK || cmbLote.SelectedItem is not ProdutoEstoque selected)
+                    return;
+
+                lote = selected.Lote!;
+            }
+        }
+
+        var existing = _cart.FirstOrDefault(c => c.ProdutoId == produto.Id && c.Lote == lote);
         if (existing != null)
         {
             existing.Quantidade++;
@@ -284,7 +345,7 @@ public class PosForm : Form
                 ProdutoId = produto.Id,
                 CodBarra = produto.CodBarra,
                 Descricao = produto.Descricao,
-                Lote = "",
+                Lote = lote,
                 Quantidade = 1,
                 Controlado = produto.Controlado
             });
@@ -297,9 +358,10 @@ public class PosForm : Form
     private void BindCartGrid()
     {
         dgvCart.Rows.Clear();
-        foreach (var item in _cart)
+        for (int i = 0; i < _cart.Count; i++)
         {
-            dgvCart.Rows.Add(item.CodBarra, item.Descricao, item.Quantidade);
+            var item = _cart[i];
+            dgvCart.Rows.Add(i + 1, item.CodBarra, item.Descricao, item.Lote, item.Quantidade);
         }
         lblTotalItens.Text = $"{_cart.Sum(c => c.Quantidade)} itens";
     }
@@ -307,7 +369,7 @@ public class PosForm : Form
     private void DgvCart_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.RowIndex >= _cart.Count) return;
-        if (e.ColumnIndex == 2)
+        if (e.ColumnIndex == 4)
         {
             if (int.TryParse(dgvCart.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString(), out var qtd) && qtd > 0)
                 _cart[e.RowIndex].Quantidade = qtd;
@@ -344,14 +406,6 @@ public class PosForm : Form
         }
 
         var controlados = _cart.Where(c => c.Controlado).ToList();
-        foreach (var item in controlados)
-        {
-            if (string.IsNullOrEmpty(item.Lote))
-            {
-                MessageBox.Show($"Informe o lote para o produto controlado: {item.Descricao}", "Atenção", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-        }
 
         var receitaIds = new List<int>();
 
@@ -360,6 +414,8 @@ public class PosForm : Form
             var clientes = await ApiClient.Instance.GetAsync<List<Cliente>>("api/clientes") ?? [];
             var prescritores = await ApiClient.Instance.GetAsync<List<Prescritor>>("api/prescritores") ?? [];
             var allProdutos = await ApiClient.Instance.GetAsync<List<Produto>>("api/produtos") ?? [];
+            var todasReceitas = await ApiClient.Instance.GetAsync<List<Receita>>("api/receitas") ?? [];
+            var availableReceitas = todasReceitas.Where(r => r.VendaId == null).ToList();
 
             var controlledItems = controlados.Select(c =>
                 new PrescriptionDialog.ControlledItem
@@ -370,7 +426,7 @@ public class PosForm : Form
                     Quantidade = c.Quantidade
                 }).ToList();
 
-            using var prescriptionDialog = new PrescriptionDialog(controlledItems, clientes, prescritores, allProdutos);
+            using var prescriptionDialog = new PrescriptionDialog(controlledItems, clientes, prescritores, allProdutos, availableReceitas);
             if (prescriptionDialog.ShowDialog(this) != DialogResult.OK)
             {
                 return;

@@ -8,7 +8,10 @@ public class VendaItemMapping : IEntityTypeConfiguration<VendaItem>
 {
     public void Configure(EntityTypeBuilder<VendaItem> builder)
     {
-        builder.HasKey(vi => new { vi.VendaId, vi.ProdutoId });
+        builder.HasKey(vi => new { vi.VendaId, vi.ProdutoId, vi.Posicao });
+
+        builder.Property(vi => vi.Posicao)
+            .IsRequired();
 
         builder.Property(vi => vi.Quantidade)
             .IsRequired()
