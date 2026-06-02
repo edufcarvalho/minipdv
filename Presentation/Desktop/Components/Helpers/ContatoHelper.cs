@@ -5,12 +5,6 @@ namespace minipdv.Presentation.Desktop.Components.Helpers;
 
 public static class ContatoHelper
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
-
     public static async Task<int?> CreateOrUpdateAsync(int? contatoId, string email, string telefone)
     {
         if (string.IsNullOrEmpty(email) && string.IsNullOrEmpty(telefone))
@@ -26,7 +20,7 @@ public static class ContatoHelper
         if (!response.IsSuccessStatusCode) return null;
 
         var json = await response.Content.ReadAsStringAsync();
-        var contato = JsonSerializer.Deserialize<Contato>(json, JsonOptions);
+        var contato = JsonSerializer.Deserialize<Contato>(json, ApiClient.JsonOptions);
         return contato?.Id;
     }
 }

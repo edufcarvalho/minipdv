@@ -4,11 +4,6 @@ namespace minipdv.Presentation.Desktop.Components.Helpers;
 
 public static class ErrorHelper
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     public static async Task<string> ExtractAsync(HttpResponseMessage response)
     {
         var body = await response.Content.ReadAsStringAsync();
@@ -31,10 +26,8 @@ public static class ErrorHelper
                     var messages = new List<string>();
                     foreach (var item in errorsProp.EnumerateArray())
                     {
-                        if (item.TryGetProperty("errorMessage", out var em))
-                            messages.Add(em.GetString() ?? "");
-                        else if (item.TryGetProperty("ErrorMessage", out var em2))
-                            messages.Add(em2.GetString() ?? "");
+                        if (item.ValueKind == JsonValueKind.String)
+                            messages.Add(item.GetString() ?? "");
                     }
                     if (messages.Count > 0)
                         return string.Join(Environment.NewLine, messages.Where(m => !string.IsNullOrEmpty(m)));

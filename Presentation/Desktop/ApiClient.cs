@@ -10,8 +10,7 @@ public class ApiClient
 {
     public static ApiClient Instance { get; } = new();
 
-    private readonly HttpClient _http;
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -19,6 +18,8 @@ public class ApiClient
         ReferenceHandler = ReferenceHandler.IgnoreCycles,
         Converters = { new JsonStringEnumConverter() }
     };
+
+    private readonly HttpClient _http;
 
     public int UserId { get; private set; }
     public string UserName { get; private set; } = "";
