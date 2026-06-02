@@ -40,7 +40,7 @@ public class FarmaceuticosForm : Form
         tbl.Controls.Add(topPanel, 0, 0);
 
         dgv = FormComponents.CreateDataGridView();
-        dgv.CellDoubleClick += (_, _) => ViewItem();
+        dgv.CellDoubleClick += async (_, _) => await ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
         _searchFilter = new SearchFilter(topPanel, dgv);
 

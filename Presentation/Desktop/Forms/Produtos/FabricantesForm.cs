@@ -37,7 +37,7 @@ public class FabricantesForm : Form
         tbl.Controls.Add(topPanel, 0, 0);
 
         dgv = FormComponents.CreateDataGridView();
-        dgv.CellDoubleClick += (_, _) => ViewItem();
+        dgv.CellDoubleClick += async (_, _) => await ViewItem();
         tbl.Controls.Add(dgv, 0, 1);
 
         tbl.Controls.Add(FormComponents.CreateStatusBar(dgv), 0, 2);
