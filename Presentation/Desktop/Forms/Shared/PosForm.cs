@@ -104,8 +104,15 @@ public class PosForm : Form
         dgvCart.Columns.Add("Descricao", "Descrição");
         dgvCart.Columns.Add("Lote", "Lote");
         dgvCart.Columns.Add("Quantidade", "Qtd");
-        dgvCart.Columns["Descricao"]!.FillWeight = 40;
-        dgvCart.Columns["Descricao"]!.MinimumWidth = 120;
+        dgvCart.Columns["Posicao"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvCart.Columns["Posicao"]!.MinimumWidth = 30;
+        dgvCart.Columns["CodBarra"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvCart.Columns["CodBarra"]!.MinimumWidth = 90;
+        dgvCart.Columns["Lote"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvCart.Columns["Lote"]!.MinimumWidth = 60;
+        dgvCart.Columns["Quantidade"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvCart.Columns["Quantidade"]!.MinimumWidth = 40;
+        dgvCart.Columns["Descricao"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         dgvCart.ReadOnly = false;
         dgvCart.CellEndEdit += DgvCart_CellEndEdit;
         rightPanel.Controls.Add(dgvCart, 0, 0);
@@ -262,8 +269,15 @@ public class PosForm : Form
         dgvProducts.Columns.Add("Estoque", "Estoque");
         dgvProducts.Columns.Add("Dosagem", "Dosagem");
         dgvProducts.Columns.Add("Controlado", "Controlado");
-        dgvProducts.Columns["Descricao"]!.FillWeight = 40;
-        dgvProducts.Columns["Descricao"]!.MinimumWidth = 120;
+        dgvProducts.Columns["CodBarra"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvProducts.Columns["CodBarra"]!.MinimumWidth = 90;
+        dgvProducts.Columns["Estoque"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvProducts.Columns["Estoque"]!.MinimumWidth = 50;
+        dgvProducts.Columns["Dosagem"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvProducts.Columns["Dosagem"]!.MinimumWidth = 70;
+        dgvProducts.Columns["Controlado"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvProducts.Columns["Controlado"]!.MinimumWidth = 60;
+        dgvProducts.Columns["Descricao"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
 
         foreach (var p in _searchResults)
         {
@@ -304,12 +318,12 @@ public class PosForm : Form
                     FormBorderStyle = FormBorderStyle.FixedDialog,
                     MaximizeBox = false,
                     MinimizeBox = false,
-                    ClientSize = new Size(350, 130)
+                    ClientSize = new Size(350, 120)
                 };
 
                 var ltbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
-                ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 25));
-                ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
+                ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
+                ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
                 ltbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 35));
 
                 ltbl.Controls.Add(new Label { Text = "Selecione o lote:", TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 10) }, 0, 0);
