@@ -41,7 +41,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Containerfile
     depends_on:
       db:
         condition: service_healthy

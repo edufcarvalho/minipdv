@@ -231,27 +231,18 @@ static class Program
         {
             var context = scope.ServiceProvider.GetRequiredService<MiniPDVContext>();
 
-            if (!await context.Database.CanConnectAsync())
-            {
-                await context.Database.EnsureCreatedAsync();
-            }
-            else
+            var strategy = context.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
                 await context.Database.MigrateAsync();
-            }
+            });
 
             var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
-            try
+            await strategy.ExecuteAsync(async () =>
             {
                 await initializer.SeedAsync();
-
-                if (args.Contains("--seed"))
-                    await initializer.SeedDataAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Database seeding skipped: {ex.Message}");
-            }
+                await initializer.SeedDataAsync();
+            });
         }
 
         app.MapControllers();
