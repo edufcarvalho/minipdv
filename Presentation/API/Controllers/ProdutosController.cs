@@ -49,6 +49,7 @@ public class ProdutosController : ControllerBase
             Controlado = request.Controlado,
             Dosagem = request.Dosagem,
             RegistroMS = request.RegistroMS,
+            Preco = request.Preco,
             ProdutoGrupoId = request.ProdutoGrupoId,
             FabricanteId = request.FabricanteId,
             PrincipioAtivoId = request.PrincipioAtivoId,
@@ -68,6 +69,8 @@ public class ProdutosController : ControllerBase
     {
         if (id != request.Id) return BadRequest();
 
+        var isAdmin = User.FindFirst("tipo")?.Value == "Administrador";
+
         var entity = new Produto
         {
             Id = request.Id,
@@ -77,6 +80,7 @@ public class ProdutosController : ControllerBase
             Controlado = request.Controlado,
             Dosagem = request.Dosagem,
             RegistroMS = request.RegistroMS,
+            Preco = isAdmin ? request.Preco : (await _service.GetByIdAsync(id))!.Preco,
             ProdutoGrupoId = request.ProdutoGrupoId,
             FabricanteId = request.FabricanteId,
             PrincipioAtivoId = request.PrincipioAtivoId,
@@ -110,6 +114,7 @@ public class ProdutosController : ControllerBase
             Controlado = true,
             Dosagem = request.Dosagem,
             RegistroMS = request.RegistroMS,
+            Preco = request.Preco,
             ProdutoGrupoId = request.ProdutoGrupoId,
             FabricanteId = request.FabricanteId,
             PrincipioAtivoId = request.PrincipioAtivoId,
@@ -131,6 +136,8 @@ public class ProdutosController : ControllerBase
     {
         if (id != request.Id) return BadRequest();
 
+        var isAdmin = User.FindFirst("tipo")?.Value == "Administrador";
+
         var entity = new ProdutoControlado
         {
             Id = request.Id,
@@ -140,6 +147,7 @@ public class ProdutosController : ControllerBase
             Controlado = true,
             Dosagem = request.Dosagem,
             RegistroMS = request.RegistroMS,
+            Preco = isAdmin ? request.Preco : (await _service.GetByIdAsync(id))!.Preco,
             ProdutoGrupoId = request.ProdutoGrupoId,
             FabricanteId = request.FabricanteId,
             PrincipioAtivoId = request.PrincipioAtivoId,

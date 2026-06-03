@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Watch Remove=".git$(DS)**" />
+    <Watch Remove="**$(DS).git$(DS)**" />
     <Watch Remove="**$(DS).artifacts$(DS)**" />
   </ItemGroup>
 

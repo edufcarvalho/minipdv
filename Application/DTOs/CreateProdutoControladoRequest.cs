@@ -9,6 +9,7 @@ public record CreateProdutoControladoRequest(
     int? FabricanteId,
     int PrincipioAtivoId,
     string RegistroMS,
+    decimal Preco,
     string ClasseTerapeutica,
     string Lista
 );
@@ -23,6 +24,7 @@ public record UpdateProdutoControladoRequest(
     int? FabricanteId,
     int PrincipioAtivoId,
     string RegistroMS,
+    decimal Preco,
     string ClasseTerapeutica,
     string Lista
 );

@@ -7,6 +7,7 @@ public record CreateProdutoRequest(
     bool Controlado,
     string Dosagem,
     string? RegistroMS,
+    decimal Preco,
     int ProdutoGrupoId,
     int? FabricanteId,
     int PrincipioAtivoId
@@ -20,6 +21,7 @@ public record UpdateProdutoRequest(
     bool Controlado,
     string Dosagem,
     string? RegistroMS,
+    decimal Preco,
     int ProdutoGrupoId,
     int? FabricanteId,
     int PrincipioAtivoId

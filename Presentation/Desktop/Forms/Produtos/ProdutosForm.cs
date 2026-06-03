@@ -62,6 +62,7 @@ public class ProdutosForm : Form
             dgv.Columns.Add("Dosagem", "Dosagem");
             dgv.Columns.Add("Estoque", "Estoque");
             dgv.Columns.Add("Ativo", "Ativo");
+            dgv.Columns.Add("Preco", "Preço");
             dgv.Columns.Add("Controlado", "Controlado");
             dgv.Columns.Add("RegistroMS", "Reg. MS");
             dgv.Columns.Add("GrupoNome", "Grupo");
@@ -70,7 +71,7 @@ public class ProdutosForm : Form
 
             dgv.Rows.Clear();
             foreach (var p in _produtos)
-                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Ativo ? "Sim" : "Não", p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.Grupo?.Nome ?? "");
+                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Preco.ToString("F2"), p.Ativo ? "Sim" : "Não", p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.Grupo?.Nome ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex)
@@ -95,8 +96,8 @@ public class ProdutosForm : Form
         var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
         var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
 
-        using var dialog = FormComponents.CreateDialog("Visualizar Produto", 450, 420);
-        var tbl = FormComponents.CreateDialogLayout(2, 10, 120);
+        using var dialog = FormComponents.CreateDialog("Visualizar Produto", 450, 460);
+        var tbl = FormComponents.CreateDialogLayout(2, 11, 120);
 
         tbl.Controls.Add(FormComponents.CreateFieldLabel("Descrição:"), 0, 0);
         tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Descricao), 1, 0);
@@ -107,40 +108,43 @@ public class ProdutosForm : Form
         tbl.Controls.Add(FormComponents.CreateFieldLabel("Dosagem:"), 0, 2);
         tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Dosagem), 1, 2);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Preço:"), 0, 3);
+        tbl.Controls.Add(FormComponents.CreateReadOnlyTextBox(item.Preco.ToString("F2")), 1, 3);
+
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 4);
         var cmbGrupo = new SearchableComboBox { Enabled = false, Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbGrupo.DataSource = grupos;
         cmbGrupo.DisplayMember = "Nome";
         cmbGrupo.ValueMember = "Id";
         cmbGrupo.SelectedValue = item.ProdutoGrupoId;
-        tbl.Controls.Add(cmbGrupo, 1, 3);
+        tbl.Controls.Add(cmbGrupo, 1, 4);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 4);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 5);
         var cmbPrinc = new SearchableComboBox { Enabled = false, Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbPrinc.DataSource = principios;
         cmbPrinc.DisplayMember = "Nome";
         cmbPrinc.ValueMember = "Id";
         cmbPrinc.SelectedValue = item.PrincipioAtivoId;
-        tbl.Controls.Add(cmbPrinc, 1, 4);
+        tbl.Controls.Add(cmbPrinc, 1, 5);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 5);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 6);
         var cmbFab = new SearchableComboBox { Enabled = false, Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
         cmbFab.DataSource = fabricantes;
         cmbFab.DisplayMember = "NomeFantasia";
         cmbFab.ValueMember = "Id";
         if (item.FabricanteId.HasValue)
             cmbFab.SelectedValue = item.FabricanteId.Value;
-        tbl.Controls.Add(cmbFab, 1, 5);
+        tbl.Controls.Add(cmbFab, 1, 6);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 6);
-        tbl.Controls.Add(FormComponents.CreateCheckBox("Ativo", item.Ativo, enabled: false), 1, 6);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 7);
+        tbl.Controls.Add(FormComponents.CreateCheckBox("Ativo", item.Ativo, enabled: false), 1, 7);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 7);
-        tbl.Controls.Add(FormComponents.CreateCheckBox("Controlado", item.Controlado, enabled: false), 1, 7);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 8);
+        tbl.Controls.Add(FormComponents.CreateCheckBox("Controlado", item.Controlado, enabled: false), 1, 8);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 8);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 9);
         var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Text = item.RegistroMS ?? "", Enabled = false, ReadOnly = true, Dock = DockStyle.Fill, Font = FormComponents.DefaultFont, HidePromptOnLeave = true };
-        tbl.Controls.Add(mtxtRegMs, 1, 8);
+        tbl.Controls.Add(mtxtRegMs, 1, 9);
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
@@ -148,7 +152,7 @@ public class ProdutosForm : Form
         var btnDelete = FormComponents.CreateDeleteButton(80);
         var btnClose = FormComponents.CreateCloseButton(80);
         btnPanel.Controls.Add(btnEdit); btnPanel.Controls.Add(btnDelete); btnPanel.Controls.Add(btnClose);
-        tbl.Controls.Add(btnPanel, 0, 9);
+        tbl.Controls.Add(btnPanel, 0, 10);
 
         dialog.Controls.Add(tbl);
         dialog.CancelButton = btnClose;
@@ -165,8 +169,8 @@ public class ProdutosForm : Form
         var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
         var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
 
-        using var dialog = FormComponents.CreateDialog("Novo Produto", 450, 420);
-        var tbl = FormComponents.CreateDialogLayout(2, 10, 120);
+        using var dialog = FormComponents.CreateDialog("Novo Produto", 450, 460);
+        var tbl = FormComponents.CreateDialogLayout(2, 11, 120);
 
         tbl.Controls.Add(FormComponents.CreateFieldLabel("Descrição:"), 0, 0);
         var txtDesc = FormComponents.CreateTextBox();
@@ -180,45 +184,49 @@ public class ProdutosForm : Form
         var txtDosagem = FormComponents.CreateTextBox();
         tbl.Controls.Add(txtDosagem, 1, 2);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Preço:"), 0, 3);
+        var txtPreco = FormComponents.CreateTextBox();
+        tbl.Controls.Add(txtPreco, 1, 3);
+
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 4);
         var cmbGrupo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbGrupo.DataSource = grupos;
         cmbGrupo.DisplayMember = "Nome";
         cmbGrupo.ValueMember = "Id";
-        tbl.Controls.Add(cmbGrupo, 1, 3);
+        tbl.Controls.Add(cmbGrupo, 1, 4);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 4);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 5);
         var cmbPrinc = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbPrinc.DataSource = principios;
         cmbPrinc.DisplayMember = "Nome";
         cmbPrinc.ValueMember = "Id";
-        tbl.Controls.Add(cmbPrinc, 1, 4);
+        tbl.Controls.Add(cmbPrinc, 1, 5);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 5);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 6);
         var cmbFab = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
         cmbFab.DataSource = fabricantes;
         cmbFab.DisplayMember = "NomeFantasia";
         cmbFab.ValueMember = "Id";
-        tbl.Controls.Add(cmbFab, 1, 5);
+        tbl.Controls.Add(cmbFab, 1, 6);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 6);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 7);
         var chkAtivo = FormComponents.CreateCheckBox("Ativo", true);
-        tbl.Controls.Add(chkAtivo, 1, 6);
+        tbl.Controls.Add(chkAtivo, 1, 7);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 7);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 8);
         var chkControlado = FormComponents.CreateCheckBox("Controlado");
-        tbl.Controls.Add(chkControlado, 1, 7);
+        tbl.Controls.Add(chkControlado, 1, 8);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 8);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 9);
         var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Dock = DockStyle.Fill, Font = FormComponents.DefaultFont, HidePromptOnLeave = true };
-        tbl.Controls.Add(mtxtRegMs, 1, 8);
+        tbl.Controls.Add(mtxtRegMs, 1, 9);
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
         var btnOk = FormComponents.CreateSaveButton();
         var btnCancel = FormComponents.CreateCancelButton();
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 9);
+        tbl.Controls.Add(btnPanel, 0, 10);
 
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk;
@@ -240,6 +248,7 @@ public class ProdutosForm : Form
                     controlado = isControlado,
                     dosagem = txtDosagem.Text.Trim(),
                     registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
+                    preco = decimal.Parse(txtPreco.Text.Trim(), CultureInfo.InvariantCulture),
                     produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
                     fabricanteId = (int?)cmbFab.SelectedValue,
                     principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
@@ -248,7 +257,7 @@ public class ProdutosForm : Form
                 var response = await ApiClient.Instance.PostAsync("api/produtos", request);
                 if (response.IsSuccessStatusCode)
                 {
-                    txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); mtxtRegMs.Clear();
+                    txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); txtPreco.Clear(); mtxtRegMs.Clear();
                     cmbGrupo.ClearSelection(); cmbPrinc.ClearSelection(); cmbFab.ClearSelection();
                     chkAtivo.Checked = true; chkControlado.Checked = false;
                     await LoadData();
@@ -283,8 +292,8 @@ public class ProdutosForm : Form
         var principios = await ApiClient.Instance.GetAsync<List<PrincipioAtivo>>("api/principiosativos") ?? [];
         var fabricantes = await ApiClient.Instance.GetAsync<List<Fabricante>>("api/fabricantes") ?? [];
 
-        using var dialog = FormComponents.CreateDialog("Editar Produto", 450, 420);
-        var tbl = FormComponents.CreateDialogLayout(2, 10, 120);
+        using var dialog = FormComponents.CreateDialog("Editar Produto", 450, 460);
+        var tbl = FormComponents.CreateDialogLayout(2, 11, 120);
 
         tbl.Controls.Add(FormComponents.CreateFieldLabel("Descrição:"), 0, 0);
         var txtDesc = FormComponents.CreateTextBox(item.Descricao);
@@ -298,49 +307,53 @@ public class ProdutosForm : Form
         var txtDosagem = FormComponents.CreateTextBox(item.Dosagem);
         tbl.Controls.Add(txtDosagem, 1, 2);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 3);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Preço:"), 0, 3);
+        var txtPreco = FormComponents.CreateTextBox(item.Preco.ToString("F2", CultureInfo.InvariantCulture));
+        tbl.Controls.Add(txtPreco, 1, 3);
+
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Grupo:"), 0, 4);
         var cmbGrupo = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbGrupo.DataSource = grupos;
         cmbGrupo.DisplayMember = "Nome";
         cmbGrupo.ValueMember = "Id";
         cmbGrupo.SelectedValue = item.ProdutoGrupoId;
-        tbl.Controls.Add(cmbGrupo, 1, 3);
+        tbl.Controls.Add(cmbGrupo, 1, 4);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 4);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Princ. Ativo:"), 0, 5);
         var cmbPrinc = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "Selecione..." };
         cmbPrinc.DataSource = principios;
         cmbPrinc.DisplayMember = "Nome";
         cmbPrinc.ValueMember = "Id";
         cmbPrinc.SelectedValue = item.PrincipioAtivoId;
-        tbl.Controls.Add(cmbPrinc, 1, 4);
+        tbl.Controls.Add(cmbPrinc, 1, 5);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 5);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Fabricante:"), 0, 6);
         var cmbFab = new SearchableComboBox { Dock = DockStyle.Fill, PlaceholderText = "(opcional)" };
         cmbFab.DataSource = fabricantes;
         cmbFab.DisplayMember = "NomeFantasia";
         cmbFab.ValueMember = "Id";
         if (item.FabricanteId.HasValue)
             cmbFab.SelectedValue = item.FabricanteId.Value;
-        tbl.Controls.Add(cmbFab, 1, 5);
+        tbl.Controls.Add(cmbFab, 1, 6);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 6);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Ativo:"), 0, 7);
         var chkAtivo = FormComponents.CreateCheckBox("Ativo", item.Ativo);
-        tbl.Controls.Add(chkAtivo, 1, 6);
+        tbl.Controls.Add(chkAtivo, 1, 7);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 7);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Controlado:"), 0, 8);
         var chkControlado = FormComponents.CreateCheckBox("Controlado", item.Controlado);
-        tbl.Controls.Add(chkControlado, 1, 7);
+        tbl.Controls.Add(chkControlado, 1, 8);
 
-        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 8);
+        tbl.Controls.Add(FormComponents.CreateFieldLabel("Registro MS:"), 0, 9);
         var mtxtRegMs = new MaskedTextBox { Mask = "0.0000.0000.000-0", Culture = CultureInfo.InvariantCulture, Text = item.RegistroMS ?? "", Dock = DockStyle.Fill, Font = FormComponents.DefaultFont, HidePromptOnLeave = true };
-        tbl.Controls.Add(mtxtRegMs, 1, 8);
+        tbl.Controls.Add(mtxtRegMs, 1, 9);
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();
         tbl.SetColumnSpan(btnPanel, 2);
         var btnOk = FormComponents.CreateSaveButton();
         var btnCancel = FormComponents.CreateCancelButton();
         btnPanel.Controls.Add(btnOk); btnPanel.Controls.Add(btnCancel);
-        tbl.Controls.Add(btnPanel, 0, 9);
+        tbl.Controls.Add(btnPanel, 0, 10);
 
         dialog.Controls.Add(tbl);
         dialog.AcceptButton = btnOk;
@@ -363,6 +376,7 @@ public class ProdutosForm : Form
                     controlado = isControlado,
                     dosagem = txtDosagem.Text.Trim(),
                     registroMS = mtxtRegMs.MaskCompleted ? regMs : null,
+                    preco = decimal.Parse(txtPreco.Text.Trim(), CultureInfo.InvariantCulture),
                     produtoGrupoId = (int)(cmbGrupo.SelectedValue ?? 0),
                     fabricanteId = (int?)cmbFab.SelectedValue,
                     principioAtivoId = (int)(cmbPrinc.SelectedValue ?? 0)
@@ -371,7 +385,7 @@ public class ProdutosForm : Form
                 var response = await ApiClient.Instance.PutAsync($"api/produtos/{item.Id}", request);
                 if (response.IsSuccessStatusCode)
                 {
-                    txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); mtxtRegMs.Clear();
+                    txtDesc.Clear(); txtCod.Clear(); txtDosagem.Clear(); txtPreco.Clear(); mtxtRegMs.Clear();
                     cmbGrupo.ClearSelection(); cmbPrinc.ClearSelection(); cmbFab.ClearSelection();
                     chkAtivo.Checked = true; chkControlado.Checked = false;
                     await LoadData();

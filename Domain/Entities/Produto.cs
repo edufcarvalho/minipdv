@@ -12,6 +12,7 @@ public class Produto : Entity
     public required string Descricao { get; set; }
     public required bool Ativo { get; set; } = true;
     public required int CodBarra { get; set; }
+    public required decimal Preco { get; set; }
     public required bool Controlado { get; set; } = false;
     public required string Dosagem { get; set; }
     public string? RegistroMS { get; set; }

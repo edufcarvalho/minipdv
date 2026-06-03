@@ -25,6 +25,10 @@ public class ProdutoMapping : IEntityTypeConfiguration<Produto>
 
         builder.Property(p => p.AtualizadoEm);
 
+        builder.Property(p => p.Preco)
+            .IsRequired()
+            .HasColumnType("decimal(12,4)");
+
         builder.Property(p => p.CodBarra)
             .IsRequired();
 
