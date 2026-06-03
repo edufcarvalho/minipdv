@@ -72,15 +72,16 @@ public class ProdutosForm : Form
             dgv.Columns["Descricao"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             dgv.Columns["Dosagem"]!.Width = 120;
             dgv.Columns["Estoque"]!.Width = 70;
-            dgv.Columns["Ativo"]!.Width = 45;
-            dgv.Columns["Preco"]!.Width = 70;
-            dgv.Columns["Controlado"]!.Width = 50;
+            dgv.Columns["Ativo"]!.Width = 55;
+            dgv.Columns["Preco"]!.Width = 100;
+            dgv.Columns["Controlado"]!.Width = 90;
             dgv.Columns["RegistroMS"]!.Width = 175;
-            dgv.Columns["GrupoNome"]!.Width = 240;
+            dgv.Columns["GrupoNome"]!.Width = 210;
+            dgv.Columns["Preco"]!.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
 
             dgv.Rows.Clear();
             foreach (var p in _produtos)
-                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Ativo ? "Sim" : "Não", p.Preco.ToString("F2"), p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.Grupo?.Nome ?? "");
+                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Ativo ? "Sim" : "Não", p.Preco.ToString("C2", new CultureInfo("pt-BR")), p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.Grupo?.Nome ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex)
