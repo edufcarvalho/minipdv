@@ -17,6 +17,10 @@ public class VendaItemMapping : IEntityTypeConfiguration<VendaItem>
             .IsRequired()
             .HasDefaultValue(1);
 
+        builder.Property(vi => vi.PrecoUnitario)
+            .IsRequired()
+            .HasColumnType("decimal(12,4)");
+
         builder.HasOne(vi => vi.Venda)
             .WithMany(v => v.VendaItens)
             .HasForeignKey(vi => vi.VendaId)

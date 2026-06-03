@@ -51,10 +51,11 @@ public class VendasForm : Form
             dgv.Columns.Add("ClienteNome", "Cliente");
             dgv.Columns.Add("VendedorNome", "Vendedor");
             dgv.Columns.Add("Data", "Data");
+            dgv.Columns.Add("Total", "Total");
             dgv.Columns.Add("CanceladoEm", "Cancelado Em");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.Cliente?.Nome ?? "", item.Vendedor?.Nome ?? "", item.CriadoEm.ToString("dd/MM/yyyy HH:mm"), item.CanceladoEm?.ToString("dd/MM/yyyy HH:mm") ?? "");
+                dgv.Rows.Add(item.Id, item.Cliente?.Nome ?? "", item.Vendedor?.Nome ?? "", item.CriadoEm.ToString("dd/MM/yyyy HH:mm"), item.Total.ToString("C2"), item.CanceladoEm?.ToString("dd/MM/yyyy HH:mm") ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
@@ -72,13 +73,13 @@ public class VendasForm : Form
         catch (Exception ex) { MessageBox.Show($"Erro ao carregar venda: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
         if (fullVenda == null) { MessageBox.Show("Venda não encontrada.", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); return; }
 
-        using var dialog = FormComponents.CreateDialog("Visualizar Venda", 500, 350);
+        using var dialog = FormComponents.CreateDialog("Visualizar Venda", 600, 400);
         var tbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 3, Padding = new Padding(10) };
-        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 120));
+        tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 145));
         tbl.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         tbl.RowStyles.Add(new RowStyle(SizeType.Absolute, 50));
 
-        var infoTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 4, Padding = new Padding(5) };
+        var infoTbl = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 5, Padding = new Padding(5) };
         infoTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
         infoTbl.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
@@ -94,15 +95,26 @@ public class VendasForm : Form
         infoTbl.Controls.Add(new Label { Text = "Cancelado Em:", TextAlign = ContentAlignment.MiddleLeft }, 0, 3);
         infoTbl.Controls.Add(new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Text = fullVenda.CanceladoEm?.ToString("dd/MM/yyyy HH:mm") ?? "" }, 1, 3);
 
+        infoTbl.Controls.Add(new Label { Text = "Total:", TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 9, FontStyle.Bold) }, 0, 4);
+        infoTbl.Controls.Add(new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Text = fullVenda.Total.ToString("C2"), Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.Green }, 1, 4);
+
         tbl.Controls.Add(infoTbl, 0, 0);
 
         var dgvItems = FormComponents.CreateDataGridView();
         dgvItems.Columns.Add("Produto", "Produto");
+        dgvItems.Columns.Add("PrecoUnit", "Preço Unit.");
         dgvItems.Columns.Add("Quantidade", "Qtd");
+        dgvItems.Columns.Add("Subtotal", "Subtotal");
         dgvItems.Columns["Produto"]!.FillWeight = 60;
         dgvItems.Columns["Produto"]!.MinimumWidth = 120;
+        dgvItems.Columns["PrecoUnit"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvItems.Columns["PrecoUnit"]!.MinimumWidth = 80;
+        dgvItems.Columns["PrecoUnit"]!.DefaultCellStyle = new DataGridViewCellStyle { Format = "C2" };
+        dgvItems.Columns["Subtotal"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvItems.Columns["Subtotal"]!.MinimumWidth = 80;
+        dgvItems.Columns["Subtotal"]!.DefaultCellStyle = new DataGridViewCellStyle { Format = "C2" };
         foreach (var vi in fullVenda.VendaItens)
-            dgvItems.Rows.Add(vi.Produto?.Descricao ?? $"ID {vi.ProdutoId}", vi.Quantidade);
+            dgvItems.Rows.Add(vi.Produto?.Descricao ?? $"ID {vi.ProdutoId}", vi.PrecoUnitario, vi.Quantidade, vi.PrecoUnitario * vi.Quantidade);
         tbl.Controls.Add(dgvItems, 0, 1);
 
         var btnPanel = FormComponents.CreateDialogButtonPanel();

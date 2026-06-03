@@ -59,8 +59,11 @@ public class VendaService : IVendaService
                     $"Disponível: {produto.Estoque}, solicitado: {item.Quantidade}");
             }
 
+            item.PrecoUnitario = produto.Preco;
             produto.Estoque -= item.Quantidade;
         }
+
+        entity.Total = entity.VendaItens.Sum(i => i.PrecoUnitario * i.Quantidade);
 
         entity.CriadoEm = DateTime.UtcNow;
         _context.Vendas.Add(entity);

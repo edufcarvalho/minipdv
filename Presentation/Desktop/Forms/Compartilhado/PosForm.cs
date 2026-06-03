@@ -13,6 +13,7 @@ public class PosForm : Form
     private readonly DataGridView dgvCart;
     private readonly SearchableComboBox cmbCliente;
     private readonly Label lblTotalItens;
+    private readonly Label lblTotalValor;
     private readonly Button btnFinalizar;
     private readonly Button btnRemover;
     private List<Produto> _searchResults = [];
@@ -25,7 +26,9 @@ public class PosForm : Form
         public string Descricao { get; set; } = "";
         public string Lote { get; set; } = "";
         public int Quantidade { get; set; } = 1;
+        public decimal Preco { get; set; }
         public bool Controlado { get; set; }
+        public decimal Subtotal => Preco * Quantidade;
     }
 
     public PosForm()
@@ -80,15 +83,21 @@ public class PosForm : Form
         dgvCart.Columns.Add("CodBarra", "Cód. Barras");
         dgvCart.Columns.Add("Descricao", "Descrição");
         dgvCart.Columns.Add("Lote", "Lote");
+        dgvCart.Columns.Add("PrecoUnit", "Preço Unit.");
         dgvCart.Columns.Add("Quantidade", "Qtd");
+        dgvCart.Columns.Add("Subtotal", "Subtotal");
         dgvCart.Columns["Posicao"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
         dgvCart.Columns["Posicao"]!.MinimumWidth = 30;
         dgvCart.Columns["CodBarra"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
         dgvCart.Columns["CodBarra"]!.MinimumWidth = 90;
         dgvCart.Columns["Lote"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
         dgvCart.Columns["Lote"]!.MinimumWidth = 60;
+        dgvCart.Columns["PrecoUnit"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvCart.Columns["PrecoUnit"]!.MinimumWidth = 80;
         dgvCart.Columns["Quantidade"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
         dgvCart.Columns["Quantidade"]!.MinimumWidth = 40;
+        dgvCart.Columns["Subtotal"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvCart.Columns["Subtotal"]!.MinimumWidth = 80;
         dgvCart.Columns["Descricao"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
         dgvCart.ReadOnly = false;
         dgvCart.CellEndEdit += DgvCart_CellEndEdit;
@@ -105,7 +114,9 @@ public class PosForm : Form
 
         var actionPanel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 5, 0, 0) };
 
-        lblTotalItens = new Label { Text = "0 itens", TextAlign = ContentAlignment.MiddleRight, Width = 100, Height = 30, Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.DarkBlue };
+        lblTotalItens = new Label { Text = "0 itens", TextAlign = ContentAlignment.MiddleRight, Width = 80, Height = 30, Font = new Font("Segoe UI", 10, FontStyle.Bold), ForeColor = Color.DarkBlue };
+
+        lblTotalValor = new Label { Text = "R$ 0,00", TextAlign = ContentAlignment.MiddleRight, Width = 140, Height = 30, Font = new Font("Segoe UI", 12, FontStyle.Bold), ForeColor = Color.Green };
 
         btnRemover = new Button { Text = "Remover Item", Width = 120, Height = 32, BackColor = Color.Coral, ForeColor = Color.White, Font = new Font("Segoe UI", 10, FontStyle.Bold), FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand };
         btnRemover.Click += (_, _) => RemoveSelectedFromCart();
@@ -116,6 +127,7 @@ public class PosForm : Form
         actionPanel.Controls.Add(btnFinalizar);
         actionPanel.Controls.Add(btnRemover);
         actionPanel.Controls.Add(lblTotalItens);
+        actionPanel.Controls.Add(lblTotalValor);
 
         rightPanel.Controls.Add(actionPanel, 0, 2);
 
@@ -163,11 +175,15 @@ public class PosForm : Form
         dgvProducts.Columns.Clear();
         dgvProducts.Columns.Add("CodBarra", "Cód. Barras");
         dgvProducts.Columns.Add("Descricao", "Descrição");
+        dgvProducts.Columns.Add("Preco", "Preço");
         dgvProducts.Columns.Add("Estoque", "Estoque");
         dgvProducts.Columns.Add("Dosagem", "Dosagem");
         dgvProducts.Columns.Add("Controlado", "Controlado");
         dgvProducts.Columns["CodBarra"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
         dgvProducts.Columns["CodBarra"]!.MinimumWidth = 90;
+        dgvProducts.Columns["Preco"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+        dgvProducts.Columns["Preco"]!.MinimumWidth = 70;
+        dgvProducts.Columns["Preco"]!.DefaultCellStyle = new DataGridViewCellStyle { Format = "C2" };
         dgvProducts.Columns["Estoque"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
         dgvProducts.Columns["Estoque"]!.MinimumWidth = 50;
         dgvProducts.Columns["Dosagem"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
@@ -179,7 +195,7 @@ public class PosForm : Form
         foreach (var p in _searchResults)
         {
             var inCart = _cart.Where(c => c.ProdutoId == p.Id).Sum(c => c.Quantidade);
-            dgvProducts.Rows.Add(p.CodBarra, p.Descricao, p.Estoque - inCart, p.Dosagem, p.Controlado ? "Sim" : "Não");
+            dgvProducts.Rows.Add(p.CodBarra, p.Descricao, p.Preco, p.Estoque - inCart, p.Dosagem, p.Controlado ? "Sim" : "Não");
         }
     }
 
@@ -241,7 +257,7 @@ public class PosForm : Form
         if (existing != null)
             existing.Quantidade++;
         else
-            _cart.Add(new CartItem { ProdutoId = produto.Id, CodBarra = produto.CodBarra, Descricao = produto.Descricao, Lote = lote, Quantidade = 1, Controlado = produto.Controlado });
+            _cart.Add(new CartItem { ProdutoId = produto.Id, CodBarra = produto.CodBarra, Descricao = produto.Descricao, Lote = lote, Quantidade = 1, Preco = produto.Preco, Controlado = produto.Controlado });
 
         BindCartGrid();
         BindProductGrid();
@@ -253,15 +269,16 @@ public class PosForm : Form
         for (int i = 0; i < _cart.Count; i++)
         {
             var item = _cart[i];
-            dgvCart.Rows.Add(i + 1, item.CodBarra, item.Descricao, item.Lote, item.Quantidade);
+            dgvCart.Rows.Add(i + 1, item.CodBarra, item.Descricao, item.Lote, item.Preco.ToString("C2"), item.Quantidade, item.Subtotal.ToString("C2"));
         }
         lblTotalItens.Text = $"{_cart.Sum(c => c.Quantidade)} itens";
+        lblTotalValor.Text = _cart.Sum(c => c.Subtotal).ToString("C2");
     }
 
     private void DgvCart_CellEndEdit(object? sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0 || e.RowIndex >= _cart.Count) return;
-        if (e.ColumnIndex == 4)
+        if (e.ColumnIndex == 5)
         {
             if (int.TryParse(dgvCart.Rows[e.RowIndex].Cells[e.ColumnIndex].Value?.ToString(), out var qtd) && qtd > 0)
                 _cart[e.RowIndex].Quantidade = qtd;

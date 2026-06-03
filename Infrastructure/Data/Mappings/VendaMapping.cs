@@ -22,6 +22,10 @@ public class VendaMapping : IEntityTypeConfiguration<Venda>
 
         builder.Property(v => v.CanceladoEm);
 
+        builder.Property(v => v.Total)
+            .IsRequired()
+            .HasColumnType("decimal(12,4)");
+
         builder.HasOne(v => v.Vendedor)
             .WithMany()
             .HasForeignKey(v => v.VendedorId)

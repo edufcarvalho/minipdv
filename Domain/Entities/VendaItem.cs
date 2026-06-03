@@ -12,4 +12,5 @@ public class VendaItem
     public virtual Produto Produto { get; set; } = null!;
     public int Posicao { get; set; }
     public int Quantidade { get; set; } = 1;
+    public decimal PrecoUnitario { get; set; }
 }
