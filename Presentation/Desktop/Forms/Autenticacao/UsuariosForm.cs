@@ -1,4 +1,5 @@
 using System.Text.Json;
+using minipdv.Application.DTOs;
 using minipdv.Application.DTOs.Auth;
 using minipdv.Domain.Entities;
 using minipdv.Presentation.Desktop.Components.Controls;
@@ -10,7 +11,7 @@ public class UsuariosForm : Form
 {
     private readonly DataGridView dgv;
     private readonly SearchFilter _searchFilter;
-    private List<Usuario> _items = [];
+    private List<UsuarioResponse> _items = [];
 
     public UsuariosForm()
     {
@@ -54,7 +55,7 @@ public class UsuariosForm : Form
     {
         try
         {
-            _items = await ApiClient.Instance.GetAsync<List<Usuario>>("api/usuarios") ?? [];
+            _items = await ApiClient.Instance.GetAsync<List<UsuarioResponse>>("api/usuarios") ?? [];
             dgv.Columns.Clear();
             dgv.Columns.Add("Id", "ID");
             dgv.Columns.Add("Nome", "Nome");
@@ -65,13 +66,13 @@ public class UsuariosForm : Form
             dgv.Columns.Add("Telefone", "Telefone");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.Nome, item.Login, item.TipoUsuario, item.Ativo ? "Sim" : "Não", item.Contato?.Email ?? "", item.Contato?.Telefone ?? "");
+                dgv.Rows.Add(item.Id, item.Nome, item.Login, item.TipoUsuario, item.Ativo ? "Sim" : "Não", "", "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
 
-    private Usuario? GetSelected()
+    private UsuarioResponse? GetSelected()
     {
         if (dgv.SelectedRows.Count > 0 && dgv.SelectedRows[0].Index < _items.Count)
             return _items[dgv.SelectedRows[0].Index];
@@ -183,12 +184,14 @@ public class UsuariosForm : Form
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 };
 
+                var tipo = cmbTipo.SelectedValue?.ToString() ?? "Usuario";
+
                 var response = await ApiClient.Instance.PostAsync("api/auth/register", new
                 {
                     nome = txtNome.Text.Trim(),
                     login = txtLogin.Text.Trim(),
                     password = txtSenha.Text,
-                    tipo = cmbTipo.SelectedValue?.ToString() ?? "Usuario"
+                    tipo
                 });
                 if (!response.IsSuccessStatusCode)
                 {
@@ -206,20 +209,14 @@ public class UsuariosForm : Form
 
                 if (contatoId.HasValue)
                 {
-                    var user = await ApiClient.Instance.GetAsync<Usuario>($"api/usuarios/{authResult.Id}");
-                    if (user != null)
+                    await ApiClient.Instance.PutAsync($"api/usuarios/{authResult.Id}", new
                     {
-                        await ApiClient.Instance.PutAsync($"api/usuarios/{authResult.Id}", new
-                        {
-                            id = authResult.Id,
-                            nome = user.Nome,
-                            login = user.Login,
-                            passwordHash = user.PasswordHash,
-                            ativo = user.Ativo,
-                            tipoUsuario = user.TipoUsuario,
-                            contatoId
-                        });
-                    }
+                        nome = authResult.Nome,
+                        login = authResult.Login,
+                        ativo = true,
+                        tipoUsuario = tipo,
+                        contatoId
+                    });
                 }
 
                 txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtEmail.Clear(); txtTelefone.Clear();
@@ -298,15 +295,15 @@ public class UsuariosForm : Form
                 var telefone = txtTelefone.Text.Trim();
                 var contatoId = await ContatoHelper.CreateOrUpdateAsync(item.ContatoId, email, telefone);
 
+                var senha = txtSenha.Text;
                 var response = await ApiClient.Instance.PutAsync($"api/usuarios/{item.Id}", new
                 {
-                    id = item.Id,
                     nome = txtNome.Text.Trim(),
                     login = txtLogin.Text.Trim(),
-                    passwordHash = item.PasswordHash,
                     ativo = chkAtivo.Checked,
                     tipoUsuario = cmbTipo.SelectedValue?.ToString() ?? item.TipoUsuario,
-                    contatoId
+                    contatoId,
+                    password = string.IsNullOrEmpty(senha) ? null : senha
                 });
                 if (response.IsSuccessStatusCode)
                 {

@@ -1,6 +1,6 @@
 using System.Text.Json;
+using minipdv.Application.DTOs;
 using minipdv.Domain.Entities;
-using minipdv.Infrastructure.Security;
 using minipdv.Presentation.Desktop.Components.Controls;
 using minipdv.Presentation.Desktop.Components.Helpers;
 
@@ -10,7 +10,7 @@ public class FarmaceuticosForm : Form
 {
     private readonly DataGridView dgv;
     private readonly SearchFilter _searchFilter;
-    private List<Farmaceutico> _items = [];
+    private List<FarmaceuticoResponse> _items = [];
 
     public FarmaceuticosForm()
     {
@@ -54,7 +54,7 @@ public class FarmaceuticosForm : Form
     {
         try
         {
-            _items = await ApiClient.Instance.GetAsync<List<Farmaceutico>>("api/farmaceuticos") ?? [];
+            _items = await ApiClient.Instance.GetAsync<List<FarmaceuticoResponse>>("api/farmaceuticos") ?? [];
             dgv.Columns.Clear();
             dgv.Columns.Add("Id", "ID");
             dgv.Columns.Add("Nome", "Nome");
@@ -65,13 +65,13 @@ public class FarmaceuticosForm : Form
             dgv.Columns.Add("Telefone", "Telefone");
             dgv.Rows.Clear();
             foreach (var item in _items)
-                dgv.Rows.Add(item.Id, item.Nome, item.Login, item.Crf, item.Ativo ? "Sim" : "Não", item.Contato?.Email ?? "", item.Contato?.Telefone ?? "");
+                dgv.Rows.Add(item.Id, item.Nome, item.Login, item.Crf, item.Ativo ? "Sim" : "Não", "", "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex) { MessageBox.Show($"Erro: {ex.Message}", "Erro", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
 
-    private Farmaceutico? GetSelected()
+    private FarmaceuticoResponse? GetSelected()
     {
         if (dgv.SelectedRows.Count > 0 && dgv.SelectedRows[0].Index < _items.Count)
             return _items[dgv.SelectedRows[0].Index];
@@ -202,21 +202,14 @@ public class FarmaceuticosForm : Form
 
                 if (contatoId.HasValue)
                 {
-                    var farm = await ApiClient.Instance.GetAsync<Farmaceutico>($"api/farmaceuticos/{authResult.Id}");
-                    if (farm != null)
+                    await ApiClient.Instance.PutAsync($"api/farmaceuticos/{authResult.Id}", new
                     {
-                        await ApiClient.Instance.PutAsync($"api/farmaceuticos/{authResult.Id}", new
-                        {
-                            id = authResult.Id,
-                            nome = farm.Nome,
-                            login = farm.Login,
-                            passwordHash = farm.PasswordHash,
-                            ativo = farm.Ativo,
-                            tipoUsuario = farm.TipoUsuario,
-                            crf = farm.Crf,
-                            contatoId
-                        });
-                    }
+                        nome = authResult.Nome,
+                        login = authResult.Login,
+                        ativo = true,
+                        crf = txtCrf.Text.Trim(),
+                        contatoId
+                    });
                 }
 
                 txtNome.Clear(); txtLogin.Clear(); txtSenha.Clear(); txtCrf.Clear(); txtEmail.Clear(); txtTelefone.Clear();
@@ -288,24 +281,19 @@ public class FarmaceuticosForm : Form
             {
                 dialog.Enabled = false;
 
-                var passwordHash = string.IsNullOrEmpty(txtSenha.Text)
-                    ? item.PasswordHash
-                    : PasswordHasher.Hash(txtSenha.Text);
-
                 var email = txtEmail.Text.Trim();
                 var telefone = txtTelefone.Text.Trim();
                 var contatoId = await ContatoHelper.CreateOrUpdateAsync(item.ContatoId, email, telefone);
 
+                var senha = txtSenha.Text;
                 var response = await ApiClient.Instance.PutAsync($"api/farmaceuticos/{item.Id}", new
                 {
-                    id = item.Id,
                     nome = txtNome.Text.Trim(),
                     login = txtLogin.Text.Trim(),
-                    passwordHash,
                     ativo = chkAtivo.Checked,
-                    tipoUsuario = "Farmaceutico",
                     crf = txtCrf.Text.Trim(),
-                    contatoId
+                    contatoId,
+                    password = string.IsNullOrEmpty(senha) ? null : senha
                 });
                 if (response.IsSuccessStatusCode)
                 {
