@@ -66,12 +66,21 @@ public class ProdutosForm : Form
             dgv.Columns.Add("Controlado", "Controlado");
             dgv.Columns.Add("RegistroMS", "Reg. MS");
             dgv.Columns.Add("GrupoNome", "Grupo");
-            dgv.Columns["Descricao"]!.FillWeight = 40;
-            dgv.Columns["Descricao"]!.MinimumWidth = 120;
+            dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+            dgv.Columns["Id"]!.Width = 50;
+            dgv.Columns["CodBarra"]!.Width = 160;
+            dgv.Columns["Descricao"]!.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dgv.Columns["Dosagem"]!.Width = 120;
+            dgv.Columns["Estoque"]!.Width = 70;
+            dgv.Columns["Ativo"]!.Width = 45;
+            dgv.Columns["Preco"]!.Width = 70;
+            dgv.Columns["Controlado"]!.Width = 50;
+            dgv.Columns["RegistroMS"]!.Width = 175;
+            dgv.Columns["GrupoNome"]!.Width = 240;
 
             dgv.Rows.Clear();
             foreach (var p in _produtos)
-                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Preco.ToString("F2"), p.Ativo ? "Sim" : "Não", p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.Grupo?.Nome ?? "");
+                dgv.Rows.Add(p.Id, p.CodBarra, p.Descricao, p.Dosagem, p.Estoque, p.Ativo ? "Sim" : "Não", p.Preco.ToString("F2"), p.Controlado ? "Sim" : "Não", p.RegistroMS ?? "", p.Grupo?.Nome ?? "");
             _searchFilter.ApplyFilter();
         }
         catch (Exception ex)
