@@ -105,8 +105,8 @@ Documentação completa da arquitetura, padrões, bibliotecas e uso de cada part
 ### 2.1. Pré-requisitos
 
 - .NET 10 SDK
-- SQL Server (opcional, apenas para ambiente local)
-- Podman ou Docker (opcional, para ambiente containerizado)
+- SQL Server (necessário apenas para ambiente local)
+- Podman ou Docker (necessário para ambiente containerizado)
 
 ### 2.2. Configuração via `.env`
 
