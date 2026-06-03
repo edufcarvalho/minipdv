@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -26,10 +27,7 @@ public class UsuariosController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var items = await _service.GetAllAsync();
-        var response = items.Select(u => new UsuarioResponse(
-            u.Id, u.Nome, u.Login, u.Ativo, u.TipoUsuario, u.ContatoId, u.CriadoEm, u.AtualizadoEm
-        ));
-        return Ok(response);
+        return Ok(items.Adapt<List<UsuarioResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -37,9 +35,7 @@ public class UsuariosController : ControllerBase
     {
         var item = await _service.GetByIdAsync(id);
         if (item is null) return NotFound();
-        return Ok(new UsuarioResponse(
-            item.Id, item.Nome, item.Login, item.Ativo, item.TipoUsuario, item.ContatoId, item.CriadoEm, item.AtualizadoEm
-        ));
+        return Ok(item.Adapt<UsuarioResponse>());
     }
 
     [HttpPut("{id}")]

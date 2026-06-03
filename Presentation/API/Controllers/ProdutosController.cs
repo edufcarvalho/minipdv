@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -27,7 +28,7 @@ public class ProdutosController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var items = await _service.GetAllAsync();
-        return Ok(items);
+        return Ok(items.Adapt<List<ProdutoResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -35,7 +36,7 @@ public class ProdutosController : ControllerBase
     {
         var item = await _service.GetByIdAsync(id);
         if (item is null) return NotFound();
-        return Ok(item);
+        return Ok(item.Adapt<ProdutoResponse>());
     }
 
     [HttpPost]
@@ -61,7 +62,7 @@ public class ProdutosController : ControllerBase
 
         var created = await _service.AddAsync(entity);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created.Adapt<ProdutoResponse>());
     }
 
     [HttpPut("{id}")]
@@ -128,7 +129,7 @@ public class ProdutosController : ControllerBase
 
         var created = await _controladoService.AddAsync(entity);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created.Adapt<ProdutoResponse>());
     }
 
     [HttpPut("controlado/{id}")]

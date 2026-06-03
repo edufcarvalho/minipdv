@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities.Base;
@@ -5,7 +6,7 @@ using minipdv.Infrastructure.Data.Context;
 
 namespace minipdv.Presentation.API.Controllers;
 
-public abstract class CrudControllerBase<TEntity, TService> : ControllerBase
+public abstract class CrudControllerBase<TEntity, TResponse, TService> : ControllerBase
     where TEntity : Entity
     where TService : ICrudService<TEntity>
 {
@@ -22,7 +23,7 @@ public abstract class CrudControllerBase<TEntity, TService> : ControllerBase
     public virtual async Task<IActionResult> GetAll()
     {
         var items = await Service.GetAllAsync();
-        return Ok(items);
+        return Ok(items.Adapt<List<TResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -30,7 +31,7 @@ public abstract class CrudControllerBase<TEntity, TService> : ControllerBase
     {
         var item = await Service.GetByIdAsync(id);
         if (item is null) return NotFound();
-        return Ok(item);
+        return Ok(item.Adapt<TResponse>());
     }
 
     [HttpPost]
@@ -38,7 +39,7 @@ public abstract class CrudControllerBase<TEntity, TService> : ControllerBase
     {
         var created = await Service.AddAsync(entity);
         await Context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created.Adapt<TResponse>());
     }
 
     [HttpPut("{id}")]

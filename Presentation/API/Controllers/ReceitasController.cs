@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -25,7 +26,7 @@ public class ReceitasController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var items = await _service.GetAllAsync();
-        return Ok(items);
+        return Ok(items.Adapt<List<ReceitaResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -33,7 +34,7 @@ public class ReceitasController : ControllerBase
     {
         var item = await _service.GetByIdAsync(id);
         if (item is null) return NotFound();
-        return Ok(item);
+        return Ok(item.Adapt<ReceitaResponse>());
     }
 
     [HttpPost]
@@ -64,7 +65,7 @@ public class ReceitasController : ControllerBase
 
         var created = await _service.AddAsync(entity);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created.Adapt<ReceitaResponse>());
     }
 
     [HttpPut("{id}")]

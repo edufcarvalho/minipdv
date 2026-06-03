@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -26,10 +27,7 @@ public class AdministradoresController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var items = await _service.GetAllAsync();
-        var response = items.Select(a => new AdministradorResponse(
-            a.Id, a.Nome, a.Login, a.Ativo, a.ContatoId, a.CriadoEm, a.AtualizadoEm
-        ));
-        return Ok(response);
+        return Ok(items.Adapt<List<AdministradorResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -37,9 +35,7 @@ public class AdministradoresController : ControllerBase
     {
         var item = await _service.GetByIdAsync(id);
         if (item is null) return NotFound();
-        return Ok(new AdministradorResponse(
-            item.Id, item.Nome, item.Login, item.Ativo, item.ContatoId, item.CriadoEm, item.AtualizadoEm
-        ));
+        return Ok(item.Adapt<AdministradorResponse>());
     }
 
     [HttpPut("{id}")]

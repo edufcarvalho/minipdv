@@ -1,10 +1,12 @@
 using System.Text;
 using FluentValidation;
+using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using minipdv.Application.DTOs;
 using minipdv.Application.DTOs.Auth;
 using minipdv.Application.Interfaces;
 using minipdv.Application.Services;
@@ -141,12 +143,23 @@ static class Program
                 policy.RequireClaim("tipo", "Usuario", "Farmaceutico", "Administrador"));
         });
 
-        builder.Services.AddControllers()
-            .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-                options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-            });
+        builder.Services.AddControllers();
+
+        TypeAdapterConfig<Usuario, UsuarioResponse>.NewConfig();
+        TypeAdapterConfig<Farmaceutico, FarmaceuticoResponse>.NewConfig();
+        TypeAdapterConfig<Administrador, AdministradorResponse>.NewConfig();
+        TypeAdapterConfig<Cliente, ClienteResponse>.NewConfig();
+        TypeAdapterConfig<Contato, ContatoResponse>.NewConfig();
+        TypeAdapterConfig<Fabricante, FabricanteResponse>.NewConfig();
+        TypeAdapterConfig<Prescritor, PrescritorResponse>.NewConfig();
+        TypeAdapterConfig<PrincipioAtivo, PrincipioAtivoResponse>.NewConfig();
+        TypeAdapterConfig<ProdutoGrupo, ProdutoGrupoResponse>.NewConfig();
+        TypeAdapterConfig<ProdutoTipo, ProdutoTipoResponse>.NewConfig();
+        TypeAdapterConfig<Produto, ProdutoResponse>.NewConfig();
+        TypeAdapterConfig<Venda, VendaResponse>.NewConfig();
+        TypeAdapterConfig<Receita, ReceitaResponse>.NewConfig();
+        TypeAdapterConfig<ProdutoEstoque, ProdutoEstoqueResponse>.NewConfig();
+        TypeAdapterConfig<ProdutoCodBarra, ProdutoCodBarraResponse>.NewConfig();
 
         builder.Services.AddSwaggerGen(options =>
         {

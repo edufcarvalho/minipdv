@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -26,10 +27,7 @@ public class FarmaceuticosController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var items = await _service.GetAllAsync();
-        var response = items.Select(f => new FarmaceuticoResponse(
-            f.Id, f.Nome, f.Login, f.Ativo, f.Crf, f.ContatoId, f.CriadoEm, f.AtualizadoEm
-        ));
-        return Ok(response);
+        return Ok(items.Adapt<List<FarmaceuticoResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -37,9 +35,7 @@ public class FarmaceuticosController : ControllerBase
     {
         var item = await _service.GetByIdAsync(id);
         if (item is null) return NotFound();
-        return Ok(new FarmaceuticoResponse(
-            item.Id, item.Nome, item.Login, item.Ativo, item.Crf, item.ContatoId, item.CriadoEm, item.AtualizadoEm
-        ));
+        return Ok(item.Adapt<FarmaceuticoResponse>());
     }
 
     [HttpPut("{id}")]

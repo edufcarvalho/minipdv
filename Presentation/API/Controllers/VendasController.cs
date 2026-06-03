@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -25,7 +26,7 @@ public class VendasController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var items = await _service.GetAllAsync();
-        return Ok(items);
+        return Ok(items.Adapt<List<VendaResponse>>());
     }
 
     [HttpGet("{id}")]
@@ -33,7 +34,7 @@ public class VendasController : ControllerBase
     {
         var item = await _service.GetByIdAsync(id);
         if (item is null) return NotFound();
-        return Ok(item);
+        return Ok(item.Adapt<VendaResponse>());
     }
 
     [HttpPost]
@@ -60,7 +61,7 @@ public class VendasController : ControllerBase
 
         var created = await _service.AddAsync(entity, request.ReceitaIds);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created.Adapt<VendaResponse>());
     }
 
     [HttpDelete("{id}")]

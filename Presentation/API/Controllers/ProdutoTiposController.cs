@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using minipdv.Application.DTOs;
 using minipdv.Application.Interfaces;
 using minipdv.Domain.Entities;
 using minipdv.Infrastructure.Data.Context;
@@ -9,7 +10,7 @@ namespace minipdv.Presentation.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize(Policy = Policies.RequireFarmaceutico)]
-public class ProdutoTiposController : CrudControllerBase<ProdutoTipo, IProdutoTipoService>
+public class ProdutoTiposController : CrudControllerBase<ProdutoTipo, ProdutoTipoResponse, IProdutoTipoService>
 {
     public ProdutoTiposController(IProdutoTipoService service, MiniPDVContext context)
         : base(service, context) { }

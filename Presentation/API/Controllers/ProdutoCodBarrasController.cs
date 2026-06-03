@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -25,7 +26,7 @@ public class ProdutoCodBarrasController : ControllerBase
     public async Task<IActionResult> GetAll(int produtoId)
     {
         var items = await _service.GetByProdutoIdAsync(produtoId);
-        return Ok(items);
+        return Ok(items.Adapt<List<ProdutoCodBarraResponse>>());
     }
 
     [HttpGet("{codBarra}")]
@@ -33,7 +34,7 @@ public class ProdutoCodBarrasController : ControllerBase
     {
         var item = await _service.GetByCodBarraAsync(codBarra);
         if (item is null) return NotFound();
-        return Ok(item);
+        return Ok(item.Adapt<ProdutoCodBarraResponse>());
     }
 
     [HttpPost]
@@ -50,11 +51,11 @@ public class ProdutoCodBarrasController : ControllerBase
 
         var created = await _service.AddAsync(entity);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { produtoId, codBarra = created.CodBarra }, created);
+        return CreatedAtAction(nameof(GetById), new { produtoId, codBarra = created.CodBarra }, created.Adapt<ProdutoCodBarraResponse>());
     }
 
     [HttpPut("{codBarra}")]
-    public async Task<IActionResult> Update(int codBarra, [FromBody] CreateProdutoCodBarraRequest request)
+    public async Task<IActionResult> Update(long codBarra, [FromBody] CreateProdutoCodBarraRequest request)
     {
         if (codBarra != request.CodBarra) return BadRequest();
 

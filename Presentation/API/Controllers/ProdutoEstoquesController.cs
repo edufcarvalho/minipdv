@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using minipdv.Application.DTOs;
@@ -27,14 +28,14 @@ public class ProdutoEstoquesController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var items = await _service.GetAllAsync();
-        return Ok(items);
+        return Ok(items.Adapt<List<ProdutoEstoqueResponse>>());
     }
 
     [HttpGet]
     public async Task<IActionResult> GetAll(int produtoId)
     {
         var items = await _service.GetByProdutoIdAsync(produtoId);
-        return Ok(items);
+        return Ok(items.Adapt<List<ProdutoEstoqueResponse>>());
     }
 
     [HttpGet("{lote}")]
@@ -42,7 +43,7 @@ public class ProdutoEstoquesController : ControllerBase
     {
         var item = await _service.GetByIdAsync(produtoId, lote);
         if (item is null) return NotFound();
-        return Ok(item);
+        return Ok(item.Adapt<ProdutoEstoqueResponse>());
     }
 
     [HttpPost]
@@ -68,7 +69,7 @@ public class ProdutoEstoquesController : ControllerBase
 
         var created = await _service.AddAsync(entity);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetById), new { produtoId, lote = created.Lote }, created);
+        return CreatedAtAction(nameof(GetById), new { produtoId, lote = created.Lote }, created.Adapt<ProdutoEstoqueResponse>());
     }
 
     [HttpPut("{lote}")]
