@@ -32,6 +32,8 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
+      - /app/.git
+      - /app/.artifacts
       - /app/bin
       - /app/obj
       - /app/keys
@@ -61,6 +63,8 @@ services:
       - "5000:5000"
     volumes:
       - /app/keys
+      - /app/.git
+      - /app/.artifacts
 
 volumes:
   sqlserver_data:
