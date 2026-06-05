@@ -9,7 +9,20 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "descricao": "Ritalina 10mg 30 Comprimidos",
+        "ativo": true,
+        "codBarra": 40000001,
+        "dosagem": "10mg",
+        "produtoGrupoId": 7,
+        "fabricanteId": 6,
+        "principioAtivoId": 16,
+        "registroMS": "1.2345.6789.012-3",
+        "preco": 150.00,
+        "classeTerapeutica": "Psicoestimulante",
+        "lista": "A3"
+      }
 
 settings:
   encodeUrl: true

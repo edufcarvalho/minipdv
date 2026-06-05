@@ -9,7 +9,13 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nome": "Novo Administrador",
+        "login": "novo.admin",
+        "password": "admin123",
+        "tipo": "Administrador"
+      }
 
 settings:
   encodeUrl: true

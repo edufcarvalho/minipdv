@@ -9,7 +9,14 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "id": {{id}},
+        "numero": "123456",
+        "nome": "Dr. Atualizado",
+        "conselho": "CRM",
+        "uf": "SP"
+      }
 
 settings:
   encodeUrl: true

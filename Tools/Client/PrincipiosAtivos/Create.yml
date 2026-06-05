@@ -9,7 +9,10 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nome": "Novo Principio Ativo"
+      }
 
 settings:
   encodeUrl: true

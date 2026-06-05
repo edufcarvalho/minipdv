@@ -9,7 +9,13 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nome": "Novo Farmaceutico",
+        "login": "novo.farma",
+        "password": "mudar123",
+        "crf": "00000-SP"
+      }
 
 settings:
   encodeUrl: true

@@ -9,7 +9,11 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "codBarra": {{codBarra}},
+        "produtoId": {{produtoId}}
+      }
 
 settings:
   encodeUrl: true

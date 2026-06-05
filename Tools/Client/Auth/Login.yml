@@ -8,7 +8,11 @@ http:
   url: "{{baseUrl}}/api/auth/login"
   body:
     type: json
-    data: ""
+    data: |-
+      {
+        "login": "{{login}}",
+        "password": "{{senha}}"
+      }
 
 runtime:
   scripts:

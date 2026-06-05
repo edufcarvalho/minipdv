@@ -9,7 +9,14 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nome": "Usuario Atualizado",
+        "login": "user.atualizado",
+        "ativo": true,
+        "tipoUsuario": "Usuario",
+        "contatoId": null
+      }
 
 settings:
   encodeUrl: true

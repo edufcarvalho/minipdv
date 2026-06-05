@@ -9,7 +9,12 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "id": {{id}},
+        "email": "atualizado@email.com",
+        "telefone": "11999999999"
+      }
 
 settings:
   encodeUrl: true

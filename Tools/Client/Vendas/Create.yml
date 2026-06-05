@@ -8,7 +8,14 @@ http:
   url: "{{baseUrl}}/api/vendas"
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "vendedorId": 1004,
+        "clienteId": 1,
+        "produtos": [
+          { "produtoId": {{id}}, "quantidade": 1 }
+        ]
+      }
 
 settings:
   encodeUrl: true

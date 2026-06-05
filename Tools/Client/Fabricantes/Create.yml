@@ -9,7 +9,13 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nomeFantasia": "Novo Fabricante",
+        "razaoSocial": "Novo Fabricante Ltda",
+        "cnpj": "00000000000100",
+        "contatoId": null
+      }
 
 settings:
   encodeUrl: true

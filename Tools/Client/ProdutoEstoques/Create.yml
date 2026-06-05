@@ -9,7 +9,15 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "produtoId": {{produtoId}},
+        "lote": "{{lote}}",
+        "fabricacao": "2025-01-01",
+        "validade": "2027-01-01",
+        "quantidade": 100,
+        "registroMS": null
+      }
 
 settings:
   encodeUrl: true

@@ -9,7 +9,19 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "descricao": "Paracetamol 500mg 20 Comprimidos",
+        "ativo": true,
+        "codBarra": 7890000000002,
+        "preco": 15.90,
+        "controlado": false,
+        "dosagem": "500mg",
+        "registroMS": null,
+        "produtoGrupoId": 1,
+        "fabricanteId": 1,
+        "principioAtivoId": 2
+      }
 
 settings:
   encodeUrl: true

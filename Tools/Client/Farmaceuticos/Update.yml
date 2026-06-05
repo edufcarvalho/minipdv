@@ -9,7 +9,14 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nome": "Farmaceutico Atualizado",
+        "login": "farma.atualizado",
+        "ativo": true,
+        "crf": "00000-SP",
+        "contatoId": null
+      }
 
 settings:
   encodeUrl: true

@@ -9,7 +9,12 @@ http:
   auth: inherit
   body:
     type: json
-    data: "{}"
+    data: |-
+      {
+        "nome": "Novo Cliente",
+        "cpf": "123.456.789-00",
+        "contatoId": null
+      }
 
 settings:
   encodeUrl: true
