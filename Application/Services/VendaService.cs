@@ -48,6 +48,7 @@ public class VendaService : IVendaService
         foreach (var item in entity.VendaItens)
         {
             var produto = await _context.Set<Produto>()
+                .Include(p => p.Estoques)
                 .FirstAsync(p => p.Id == item.ProdutoId);
 
             if (produto.Estoque < item.Quantidade)
@@ -60,6 +61,8 @@ public class VendaService : IVendaService
             }
 
             item.PrecoUnitario = produto.Preco;
+
+            if (produto is ProdutoControlado controlado) continue;
             produto.Estoque -= item.Quantidade;
         }
 
@@ -102,7 +105,10 @@ public class VendaService : IVendaService
         foreach (var item in entity.VendaItens)
         {
             var produto = await _context.Set<Produto>()
+                .Include(p => p.Estoques)
                 .FirstAsync(p => p.Id == item.ProdutoId);
+
+            if (produto is ProdutoControlado controlado) continue;
 
             produto.Estoque += item.Quantidade;
         }

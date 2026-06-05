@@ -180,7 +180,13 @@ public class ReceitaService : IReceitaService
             .SumAsync(e => e.Quantidade);
 
         var produto = await _context.Set<Produto>().FindAsync(produtoId);
-        if (produto is not null)
-            produto.Estoque = total;
+
+        if (produto is null)
+        {
+            _logger.LogWarning("Produto não encontrado para sincronização de estoque: ProdutoId={ProdutoId}", produtoId);
+            return;
+        }
+
+        produto.Estoque = total;
     }
 }
