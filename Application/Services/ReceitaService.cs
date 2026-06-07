@@ -61,7 +61,6 @@ public class ReceitaService : IReceitaService
 
             estoque.Quantidade -= rpe.Quantidade;
             rpe.ProdutoEstoque = estoque;
-            await SyncProdutoEstoqueAsync(rpe.ProdutoId);
         }
 
         entity.CriadoEm = DateTime.UtcNow;
@@ -130,9 +129,6 @@ public class ReceitaService : IReceitaService
         existing.ReceitaProdutoEstoques = newItems;
         existing.AtualizadoEm = DateTime.UtcNow;
 
-        foreach (var prodId in affectedProdutos)
-            await SyncProdutoEstoqueAsync(prodId);
-
         _logger.LogInformation("Receita marcada para atualização: ReceitaId={ReceitaId}, Itens={Itens}", entity.Id, newItems.Count);
     }
 
@@ -160,7 +156,6 @@ public class ReceitaService : IReceitaService
             var estoque = await _produtoEstoqueRepository.GetByIdAsync(rpe.ProdutoId, rpe.Lote);
             if (estoque is not null)
                 estoque.Quantidade += rpe.Quantidade;
-            await SyncProdutoEstoqueAsync(rpe.ProdutoId);
         }
 
         _context.Receitas.Remove(entity);
@@ -171,22 +166,5 @@ public class ReceitaService : IReceitaService
     public async Task<bool> ExistsAsync(int id)
     {
         return await _repository.ExistsAsync(id);
-    }
-
-    private async Task SyncProdutoEstoqueAsync(int produtoId)
-    {
-        var total = await _context.Set<ProdutoEstoque>()
-            .Where(e => e.ProdutoId == produtoId)
-            .SumAsync(e => e.Quantidade);
-
-        var produto = await _context.Set<Produto>().FindAsync(produtoId);
-
-        if (produto is null)
-        {
-            _logger.LogWarning("Produto não encontrado para sincronização de estoque: ProdutoId={ProdutoId}", produtoId);
-            return;
-        }
-
-        produto.Estoque = total;
     }
 }
